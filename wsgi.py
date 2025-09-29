@@ -204,6 +204,7 @@ app.cli.add_command(student_cli) # add the group to the cli
 
 staff_cli = AppGroup('staff', help='Staff object commands')
 
+#Command to create a new staff member (name, email)
 @staff_cli.command("create", help="Create a new staff member")
 def create_staff():
     print("\n")

@@ -13,5 +13,6 @@ class Request(db.Model):
         self.hours = hours
         self.status = status
 
+    
     def __repr__(self):
         return f"**RequestID={self.id:<5} StudentID={self.student_id:<5} Requested Hours={self.hours:<10} Status={self.status:<5}**"

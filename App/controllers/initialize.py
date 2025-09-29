@@ -23,7 +23,7 @@ def initialize():
     db.session.add_all(students)
     db.session.commit()
 
-
+    # Add sample staff members
     staff_members = [
         Staff(name='Mr. Smith', email='mr.smith@gmail.com'),
         Staff(name='Ms. Johnson', email='ms.johnson@hotmail.com'),
