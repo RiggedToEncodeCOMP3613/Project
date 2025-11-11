@@ -1,7 +1,6 @@
 from app.database import db
 from datetime import datetime
 from app.models.command import Command
-# ! Command not yet implemented this is a placeholder for future functionality
 
 class Controller(db.Model):
     #The user takes an existing user from the database
