@@ -9,4 +9,19 @@ class Controller(db.Model):
     cmd = db.Column(db.String(200), db.ForeignKey('command.cmd'), primary_key=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, primary_key=True)
     
-    setCommand (Command C)
+    def set_command(self, C: Command):
+        # store the command identifier string for the foreign key
+        self.cmd = C.cmd
+    def set_user(self, U):
+        # store the user identifier string for the foreign key
+        self.user = U.username
+    def execute_command(self):
+        # retrieve the command object from the database using the cmd identifier
+        command = Command.query.filter_by(cmd=self.cmd).first()
+        if command:
+            return command.execute()
+        else:
+            raise ValueError("Command not found in database")
+        
+    def __repr__(self):
+        return f"<Controller User: {self.user}, Command: {self.cmd}, Timestamp: {self.timestamp}>"
