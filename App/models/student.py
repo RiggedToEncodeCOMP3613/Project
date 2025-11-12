@@ -56,4 +56,7 @@ class Student(User):
         if total_hours >= 50:
             accolades.append('50 Hours Milestone')
         return accolades
+    
+    def display_history(self):
+        return print (self.history)
 
