@@ -5,6 +5,7 @@ class Student(User):
 
     __tablename__ = "student"
     student_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), primary_key=True)
+    history = db.Column(db.ActivityHistory, backref='student', lazy=True)
     
     #relationship to LoggedHours and Request both One-to-Many
     loggedhours = db.relationship('LoggedHours', backref='student', lazy=True, cascade="all, delete-orphan")
@@ -55,4 +56,7 @@ class Student(User):
         if total_hours >= 50:
             accolades.append('50 Hours Milestone')
         return accolades
+    
+    def display_history(self):
+        return print (self.history)
 
