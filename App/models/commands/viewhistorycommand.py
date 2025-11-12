@@ -6,7 +6,4 @@ class ViewHistoryCommand(command.Command):
         self.student = student
 
     def execute(self):
-        self.student.history.display_history()
-        
-        
-        
+        print(self.student.history)
