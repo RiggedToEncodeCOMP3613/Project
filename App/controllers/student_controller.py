@@ -55,3 +55,28 @@ def get_all_students_json():
     students = Student.query.all()
     return [student.get_json() for student in students]
 
+def get_student_by_id(student_id):
+    student = Student.query.get(student_id)
+    if not student:
+        raise ValueError(f"Student with id {student_id} not found.")
+    return student
+
+def get_student_by_email(email):
+    student = Student.query.filter_by(email=email).first()
+    if not student:
+        raise ValueError(f"Student with email {email} not found.")
+    return student
+
+def get_student_by_name(name):
+    student = Student.query.filter_by(username=name).first()
+    if not student:
+        raise ValueError(f"Student with name {name} not found.")
+    return student
+
+def query_router(string): #The user will enter a string, and this function will determine if it's an email or an id or a name and call the appropriate function
+    if "@" in string and "." in string:
+        return get_student_by_email(string)
+    elif string.isdigit():
+        return get_student_by_id(int(string))
+    else:
+        return get_student_by_name(string)

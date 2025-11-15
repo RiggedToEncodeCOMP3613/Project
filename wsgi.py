@@ -7,7 +7,7 @@ from App.models import Student
 from App.models import Staff
 from App.models import Request
 from App.main import create_app
-from App.controllers.student_controller import *
+from App.controllers.student_controller import query_router, register_student, get_approved_hours, create_hours_request, fetch_requests, fetch_accolades, generate_leaderboard
 from App.controllers.staff_controller import *
 from App.controllers.app_controller import *
 from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize )
@@ -43,6 +43,9 @@ def listStaff():
 @app.cli.command ("listStudents", help="Lists all students in the database")
 def listStudents():
     printAllStudents()
+    
+#Command to search students by field
+
 
 
 #Comamand to list all requests in the database
@@ -79,6 +82,20 @@ def listloggedHours():
 '''STUDENT COMMANDS'''
 
 student_cli = AppGroup('student', help='Student object commands')
+
+# Command to search students by field (name, email, or ID)
+@student_cli.command("search", help="Search for a student by name, email, or ID")
+def search_student():
+    print("\n")
+    try:
+        query = input("Enter student name, email, or ID: ")
+        student = query_router(query)
+        print(f"Found student: {student}")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
 
 #Command to view total approved hours for a student (student_id)
 @student_cli.command("hours", help="View total approved hours for a student")
