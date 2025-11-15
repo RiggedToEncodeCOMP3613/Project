@@ -1,5 +1,5 @@
 from App.database import db
-from App.models import User,Staff,Student,Request
+from App.models import User,Staff,Student,Request,LoggedHours
 
 #Comamand to list all staff in the database
 def printAllStaff():
@@ -57,7 +57,6 @@ def listAllPendingRequests():
 #Comamand to list all logged hours in the database
 def listAllloggedHours():
     print("\nAll Logged Hours:")
-    from App.models import LoggedHours
     logged_hours = LoggedHours.query.all()
     for log in logged_hours:
         print(log)
@@ -70,3 +69,22 @@ def listAllUsers():
     for user in users:
         print(user)
     print("\n")
+
+def create_logged_hours(student_id, staff_id, hours, status='approved'):
+    logged_hour = LoggedHours(student_id, staff_id, hours, status)
+    db.session.add(logged_hour)
+    db.session.commit()
+    return logged_hour
+
+def delete_logged_hours(log_id):
+    log = LoggedHours.query.get(log_id)
+    if not log:
+        raise ValueError(f"LoggedHours entry with id {log_id} not found.")
+    db.session.delete(log)
+    db.session.commit()
+    return True
+
+def delete_all_logged_hours():
+    num_deleted = LoggedHours.query.delete()
+    db.session.commit()
+    return num_deleted

@@ -462,3 +462,131 @@ def user_tests_command(type):
 
 
 app.cli.add_command(test)
+
+# Command to create a logged hours entry
+@app.cli.command("createLoggedHours", help="Create a logged hours entry")
+def create_logged_hours_command():
+    print("\n")
+    try:
+        student_id = int(input("Enter student ID: "))
+        staff_id = int(input("Enter staff ID: "))
+        hours = float(input("Enter hours: "))
+        status = input("Enter status (default 'approved'): ") or 'approved'
+        log = create_logged_hours(student_id, staff_id, hours, status)
+        print(f"Created logged hours entry: {log}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+# Command to delete a logged hours entry by ID
+@app.cli.command("deleteLoggedHours", help="Delete a logged hours entry by ID")
+def delete_logged_hours_command():
+    log_id = int(input("Enter the logged hours ID to delete: "))
+    try:
+        delete_logged_hours(log_id)
+        print(f"Logged hours entry with ID {log_id} has been deleted.")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Command to delete ALL logged hours entries (for testing purposes)
+@app.cli.command("deleteAllLoggedHours", help="Delete ALL logged hours entries (testing purposes only)")
+def delete_all_logged_hours_command():
+    confirmation = input("Are you sure you want to delete ALL logged hours entries? This action cannot be undone. (yes/no): ")
+    if confirmation.lower() == 'yes':
+        try:
+            num_deleted = delete_all_logged_hours()
+            print(f"All logged hours entries have been deleted. Total deleted: {num_deleted}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+    else:
+        print("Operation cancelled.")
+
+# Command to search logged hours by student-id, staff-id, or date
+@app.cli.command("searchLoggedHours", help="Search logged hours by student-id, staff-id, or date")
+@click.argument("search_type")
+@click.argument("value")
+def search_logged_hours_command(search_type, value):
+    print("\n")
+    try:
+        results = []
+        if search_type == "student-id":
+            if not value.isdigit():
+                print("Error: student-id must be an integer.")
+                return
+            results = LoggedHours.query.filter_by(student_id=int(value)).all()
+        elif search_type == "staff-id":
+            if not value.isdigit():
+                print("Error: staff-id must be an integer.")
+                return
+            results = LoggedHours.query.filter_by(staff_id=int(value)).all()
+        elif search_type == "date":
+            from datetime import datetime
+            try:
+                date_obj = datetime.strptime(value, "%Y-%m-%d")
+            except ValueError:
+                print("Invalid date format. Use YYYY-MM-DD.")
+                return
+            results = LoggedHours.query.filter(db.func.date(LoggedHours.timestamp) == date_obj.date()).all()
+        else:
+            print("Invalid search type. Use 'student-id', 'staff-id', or 'date'.")
+            return
+        # Enforce type checking on results
+        if not isinstance(results, list) or not all(isinstance(log, LoggedHours) for log in results):
+            print("Error: Results are not valid LoggedHours objects.")
+            return
+        if not results:
+            print("No logged hours found for the given criteria.")
+        else:
+            for log in results:
+                print(log)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+# Command to update a logged hours entry by ID
+@app.cli.command("updateLoggedHours", help="Update a logged hours entry by ID")
+@click.argument("log_id")
+def update_logged_hours_command(log_id):
+    print("\n")
+    try:
+        if not log_id.isdigit():
+            print("Error: loggedhours_id must be an integer.")
+            return
+        log = LoggedHours.query.get(int(log_id))
+        if not log:
+            print(f"LoggedHours entry with id {log_id} not found.")
+            return
+        # Prompt for new values, allow blank to keep current
+        student_id = input(f"Enter new student ID (current: {log.student_id}, leave blank to keep): ")
+        staff_id = input(f"Enter new staff ID (current: {log.staff_id}, leave blank to keep): ")
+        hours = input(f"Enter new hours (current: {log.hours}, leave blank to keep): ")
+        updated = False
+        if student_id:
+            if not student_id.isdigit():
+                print("Error: student_id must be an integer.")
+                return
+            log.student_id = int(student_id)
+            updated = True
+        if staff_id:
+            if not staff_id.isdigit():
+                print("Error: staff_id must be an integer.")
+                return
+            log.staff_id = int(staff_id)
+            updated = True
+        if hours:
+            try:
+                log.hours = float(hours)
+                updated = True
+            except ValueError:
+                print("Error: hours must be a number.")
+                return
+        if updated:
+            db.session.commit()
+            print(f"LoggedHours entry {log_id} updated: {log}")
+        else:
+            print("No changes made.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
