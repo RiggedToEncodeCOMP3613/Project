@@ -94,3 +94,11 @@ def get_staff_by_name(name):
         raise ValueError(f"Staff with name {name} not found.")
     return staff
 
+def delete_staff(staff_id):
+    staff = Staff.query.get(staff_id)
+    if not staff:
+        raise ValueError(f"Staff member with id {staff_id} not found.")
+    db.session.delete(staff)
+    db.session.commit()
+    return True
+

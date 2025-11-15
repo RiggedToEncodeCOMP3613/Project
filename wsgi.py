@@ -400,6 +400,33 @@ def search_staff():
         print(f"An error occurred: {e}")
     print("\n")
 
+# Command to delete a staff member by id (staff_id)
+@staff_cli.command("delete", help="Delete a staff member by ID")
+def delete_staff_command():
+    staff_id = int(input("Enter the staff ID to delete: "))
+    try:
+        delete_staff(staff_id)
+        print(f"Staff member with ID {staff_id} has been deleted.")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Command to delete ALL staff members (for testing purposes)
+@staff_cli.command("deleteAll", help="Delete ALL staff members (testing purposes only)")
+def delete_all_staff_command():
+    confirmation = input("Are you sure you want to delete ALL staff members? This action cannot be undone. (yes/no): ")
+    if confirmation.lower() == 'yes':
+        try:
+            num_deleted = Staff.query.delete()
+            db.session.commit()
+            print(f"All staff members have been deleted. Total deleted: {num_deleted}")
+        except Exception as e:
+            db.session.rollback()
+            print(f"An error occurred: {e}")
+    else:
+        print("Operation cancelled.")
+
 app.cli.add_command(staff_cli) # add the group to the cli
 
 
