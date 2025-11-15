@@ -7,7 +7,7 @@ from App.models import Student
 from App.models import Staff
 from App.models import Request
 from App.main import create_app
-from App.controllers.student_controller import query_router, register_student, get_approved_hours, create_hours_request, fetch_requests, fetch_accolades, generate_leaderboard
+from App.controllers.student_controller import delete_student, query_router, register_student, get_approved_hours, create_hours_request, fetch_requests, fetch_accolades, generate_leaderboard
 from App.controllers.staff_controller import *
 from App.controllers.app_controller import *
 from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize )
@@ -131,6 +131,17 @@ def create_student():
         print(f"An error occurred: {e}")
     print("\n")
 
+#Command to delete a student by id (student_id)
+@student_cli.command("delete", help="Delete a student by ID")
+def delete_student_command():
+    student_id = int(input("Enter the student ID to delete: "))
+    try:
+        delete_student(student_id)
+        print(f"Student with ID {student_id} has been deleted.")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 

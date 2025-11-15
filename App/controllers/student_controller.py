@@ -5,6 +5,15 @@ def register_student(name,email,password):
     new_student=Student.create_student(name,email,password)
     return new_student
 
+def delete_student(student_id): #deletes a student by id
+    student = Student.query.get(student_id)
+    if not student:
+        raise ValueError(f"Student with id {student_id} not found.")
+    
+    db.session.delete(student)
+    db.session.commit()
+    return True
+
 def get_approved_hours(student_id): #calculates and returns the total approved hours for a student
     student = Student.query.get(student_id)
     if not student:
