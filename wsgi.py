@@ -142,6 +142,21 @@ def delete_student_command():
         print(f"Error: {e}")
     except Exception as e:
         print(f"An error occurred: {e}")
+        
+#Command to delete ALL students (for testing purposes)
+@student_cli.command("deleteAll", help="Delete ALL students (testing purposes only)")
+def delete_all_students_command():
+    confirmation = input("Are you sure you want to delete ALL students? This action cannot be undone. (yes/no): ")
+    if confirmation.lower() == 'yes':
+        try:
+            num_deleted = Student.query.delete()
+            db.session.commit()
+            print(f"All students have been deleted. Total deleted: {num_deleted}")
+        except Exception as e:
+            db.session.rollback()
+            print(f"An error occurred: {e}")
+    else:
+        print("Operation cancelled.")
 
 #Command to update a student's information (student_id, name, email password) Use the function in student_controller.py
 @student_cli.command("update", help="Update a student's information")
@@ -369,6 +384,20 @@ def viewLeaderboard():
 
     except Exception as e:
         print(f"An error occurred while generating the leaderboard: {e}")
+    print("\n")
+
+# Command to search staff by field (name, email, or ID)
+@staff_cli.command("search", help="Search for a staff member by name, email, or ID")
+def search_staff():
+    print("\n")
+    try:
+        query = input("Enter staff name, email, or ID: ")
+        staff = query_router(query)  # Assuming a similar query_router exists for staff
+        print(f"Found staff member: {staff}")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
     print("\n")
 
 app.cli.add_command(staff_cli) # add the group to the cli
