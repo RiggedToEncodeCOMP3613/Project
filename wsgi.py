@@ -7,7 +7,7 @@ from App.models import Student
 from App.models import Staff
 from App.models import Request
 from App.main import create_app
-from App.controllers.student_controller import delete_student, query_router, register_student, get_approved_hours, create_hours_request, fetch_requests, fetch_accolades, generate_leaderboard
+from App.controllers.student_controller import delete_student, query_router, register_student, get_approved_hours, create_hours_request, fetch_requests, fetch_accolades, generate_leaderboard, update_student_info
 from App.controllers.staff_controller import *
 from App.controllers.app_controller import *
 from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize )
@@ -143,6 +143,23 @@ def delete_student_command():
     except Exception as e:
         print(f"An error occurred: {e}")
 
+#Command to update a student's information (student_id, name, email password) Use the function in student_controller.py
+@student_cli.command("update", help="Update a student's information")
+def update_student_command():
+    print("\n")
+    try:
+        student_id = int(input("Enter the student ID to update: "))
+        name = input("Enter new name (leave blank to keep current): ")
+        email = input("Enter new email (leave blank to keep current): ")
+        password = input("Enter new password (leave blank to keep current): ")
+
+        updated_student = update_student_info(student_id, name if name else None, email if email else None, password if password else None)
+        print(f"Updated student: {updated_student}")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
 
 
 #Command for student to request hour confirmation (student_id, hours)

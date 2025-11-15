@@ -89,3 +89,18 @@ def query_router(string): #The user will enter a string, and this function will 
         return get_student_by_id(int(string))
     else:
         return get_student_by_name(string)
+    
+def update_student_info(student_id, name=None, email=None, password=None):
+    student = Student.query.get(student_id)
+    if not student:
+        raise ValueError(f"Student with id {student_id} not found.")
+    
+    if name:
+        student.username = name
+    if email:
+        student.email = email
+    if password:
+        student.set_password(password)
+    
+    db.session.commit()
+    return student
