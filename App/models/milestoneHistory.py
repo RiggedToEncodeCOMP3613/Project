@@ -6,7 +6,7 @@ class MilestoneHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     activity_id = db.Column(db.Integer, db.ForeignKey('activity_history.id'), nullable=False)
 
-    milestone_id = db.Column(db.Integer, db.ForeignKey('accolade.accolade_id'), nullable=False)
+    milestone_id = db.Column(db.Integer, db.ForeignKey('milestone.id'), nullable=False)
     student_id = db.Column(db.Integer, db.ForeignKey('student.student_id'), nullable=False)
     value = db.Column(db.Integer, nullable=False)
     timestamp = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

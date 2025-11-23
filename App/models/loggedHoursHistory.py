@@ -22,8 +22,8 @@ class LoggedHoursHistory(db.Model):
         self.service = service
         self.hours = hours
         student = Student.query.get(self.student_id)
-        self.before = student.hours
-        self.after = student.hours + after
+        self.before = student.total_hours
+        self.after = student.total_hours + after
         self.date_completed = date_completed
 
     def __repr__(self):

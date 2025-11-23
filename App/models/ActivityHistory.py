@@ -1,10 +1,10 @@
-from database import db
+from App.database import db
 from datetime import datetime
 
 class ActivityHistory(db.Model): 
     __tablename__ = 'activity_history'
     id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('student.student_id'), nullable=False)
     
     requests = db.relationship('RequestHistory', backref='activity', lazy=True, cascade="all, delete-orphan")
     loggedhours = db.relationship('LoggedHoursHistory', backref='activity', lazy=True, cascade="all, delete-orphan")

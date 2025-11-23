@@ -6,7 +6,7 @@ class AccoladeHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     activity_id = db.Column(db.Integer, db.ForeignKey('activity_history.id'), nullable=False)
 
-    accolade_id = db.Column(db.Integer, db.ForeignKey('accolade.accolade_id'), nullable=False)
+    accolade_id = db.Column(db.Integer, db.ForeignKey('accolade.id'), nullable=False)
     student_id = db.Column(db.Integer, db.ForeignKey('student.student_id'), nullable=False)
     staff_id = db.Column(db.Integer, db.ForeignKey('staff.staff_id'), nullable=True)
     description = db.Column(db.String(255), nullable=False)

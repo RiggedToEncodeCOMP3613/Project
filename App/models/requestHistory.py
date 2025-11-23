@@ -22,11 +22,12 @@ class RequestHistory(db.Model):
         self.service = service
         self.hours = hours
         self.date_completed = parse_date(date_completed)
+        self.status = 'pending'
         self.date_responded = None
 
     
     def __repr__(self):
-        return f'<Request ID: {self.id} | Student ID: {self.student_id} |  Staff ID: {self.staff_id} | Service: {self.service} | Hours: {self.duration} |  Date Completed: {self.date_completed} | Status: {self.status} | Date Resolved: {self.date_responded} |  Date Request Was Made: {self.timestamp}>'
+        return f'<Request ID: {self.id} | Student ID: {self.student_id} |  Staff ID: {self.staff_id} | Service: {self.service} | Hours: {self.hours} |  Date Completed: {self.date_completed} | Status: {self.status} | Date Resolved: {self.date_responded} |  Date Request Was Made: {self.timestamp}>'
        
     
     def get_json(self):
