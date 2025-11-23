@@ -2,8 +2,10 @@ from .user import *
 from .student import Student
 from .staff import Staff
 from .ActivityHistory import ActivityHistory
-from .request import Request
-from .loggedhours import LoggedHours
+from .requestHistory import RequestHistory
+from .loggedHoursHistory import LoggedHoursHistory
+from .accoladeHistory import AccoladeHistory
+from .milestoneHistory import MilestoneHistory
 from .controller import Controller
 from .milestone import Milestone
 from .accolade import Accolade
