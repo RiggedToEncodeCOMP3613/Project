@@ -1,9 +1,12 @@
 from App.database import db
 from .user import User
-from App.models import RequestHistory
-from App.models import Accolade
-from App.models import AccoladeHistory
-from App.models import LoggedHoursHistory
+from App.models.requestHistory import RequestHistory
+from App.models.accolade import Accolade
+from App.models.accoladeHistory import AccoladeHistory
+from App.models.loggedHoursHistory import LoggedHoursHistory
+from datetime import datetime, timezone
+from App.models.student import Student
+from App.models.ActivityHistory import ActivityHistory
 
 class Staff(User):
     __tablename__ = "staff"
@@ -40,38 +43,64 @@ class Staff(User):
         db.session.commit()
         return newstaff
     
-    def log_hours(self, student_id, hours):
-        # need LoggedHoursHistory entry
-        pass
+    # Create a LoggedHoursHistory entry for hours worked by a student
+    def log_hours(self, service, student_id, hours, date_completed):
+        # Create activity history record
+        activity = ActivityHistory(student_id=student_id)
+        db.session.add(activity)
+        db.session.flush()  # Flush to get the activity ID without committing
+        
+        logged = LoggedHoursHistory(
+            student_id=student_id,
+            staff_id=self.staff_id,
+            service=service,
+            hours=hours,
+            before=0,  # Will be set in LoggedHoursHistory.__init__
+            after=0,   # Will be set in LoggedHoursHistory.__init__
+            date_completed=date_completed
+        )
+        logged.activity_id = activity.id
+        db.session.add(logged)
+        db.session.commit()
+        
+        # Update student's total hours
+        student = Student.query.get(student_id)
+        if student:
+            student.calculate_total_hours()
+        
+        return logged
     
+    # Get all pending requests awaiting staff approval
     def get_pending_requests(self):
         pending = RequestHistory.query.filter_by(status='pending').all()
         return pending
     
-
-######## Need History classes implemented to complete below methods #######
-    def approve_request(self, requestHistory):
-        if requestHistory.status != 'pending':
+    # Approve a pending request and create a LoggedHoursHistory entry
+    def approve_request(self, request):
+        if request.status != 'Pending':
             return None
-        requestHistory.status = 'approved'
-        requestHistory.reviewed_by_id = self.staff_id
         
-        # Create a LoggedHoursHistory entry
-        logged = LoggedHoursHistory(
-            student_id=requestHistory.student_id, 
-            staff_id=self.staff_id, 
-            hours=requestHistory.hours, 
-            status='approved'
-        )
-        db.session.add(logged)
+        # Update request status
+        request.status = 'approved'
+        request.date_responded = datetime.now(timezone.utc)
         db.session.commit()
+        
+        # Create a LoggedHoursHistory entry from the approved request
+        logged = self.log_hours(
+            service=request.service,
+            student_id=request.student_id,
+            hours=request.hours,
+            date_completed=request.date_completed
+        )
+        
         return logged
     
+    # Deny a pending request
     def deny_request(self, request):
         if request.status != 'pending':
             return False
         request.status = 'denied'
-        request.reviewed_by_id = self.staff_id
+        request.date_responded = datetime.now(timezone.utc)
         db.session.commit()
         return True
     
@@ -81,8 +110,28 @@ class Staff(User):
         db.session.commit()
         return accolade
     
+    # Award an accolade to a student, creating an AccoladeHistory entry
     def award_accolade(self, student_id, accolade_id):
-        # student > accolade > accoladehistory
-        pass
+        accolade = Accolade.query.get(accolade_id)
+        if not accolade:
+            return None
+        
+        # Create activity history record
+        activity = ActivityHistory(student_id=student_id)
+        db.session.add(activity)
+        db.session.flush()  # Flush to get the activity ID without committing
+        
+        # Create AccoladeHistory entry
+        accolade_history = AccoladeHistory(
+            accolade_id=accolade_id,
+            student_id=student_id,
+            staff_id=self.staff_id,
+            description=accolade.description
+        )
+        accolade_history.activity_id = activity.id
+        db.session.add(accolade_history)
+        db.session.commit()
+        
+        return accolade_history
 
 
