@@ -34,7 +34,7 @@ class Milestone(db.Model):
     def add_student(self, student_id):
         from App.models import Student
         student = Student.query.get(student_id)
-        if student and self not in student.milestones:
-            student.milestones.append(self)
+        if student and self not in student.achieved_milestones:
+            student.achieved_milestones.append(self)
             db.session.commit()
         return student
