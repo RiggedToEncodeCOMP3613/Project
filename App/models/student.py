@@ -1,7 +1,11 @@
 from App.database import db
+from App.models.milestoneHistory import MilestoneHistory
 from .user import User
 from App.models.milestone import Milestone
 from App.models.accolade import Accolade
+from App.models.requestHistory import RequestHistory
+from App.models.loggedHoursHistory import LoggedHoursHistory
+from App.models.ActivityHistory import ActivityHistory
 
 class Student(User):
 
@@ -42,12 +46,42 @@ class Student(User):
         db.session.commit()
         return newstudent
     
+    # Create a request for hours to be logged
+    def make_request(self, service, staff_id, hours, date_completed):
+
+        # Create activity history record
+        activity = ActivityHistory(student_id=self.student_id)
+        db.session.add(activity)
+        db.session.flush()  # Flush to get the activity ID without committing
+        
+        # Create request linked to activity
+        request = RequestHistory(
+            student_id=self.student_id,
+            staff_id=staff_id,
+            service=service,
+            hours=hours,
+            date_completed=date_completed
+        )
+        request.activity_id = activity.id
+        request.status = 'pending'
+        db.session.add(request)
+        db.session.commit()
+        return request
+    
+    # Calculate total hours earned by the student from all logged hours history and update total_hours attribute
     def calculate_total_hours(self):
-        # Need LoggedHoursHistory model
+        total = 0.0
+        logged_hours = LoggedHoursHistory.query.filter_by(student_id=self.student_id).all()
+        for log in logged_hours:
+            total += log.hours
+        self.total_hours = total
+        db.session.commit()
+        self.calculate_rank()
+        self.calculate_milestones()
         return self.total_hours
     
+    # Calculate the student's rank based on total hours compared to all other students
     def calculate_rank(self):
-        self.calculate_total_hours()
         all_students = Student.query.order_by(Student.total_hours.desc()).all()
         for idx, student in enumerate(all_students, start=1):
             if student.student_id == self.student_id:
@@ -56,20 +90,48 @@ class Student(User):
                 return self.rank
         return None
     
+    # Check if student has unlocked new milestones based on total hours
+    def calculate_new_milestones(self):
+        all_milestones = Milestone.query.order_by(Milestone.milestone).all()
+        for milestone in all_milestones:
+            if self.total_hours >= milestone.milestone:
+                existing = MilestoneHistory.query.filter_by(
+                    milestone_id=milestone.id,
+                    student_id=self.student_id
+                ).first()
+                
+                # If milestone hasn't been recorded yet, create a history entry
+                if not existing:
+                    # Create activity history record
+                    activity = ActivityHistory(student_id=self.student_id)
+                    db.session.add(activity)
+                    db.session.flush()  # Flush to get the activity ID
+                    
+                    # Create milestone history entry
+                    milestone_history = MilestoneHistory(
+                        milestone_id=milestone.id,
+                        student_id=self.student_id,
+                        value=milestone.milestone
+                    )
+                    milestone_history.activity_id = activity.id
+                    db.session.add(milestone_history)
+                    db.session.commit()
+    
+    # Return a list of accolades that this student has earned
     def check_accolades(self):
         try:
-            return Accolade.query.filter(Accolade.students.any(student_id=self.student_id)).all()
+            return Accolade.query.filter(Accolade.students.any(Student.student_id == self.student_id)).all()
         except Exception:
-            return [a for a in Accolade.query.all() if any(getattr(s, 'student_id', None) == self.student_id for s in a.students)]
+            # Fallback: manually filter accolades
+            return [a for a in Accolade.query.all() if self in a.students]
     
+    # Return a list of milestones that this student has earned
     def check_for_milestones(self):
         try:
-            return Milestone.query.filter(Milestone.students.any(student_id=self.student_id)).all()
+            return Milestone.query.filter(Milestone.students.any(Student.student_id == self.student_id)).all()
         except Exception:
-            return [m for m in Milestone.query.all() if any(getattr(s, 'student_id', None) == self.student_id for s in m.students)]
+            # Fallback: manually filter milestones
+            return [m for m in Milestone.query.all() if self in m.students]
     
-    def make_request(self, hours):
-        # need RequestHistory model
-        pass
 
 
