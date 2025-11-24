@@ -2,6 +2,7 @@ import click, pytest, sys
 from datetime import datetime
 from flask.cli import with_appcontext, AppGroup
 
+from App.controllers.loggedHoursHistory import search_logged_hours
 from App.database import db, get_migrate
 from App.models import User
 from App.models import Student
@@ -536,46 +537,30 @@ def delete_all_logged_hours_command():
         print("Operation cancelled.")
 
 # Command to search logged hours by student-id, staff-id, or date
-@app.cli.command("searchLoggedHours", help="Search logged hours by student-id, staff-id, or date")
-@click.argument("search_type")
-@click.argument("value")
-def search_logged_hours_command(search_type, value):
+@app.cli.command("searchLoggedHours", help="Search logged hours by student-id, staff-id, date or service string")
+@click.argument("query")
+def search_logged_hours_command(query):
+    #Automatically detect input type
     print("\n")
+    if query.isdigit() and query.startswith("8160"):  # Example student ID format
+        search_type = "student_id"
+    elif query.isdigit() and query.startswith("5000"):  # !Example staff ID format not correct
+        search_type = "staff_id"
+    else:
+        try:
+            # Try to parse the query as a date range
+            datetime.strptime(query, "%Y-%m-%d") # ! This is not fully correct, needs tuple unpacking
+            search_type = "date"
+        except ValueError:
+            search_type = "service" # If not date or id, assume service string
     try:
-        results = []
-        if search_type == "student-id":
-            if not value.isdigit():
-                print("Error: student-id must be an integer.")
-                return
-            results = LoggedHoursHistory.query.filter_by(student_id=int(value)).all()
-        elif search_type == "staff-id":
-            if not value.isdigit():
-                print("Error: staff-id must be an integer.")
-                return
-            results = LoggedHoursHistory.query.filter_by(staff_id=int(value)).all()
-        elif search_type == "date":
-            from datetime import datetime
-            try:
-                date_obj = datetime.strptime(value, "%Y-%m-%d")
-            except ValueError:
-                print("Invalid date format. Use YYYY-MM-DD.")
-                return
-            results = LoggedHoursHistory.query.filter(db.func.date(LoggedHoursHistory.timestamp) == date_obj.date()).all()
-        else:
-            print("Invalid search type. Use 'student-id', 'staff-id', or 'date'.")
-            return
-        # Enforce type checking on results
-        if not isinstance(results, list) or not all(isinstance(log, LoggedHoursHistory) for log in results):
-            print("Error: Results are not valid LoggedHoursHistory objects.")
-            return
+        results = search_logged_hours(query, search_type)
         if not results:
-            print("No logged hours found for the given criteria.")
-        else:
-            for log in results:
-                print(log)
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    print("\n")
+            print(f"No logged hours entries found for {search_type} '{query}'.")
+            return
+        print(f"Logged hours entries for {search_type} '{query}':")
+        for log in results:
+            print(log)
 
 # Command to update a logged hours entry by ID
 @app.cli.command("updateLoggedHours", help="Update a logged hours entry by ID")
