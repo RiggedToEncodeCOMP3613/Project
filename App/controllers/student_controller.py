@@ -82,13 +82,28 @@ def get_student_by_name(name):
         raise ValueError(f"Student with name {name} not found.")
     return student
 
-def query_router(string): #The user will enter a string, and this function will determine if it's an email or an id or a name and call the appropriate function
+def get_student_by_rank(rank):
+    student = Student.query.filter_by(rank=rank).first()
+    if not student:
+        raise ValueError(f"Student with rank {rank} not found.")
+    return student
+
+def query_router(string):
+    # email check
     if "@" in string and "." in string:
         return get_student_by_email(string)
-    elif string.isdigit():
+
+    # ID check using new constraints
+    if string.isdigit() and len(string) == 9 and string.startswith("8160"): # assuming student IDs follow this pattern with the future update to ID system (9 digits starting with 8160) this does NOT work at the time of writing
         return get_student_by_id(int(string))
-    else:
-        return get_student_by_name(string)
+
+    # rank check — but be careful, rank is NOT guaranteed to be unique
+    if string.isdigit():
+        return get_student_by_rank(int(string))
+
+    # fallback: treat as name
+    return get_student_by_name(string)
+
     
 def update_student_info(student_id, name=None, email=None, password=None):
     student = Student.query.get(student_id)
