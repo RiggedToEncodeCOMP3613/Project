@@ -500,11 +500,12 @@ app.cli.add_command(test)
 @click.argument("staff_id", type=int)
 @click.argument("hours", type=float)
 @click.option("--status", default="approved", help="Status for the logged hours (default: approved)")
+@click.option("--service", default=None, help="Service description for the logged hours (optional)")
 @click.option("--timestamp", default=datetime.utcnow(), help="Timestamp for the logged hours (optional, format: YYYY-MM-DD HH:MM:SS)")
-def create_logged_hours_command(student_id, staff_id, hours, status, timestamp):
+def create_logged_hours_command(student_id, staff_id, hours, status, service, timestamp):
     print("\n")
     try:
-        log = create_logged_hours(student_id, staff_id, hours, status, timestamp)
+        log = create_logged_hours(student_id, staff_id, hours, status, service, timestamp)
         print(f"Created logged hours entry: {log}")
     except Exception as e:
         print(f"An error occurred: {e}")
