@@ -146,7 +146,7 @@ def delete_student_command():
 #Command to delete ALL students (for testing purposes)
 @student_cli.command("deleteAll", help="Delete ALL students (testing purposes only)")
 def delete_all_students_command():
-    confirmation = input("Are you sure you want to delete ALL students? This action cannot be undone. (yes/no): ")
+    confirmation = input("\033[91m\033[5m⚠️  Are you sure you want to delete ALL students? This action cannot be undone. (yes/no): ⚠️\033[0m ")
     if confirmation.lower() == 'yes':
         try:
             print("Nuking all students... 💣")
@@ -420,7 +420,7 @@ def delete_staff_command():
 # Command to delete ALL staff members (for testing purposes)
 @staff_cli.command("deleteAll", help="Delete ALL staff members (testing purposes only)")
 def delete_all_staff_command():
-    confirmation = input("Are you sure you want to delete ALL staff members? This action cannot be undone. (yes/no): ")
+     confirmation = input("\033[91m\033[5m⚠️  Are you sure you want to delete ALL staff members? This action cannot be undone. (yes/no): ⚠️\033[0m ")
     if confirmation.lower() == 'yes':
         try:
             print("Nuking all staff members... 💣")
