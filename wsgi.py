@@ -229,6 +229,34 @@ def create_staff():
     print("\n")
 
 
+#Command to the update staff member's attributes (username, email, password)
+@staff_cli.command("update", help="Update a staff member's attributes via options")
+@click.option("--staff_id", required=True, type=int, help="ID of the staff member to update.")
+@click.option("--username", default=None, help="New username for the staff member.")
+@click.option("--email", default=None, help="New email for the staff member.")
+@click.option("--password", default=None, help="New password for the staff member.")
+@with_appcontext
+def update_staff_command(staff_id, username, email, password):
+    
+    if not username and not email and not password:
+        click.echo("Error: At least one attribute (--username, --email, or --password) must be provided.")
+        return
+    
+    try:
+        staff = update_staff(staff_id, username, email, password)
+        
+        if staff:
+            click.echo(f"Successfully updated Staff ID {staff.staff_id}: {staff.username}")
+        else:
+            click.echo(f"Error: Staff with ID {staff_id} not found.")
+
+    except ValueError as e:
+        click.echo(f"Update failed: {e}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"An unexpected error occurred during update: {e}", err=True)
+        sys.exit(1)
+        
 #Command for staff to view all pending requests
 @staff_cli.command("requests", help="View all pending hour requests")
 def requests():

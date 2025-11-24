@@ -1,12 +1,42 @@
 from App.database import db
 from App.models import User, Staff, Student, RequestHistory
 
+__all__ = ['register_staff', 'update_staff', 'fetch_all_requests', 'process_request_approval', 'process_request_denial', 'get_all_staff_json']
+
 def register_staff(name,email,password): #registers a new staff member
     new_staff = Staff.create_staff(name, email, password)
     return new_staff
 
+def update_staff(staff_id, username=None, email=None, password=None):
+    """
+    Updates a staff member's attributes by their ID.
+    Finds the staff member, updates the provided fields,
+    and commits the changes to the database.
+    """
+    staff = Staff.query.get(staff_id)
+    
+    if not staff:
+        return None
+    
+    # Update attributes only if they are provided
+    if username:
+        staff.username = username
+    
+    if email:
+        if "@" not in email:
+            raise ValueError("Invalid email address.")
+        staff.email = email
+    
+    if password:
+        staff.set_password(password)
+    
+    db.session.add(staff)
+    db.session.commit()
+    
+    return staff
+
 def fetch_all_requests(): #fetches all pending requests for staff to review
-    pending_requests = Request.query.filter_by(status='pending').all()
+    pending_requests = RequestHistory.query.filter_by(status='pending').all()
     if not pending_requests:
         return []
     
@@ -29,7 +59,7 @@ def process_request_approval(staff_id, request_id): #staff approves a student's 
     if not staff:
         raise ValueError(f"Staff with id {staff_id} not found.")
     
-    request = Request.query.get(request_id)
+    request = RequestHistory.query.get(request_id)
     if not request:
         raise ValueError(f"Request with id {request_id} not found.")
     
@@ -49,7 +79,7 @@ def process_request_denial(staff_id, request_id): #staff denies a student's hour
     if not staff:
         raise ValueError(f"Staff with id {staff_id} not found.")
     
-    request = Request.query.get(request_id)
+    request = RequestHistory.query.get(request_id)
     if not request:
         raise ValueError(f"Request with id {request_id} not found.")
     
