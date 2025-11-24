@@ -85,10 +85,10 @@ student_cli = AppGroup('student', help='Student object commands')
 
 # Command to search students by field (name, email, or ID)
 @student_cli.command("search", help="Search for a student by name, email, or ID")
-def search_student():
+@click.argument("query")
+def search_student(query):
     print("\n")
     try:
-        query = input("Enter student name, email, or ID: ")
         student = query_router(query)
         print(f"Found student: {student}")
     except ValueError as e:
@@ -393,11 +393,11 @@ def viewLeaderboard():
 
 # Command to search staff by field (name, email, or ID)
 @staff_cli.command("search", help="Search for a staff member by name, email, or ID")
-def search_staff():
+@click.argument("query")
+def search_staff(query):
     print("\n")
     try:
-        query = input("Enter staff name, email, or ID: ")
-        staff = query_router(query)  # Assuming a similar query_router exists for staff
+        staff = staff_query_router(query)
         print(f"Found staff member: {staff}")
     except ValueError as e:
         print(f"Error: {e}")
