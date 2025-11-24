@@ -102,3 +102,16 @@ def delete_staff(staff_id):
     db.session.commit()
     return True
 
+def update_staff_info(staff_id, name=None, email=None, password=None):
+    staff = Staff.query.get(staff_id)
+    if not staff:
+        raise ValueError(f"Staff with id {staff_id} not found.")
+    if name:
+        staff.username = name
+    if email:
+        staff.email = email
+    if password:
+        staff.set_password(password)
+    db.session.commit()
+    return staff
+

@@ -158,17 +158,21 @@ def delete_all_students_command():
     else:
         print("Operation cancelled.")
 
-#Command to update a student's information (student_id, name, email password) Use the function in student_controller.py
+#Command to update a student's information (student_id, name, email, password) via CLI options
 @student_cli.command("update", help="Update a student's information")
-def update_student_command():
+@click.argument("student_id", type=int)
+@click.option("--name", default=None, help="New name for the student")
+@click.option("--email", default=None, help="New email for the student")
+@click.option("--password", default=None, help="New password for the student")
+def update_student_command(student_id, name, email, password):
     print("\n")
     try:
-        student_id = int(input("Enter the student ID to update: "))
-        name = input("Enter new name (leave blank to keep current): ")
-        email = input("Enter new email (leave blank to keep current): ")
-        password = input("Enter new password (leave blank to keep current): ")
-
-        updated_student = update_student_info(student_id, name if name else None, email if email else None, password if password else None)
+        updated_student = update_student_info(
+            student_id,
+            name if name else None,
+            email if email else None,
+            password if password else None
+        )
         print(f"Updated student: {updated_student}")
     except ValueError as e:
         print(f"Error: {e}")
@@ -426,6 +430,28 @@ def delete_all_staff_command():
             print(f"An error occurred: {e}")
     else:
         print("Operation cancelled.")
+
+# Command to update a staff member's information (staff_id, name, email, password) via CLI options
+@staff_cli.command("update", help="Update a staff member's information")
+@click.argument("staff_id", type=int)
+@click.option("--name", default=None, help="New name for the staff member")
+@click.option("--email", default=None, help="New email for the staff member")
+@click.option("--password", default=None, help="New password for the staff member")
+def update_staff_command(staff_id, name, email, password):
+    print("\n")
+    try:
+        updated_staff = update_staff_info(
+            staff_id,
+            name if name else None,
+            email if email else None,
+            password if password else None
+        )
+        print(f"Updated staff member: {updated_staff}")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
 
 app.cli.add_command(staff_cli) # add the group to the cli
 
