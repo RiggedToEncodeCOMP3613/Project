@@ -53,6 +53,7 @@ Intended users: administrators, staff reviewers, and students at educational ins
 | `flask staff approveRequest` | Approve a student’s request (enter staff ID + request ID) → logs hours |
 | `flask staff denyRequest` | Deny a student’s request (enter staff ID + request ID) |
 | `flask staff viewLeaderboard` | View leaderboard of students ranked by approved hours |
+| `flask staff viewLeaderboard` | Update a staff member's attributes via options (--username, --email, and/or --password) |
 
 ---
 

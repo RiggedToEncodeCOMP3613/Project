@@ -106,6 +106,8 @@ def create_student():
     try:
         name = input("Enter student name: ")
         email = input("Enter student email: ")
+        if "@" not in email:
+            raise ValueError("Invalid email address.")
         password = input("Enter student password: ")    
         student = register_student(name, email, password)
 
@@ -219,6 +221,8 @@ def create_staff():
     try:
         name = input("Enter staff name: ")
         email = input("Enter staff email: ")
+        if "@" not in email:
+            raise ValueError("Invalid email address.")
         password = input("Enter staff password: ")  
         staff = register_staff(name, email, password)
 
@@ -227,7 +231,6 @@ def create_staff():
     except Exception as e:
         print(f"An error occurred: {e}")
     print("\n")
-
 
 #Command to the update staff member's attributes (username, email, password)
 @staff_cli.command("update", help="Update a staff member's attributes via options")
