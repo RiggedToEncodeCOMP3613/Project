@@ -1,6 +1,5 @@
 from App.database import db
 from datetime import datetime, timezone
-from App.models import Student
 
 class LoggedHoursHistory(db.Model):
     __tablename__ = 'loggedhours_history'
@@ -21,9 +20,11 @@ class LoggedHoursHistory(db.Model):
         self.staff_id = staff_id
         self.service = service
         self.hours = hours
+        # Import Student locally to avoid circular imports
+        from App.models.student import Student
         student = Student.query.get(self.student_id)
-        self.before = student.total_hours
-        self.after = student.total_hours + after
+        self.before = student.total_hours if student else 0.0
+        self.after = (student.total_hours if student else 0.0) + after
         self.date_completed = date_completed
 
     def __repr__(self):

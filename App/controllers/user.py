@@ -1,4 +1,4 @@
-from App.models import User,Request,LoggedHours
+from App.models import User
 from App.database import db
 
 def create_user(username, password, email):
@@ -48,16 +48,18 @@ def view_leaderboard():
     return leaderboard
 
 def get_all_requests_json():
+    from App.models.requestHistory import RequestHistory
     
-    requests = Request.query.all()
+    requests = RequestHistory.query.all()
     if not requests:
         return []
     requests = [req.get_json() for req in requests]
     return requests
 
 def get_all_logged_hours_json():
+    from App.models.loggedHoursHistory import LoggedHoursHistory
     
-    logs = LoggedHours.query.all()
+    logs = LoggedHoursHistory.query.all()
     if not logs:
         return []
     logs = [log.get_json() for log in logs]

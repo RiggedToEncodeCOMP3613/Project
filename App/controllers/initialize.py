@@ -1,4 +1,3 @@
-from App.models import User, Student, Staff, Request
 from App.database import db
 
 
@@ -10,6 +9,10 @@ def initialize_db(drop_first=True):
 
     Returns a dict with lists of created record IDs.
     """
+    # Import models here to avoid circular imports
+    from App.models import Student, Staff, RequestHistory, LoggedHoursHistory, ActivityHistory
+    from datetime import datetime, timezone
+    
     if drop_first:
         db.drop_all()
     db.create_all()
@@ -47,23 +50,52 @@ def initialize_db(drop_first=True):
     # Create 4 requests for first 4 students
     import random
     requests = []
+    request_date = datetime.now(timezone.utc)
+    
     for i in range(4):
         student = students[i]
+        staff_member = staff_members[i % len(staff_members)]
         hours = random.choice([5, 10, 12.5, 8])
-        req = Request(student_id=student.user_id, hours=hours, status='pending')
+        
+        # Create activity history record
+        activity = ActivityHistory(student_id=student.user_id)
+        db.session.add(activity)
+        db.session.flush()  # Get the activity ID
+        
+        # Create request linked to activity
+        req = RequestHistory(
+            student_id=student.user_id,
+            staff_id=staff_member.user_id,
+            service="volunteer",
+            hours=hours,
+            date_completed=request_date
+        )
+        req.activity_id = activity.id
         requests.append(req)
         db.session.add(req)
 
     db.session.commit()
 
-    # Add logged hours
-    from App.models import LoggedHours
-
-    # Approve first two requests and create logged entries
+    # Approve first two requests and create logged hours entries
     for i, req in enumerate(requests[:2]):
         req.status = 'approved'
         staff_member = staff_members[i % len(staff_members)]
-        log = LoggedHours(student_id=req.student_id, staff_id=staff_member.user_id, hours=req.hours, status='approved')
+        
+        # Create activity history for logged hours
+        activity = ActivityHistory(student_id=req.student_id)
+        db.session.add(activity)
+        db.session.flush()
+        
+        log = LoggedHoursHistory(
+            student_id=req.student_id,
+            staff_id=staff_member.user_id,
+            service="volunteer",
+            hours=req.hours,
+            before=0.0,
+            after=req.hours,
+            date_completed=request_date
+        )
+        log.activity_id = activity.id
         db.session.add(log)
 
     # Deny the third request (if present)
@@ -72,14 +104,28 @@ def initialize_db(drop_first=True):
 
     # Leave the fourth request pending
 
-    # Add 3 extra logged hours entries (to reach 6 total logged hours)
-    extra_logs = [
+    db.session.commit()
+
+    # Add 3 extra logged hours entries
+    for idx, (student_id, staff_id, hours_val, status) in enumerate([
         (students[0].user_id, staff_members[0].user_id, 3.5, 'approved'),
         (students[1].user_id, staff_members[1].user_id, 7.0, 'approved'),
         (students[2].user_id, staff_members[2].user_id, 4.0, 'approved'),
-    ]
-    for student_id, staff_id, hours, status in extra_logs:
-        log = LoggedHours(student_id=student_id, staff_id=staff_id, hours=hours, status=status)
+    ]):
+        activity = ActivityHistory(student_id=student_id)
+        db.session.add(activity)
+        db.session.flush()
+        
+        log = LoggedHoursHistory(
+            student_id=student_id,
+            staff_id=staff_id,
+            service="volunteer",
+            hours=hours_val,
+            before=0.0,
+            after=hours_val,
+            date_completed=request_date
+        )
+        log.activity_id = activity.id
         db.session.add(log)
 
     db.session.commit()
@@ -88,8 +134,8 @@ def initialize_db(drop_first=True):
     result = {
         'students': [s.user_id for s in students],
         'staff': [st.user_id for st in staff_members],
-        'requests': [r.id for r in Request.query.order_by(Request.id).all()],
-        'logged_hours': [l.id for l in LoggedHours.query.order_by(LoggedHours.id).all()]
+        'requests': [r.id for r in RequestHistory.query.order_by(RequestHistory.id).all()],
+        'logged_hours': [l.id for l in LoggedHoursHistory.query.order_by(LoggedHoursHistory.id).all()]
     }
 
     return result

@@ -3,11 +3,11 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from App.main import create_app
 from App.database import db, create_db
-from App.models import User, Student, Request, Staff, LoggedHours
+from App.models import User, Student, RequestHistory, Staff, LoggedHoursHistory
 from App.models import User
 from App.models import Staff
 from App.models import Student
-from App.models import Request
+from App.models import RequestHistory
 from App.controllers import (
     create_user,
     get_all_users_json,
@@ -100,19 +100,24 @@ class StudentUnitTests(unittest.TestCase):
 class RequestUnitTests(unittest.TestCase):
 
     def test_init_request(self):
-        Testrequest = Request(student_id=12, hours=30, status='pending')
+        from App.models import RequestHistory
+        from datetime import datetime, timezone
+        Testrequest = RequestHistory(student_id=12, staff_id=1, service="volunteer", hours=30, date_completed=datetime.now(timezone.utc))
         self.assertEqual(Testrequest.student_id, 12)
         self.assertEqual(Testrequest.hours, 30)
         self.assertEqual(Testrequest.status, 'pending')
 
     def test_repr_request(self):
-        Testrequest = Request(student_id=4, hours=40, status='denied')
+        from App.models import RequestHistory
+        from datetime import datetime, timezone
+        Testrequest = RequestHistory(student_id=4, staff_id=1, service="volunteer", hours=40, date_completed=datetime.now(timezone.utc))
+        Testrequest.status = 'denied'
         rep = repr(Testrequest)
         # Check all parts of the string representation
-        self.assertIn("RequestID=", rep)
-        self.assertIn("StudentID=", rep)
-        self.assertIn("Hours=", rep)
-        self.assertIn("Status=", rep)
+        self.assertIn("Request ID:", rep)
+        self.assertIn("Student ID:", rep)
+        self.assertIn("Hours:", rep)
+        self.assertIn("Status:", rep)
         self.assertIn("4", rep)
         self.assertIn("40", rep)
         self.assertIn("denied", rep)
@@ -120,19 +125,18 @@ class RequestUnitTests(unittest.TestCase):
 class LoggedHoursUnitTests(unittest.TestCase):
 
     def test_init_loggedhours(self):
-        from App.models import LoggedHours
-        Testlogged = LoggedHours(student_id=1, staff_id=2, hours=20, status='approved')
+        from App.models import LoggedHoursHistory
+        Testlogged = LoggedHoursHistory(student_id=1, staff_id=2, service="volunteer", hours=20, before=0.0, after=20.0, date_completed="2025-01-01")
         self.assertEqual(Testlogged.student_id, 1)
         self.assertEqual(Testlogged.staff_id, 2)
         self.assertEqual(Testlogged.hours, 20)
-        self.assertEqual(Testlogged.status, 'approved')
 
     def test_repr_loggedhours(self):
-        from App.models import LoggedHours
-        Testlogged = LoggedHours(student_id=1, staff_id=2, hours=20, status='approved')
+        from App.models import LoggedHoursHistory
+        Testlogged = LoggedHoursHistory(student_id=1, staff_id=2, service="volunteer", hours=20, before=0.0, after=20.0, date_completed="2025-01-01")
         rep = repr(Testlogged)
         # Check all parts of the string representation
-        self.assertIn("Log ID=", rep)
+        self.assertIn("LoggedHoursHistory ID:", rep)
         self.assertIn("StudentID =", rep)
         self.assertIn("Approved By (StaffID)=", rep)
         self.assertIn("Hours Approved=", rep)
@@ -172,8 +176,14 @@ class StaffIntegrationTests(unittest.TestCase):
 
     def test_request_fetch(self):
         # create a student and a pending request
+        from App.models import RequestHistory, ActivityHistory
+        from datetime import datetime, timezone
         student = Student.create_student("tariq", "tariq@example.com", "studpass")
-        req = Request(student_id=student.student_id, hours=3.5, status='pending')
+        activity = ActivityHistory(student_id=student.student_id)
+        db.session.add(activity)
+        db.session.flush()
+        req = RequestHistory(student_id=student.student_id, staff_id=1, service="volunteer", hours=3.5, date_completed=datetime.now(timezone.utc))
+        req.activity_id = activity.id
         db.session.add(req)
         db.session.commit()
 
@@ -183,9 +193,15 @@ class StaffIntegrationTests(unittest.TestCase):
 
     def test_hours_approval(self):
         # prepare staff, student and request
+        from App.models import RequestHistory, ActivityHistory
+        from datetime import datetime, timezone
         staff = register_staff("carmichael", "carm@example.com", "staffpass")
         student = Student.create_student("niara", "niara@example.com", "studpass")
-        req = Request(student_id=student.student_id, hours=2.0, status='pending')
+        activity = ActivityHistory(student_id=student.student_id)
+        db.session.add(activity)
+        db.session.flush()
+        req = RequestHistory(student_id=student.student_id, staff_id=staff.staff_id, service="volunteer", hours=2.0, date_completed=datetime.now(timezone.utc))
+        req.activity_id = activity.id
         db.session.add(req)
         db.session.commit()
 
@@ -198,9 +214,15 @@ class StaffIntegrationTests(unittest.TestCase):
 
     def test_hours_denial(self):
         # prepare staff, student and request
+        from App.models import RequestHistory, ActivityHistory
+        from datetime import datetime, timezone
         staff = register_staff("maritza", "maritza@example.com", "staffpass")
         student = Student.create_student("jabari", "jabari@example.com", "studpass")
-        req = Request(student_id=student.student_id, hours=1.0, status='pending')
+        activity = ActivityHistory(student_id=student.student_id)
+        db.session.add(activity)
+        db.session.flush()
+        req = RequestHistory(student_id=student.student_id, staff_id=staff.staff_id, service="volunteer", hours=1.0, date_completed=datetime.now(timezone.utc))
+        req.activity_id = activity.id
         db.session.add(req)
         db.session.commit()
 
@@ -235,10 +257,18 @@ class StudentIntegrationTests(unittest.TestCase):
         assert 1.0 in hours and 2.5 in hours
 
     def test_get_approved_hours_and_accolades(self):
+        from App.models import LoggedHoursHistory, ActivityHistory
+        from datetime import datetime, timezone
         student = Student.create_student("nisha", "nisha@example.com", "pass")
         # Manually add logged approved hours
-        lh1 = LoggedHours(student_id=student.student_id, staff_id=None, hours=6.0, status='approved')
-        lh2 = LoggedHours(student_id=student.student_id, staff_id=None, hours=5.0, status='approved')
+        activity1 = ActivityHistory(student_id=student.student_id)
+        activity2 = ActivityHistory(student_id=student.student_id)
+        db.session.add_all([activity1, activity2])
+        db.session.flush()
+        lh1 = LoggedHoursHistory(student_id=student.student_id, staff_id=1, service="volunteer", hours=6.0, before=0.0, after=6.0, date_completed=datetime.now(timezone.utc))
+        lh1.activity_id = activity1.id
+        lh2 = LoggedHoursHistory(student_id=student.student_id, staff_id=1, service="volunteer", hours=5.0, before=6.0, after=11.0, date_completed=datetime.now(timezone.utc))
+        lh2.activity_id = activity2.id
         db.session.add_all([lh1, lh2])
         db.session.commit()
 
@@ -251,15 +281,24 @@ class StudentIntegrationTests(unittest.TestCase):
         assert '10 Hours Milestone' in accolades
 
     def test_generate_leaderboard(self):
+        from App.models import LoggedHoursHistory, ActivityHistory
+        from datetime import datetime, timezone
         # create three students with varying approved hours
         a = Student.create_student("zara", "zara@example.com", "p")
         b = Student.create_student("omar", "omar@example.com", "p")
         c = Student.create_student("leon", "leon@example.com", "p")
-        db.session.add_all([
-            LoggedHours(student_id=a.student_id, staff_id=None, hours=10.0, status='approved'),
-            LoggedHours(student_id=b.student_id, staff_id=None, hours=5.0, status='approved'),
-            LoggedHours(student_id=c.student_id, staff_id=None, hours=1.0, status='approved')
-        ])
+        activity_a = ActivityHistory(student_id=a.student_id)
+        activity_b = ActivityHistory(student_id=b.student_id)
+        activity_c = ActivityHistory(student_id=c.student_id)
+        db.session.add_all([activity_a, activity_b, activity_c])
+        db.session.flush()
+        lh_a = LoggedHoursHistory(student_id=a.student_id, staff_id=1, service="volunteer", hours=10.0, before=0.0, after=10.0, date_completed=datetime.now(timezone.utc))
+        lh_a.activity_id = activity_a.id
+        lh_b = LoggedHoursHistory(student_id=b.student_id, staff_id=1, service="volunteer", hours=5.0, before=0.0, after=5.0, date_completed=datetime.now(timezone.utc))
+        lh_b.activity_id = activity_b.id
+        lh_c = LoggedHoursHistory(student_id=c.student_id, staff_id=1, service="volunteer", hours=1.0, before=0.0, after=1.0, date_completed=datetime.now(timezone.utc))
+        lh_c.activity_id = activity_c.id
+        db.session.add_all([lh_a, lh_b, lh_c])
         db.session.commit()
 
         leaderboard = generate_leaderboard()
