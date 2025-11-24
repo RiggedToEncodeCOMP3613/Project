@@ -5,7 +5,7 @@ from App.database import db, get_migrate
 from App.models import User
 from App.models import Student
 from App.models import Staff
-from App.models import Request
+from App.models import RequestHistory
 from App.main import create_app
 from App.controllers.student_controller import *
 from App.controllers.staff_controller import *

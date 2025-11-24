@@ -1,15 +1,29 @@
-from database import db
+from App.database import db
 from datetime import datetime
 
-class ActivityHistory(db.Model): #The purpose of this class is to log activities performed by students.
+class ActivityHistory(db.Model): 
+    __tablename__ = 'activity_history'
     id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    description = db.Column(db.String(255), nullable=False) #simple description of the activity
+    student_id = db.Column(db.Integer, db.ForeignKey('student.student_id'), nullable=False)
     
-    def __init__(self, student_id, description):
+    requests = db.relationship('RequestHistory', backref='activity', lazy=True, cascade="all, delete-orphan")
+    loggedhours = db.relationship('LoggedHoursHistory', backref='activity', lazy=True, cascade="all, delete-orphan")
+    accolades = db.relationship('AccoladeHistory', backref='activity', lazy=True, cascade="all, delete-orphan")
+    milestones = db.relationship('MilestoneHistory', backref='activity', lazy=True, cascade="all, delete-orphan")
+
+
+    def __init__(self, student_id):
         self.student_id = student_id
-        self.description = description
         
-    def __repr__(self) -> str:
-        return f"<ActivityHistory(id={self.id}, student_id={self.student_id}, timestamp={self.timestamp}, description='{self.description}')>"
+    def __repr__(self):
+        return (
+            f'<ActivityHistory ID: {self.id} | '
+            f'Student ID: {self.student_id}>')
+    
+    def sorted_history(self):
+        history = self.requests + self.loggedhours + self.accolades + self.milestones
+        return {
+            'history': sorted([item.get_json() for item in history],
+                          key=lambda x: x['timestamp'],
+                          reverse=True)
+        }
