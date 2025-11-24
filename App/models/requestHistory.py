@@ -1,6 +1,11 @@
 from App.database import db
-from App.controllers.date_controller import parse_date
 from datetime import datetime, timezone
+
+
+def parse_date(date_str: str) -> datetime:
+    if isinstance(date_str, datetime):
+        return date_str
+    return datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
 
 class RequestHistory(db.Model):
     __tablename__ = 'request_history'
