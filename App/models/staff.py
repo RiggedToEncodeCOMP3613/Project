@@ -7,10 +7,11 @@ from App.models.loggedHoursHistory import LoggedHoursHistory
 from datetime import datetime, timezone
 from App.models.student import Student
 from App.models.ActivityHistory import ActivityHistory
+from sqlalchemy import func
 
 class Staff(User):
     __tablename__ = "staff"
-    staff_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), primary_key=True)
+    staff_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), primary_key=True, autoincrement=False)
     
     # Relationships (match required names)
     loggedhours = db.relationship('LoggedHoursHistory', backref='staff', lazy=True, cascade="all, delete-orphan")
@@ -24,6 +25,13 @@ class Staff(User):
     }
 
     def __init__(self, username, email, password):
+        prefix = 3000
+        max_id = db.session.query(func.max(Staff.staff_id)).filter(Staff.staff_id.between(prefix*10**5, (prefix+1)*10**5-1)).scalar()
+        if max_id:
+            suffix = int(str(max_id)[4:]) + 1
+        else:
+            suffix = 10000
+        self.staff_id = int(f"{prefix}{suffix:05d}")
         super().__init__(username, email, password, role="staff")
 
     def __repr__(self):
