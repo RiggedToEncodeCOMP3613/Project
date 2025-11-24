@@ -1,4 +1,5 @@
 import click, pytest, sys
+from datetime import datetime
 from flask.cli import with_appcontext, AppGroup
 
 from App.database import db, get_migrate
@@ -498,10 +499,11 @@ app.cli.add_command(test)
 @click.argument("staff_id", type=int)
 @click.argument("hours", type=float)
 @click.option("--status", default="approved", help="Status for the logged hours (default: approved)")
-def create_logged_hours_command(student_id, staff_id, hours, status):
+@click.option("--timestamp", default=datetime.utcnow(), help="Timestamp for the logged hours (optional, format: YYYY-MM-DD HH:MM:SS)")
+def create_logged_hours_command(student_id, staff_id, hours, status, timestamp):
     print("\n")
     try:
-        log = create_logged_hours(student_id, staff_id, hours, status)
+        log = create_logged_hours(student_id, staff_id, hours, status, timestamp)
         print(f"Created logged hours entry: {log}")
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -522,11 +524,12 @@ def delete_logged_hours_command(log_id):
 # Command to delete ALL logged hours entries (for testing purposes)
 @app.cli.command("deleteAllLoggedHours", help="Delete ALL logged hours entries (testing purposes only)")
 def delete_all_logged_hours_command():
-    confirmation = input("Are you sure you want to delete ALL logged hours entries? This action cannot be undone. (yes/no): ")
+    confirmation = input("\033[91m\033[5m⚠️ Are you sure you want to delete ALL logged hours entries? This action cannot be undone. (yes/no): ")
     if confirmation.lower() == 'yes':
         try:
+            print ("Nuking all logged hours entries... 💣")
             num_deleted = delete_all_logged_hours()
-            print(f"All logged hours entries have been deleted. Total deleted: {num_deleted}")
+            print(f"All {num_deleted} logged hours entries have been deleted. 💥")
         except Exception as e:
             print(f"An error occurred: {e}")
     else:
@@ -577,45 +580,28 @@ def search_logged_hours_command(search_type, value):
 # Command to update a logged hours entry by ID
 @app.cli.command("updateLoggedHours", help="Update a logged hours entry by ID")
 @click.argument("log_id")
-def update_logged_hours_command(log_id):
+@click.option("--student_id", type=int, default=None, help="New student ID")
+@click.option("--staff_id", type=int, default=None, help="New staff ID")
+@click.option("--hours", type=float, default=None, help="New hours")
+@click.option("--status", type=str, default=None, help="New status")
+
+def update_logged_hours_command(log_id, student_id, staff_id, hours, status):
     print("\n")
     try:
-        if not log_id.isdigit():
-            print("Error: loggedhours_id must be an integer.")
-            return
         log = LoggedHoursHistory.query.get(int(log_id))
         if not log:
             print(f"LoggedHoursHistory entry with id {log_id} not found.")
             return
-        # Prompt for new values, allow blank to keep current
-        student_id = input(f"Enter new student ID (current: {log.student_id}, leave blank to keep): ")
-        staff_id = input(f"Enter new staff ID (current: {log.staff_id}, leave blank to keep): ")
-        hours = input(f"Enter new hours (current: {log.hours}, leave blank to keep): ")
-        updated = False
-        if student_id:
-            if not student_id.isdigit():
-                print("Error: student_id must be an integer.")
-                return
-            log.student_id = int(student_id)
-            updated = True
-        if staff_id:
-            if not staff_id.isdigit():
-                print("Error: staff_id must be an integer.")
-                return
-            log.staff_id = int(staff_id)
-            updated = True
-        if hours:
-            try:
-                log.hours = float(hours)
-                updated = True
-            except ValueError:
-                print("Error: hours must be a number.")
-                return
-        if updated:
-            db.session.commit()
-            print(f"LoggedHoursHistory entry {log_id} updated: {log}")
-        else:
-            print("No changes made.")
+        if student_id is not None:
+            log.student_id = student_id
+        if staff_id is not None:
+            log.staff_id = staff_id
+        if hours is not None:
+            log.hours = hours
+        if status is not None:
+            log.status = status
+        db.session.commit()
+        print(f"Updated logged hours entry: {log}")
     except Exception as e:
         print(f"An error occurred: {e}")
     print("\n")

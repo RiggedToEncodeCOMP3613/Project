@@ -72,8 +72,8 @@ def listAllUsers():
         print(user)
     print("\n")
 
-def create_logged_hours(student_id, staff_id, hours, status='approved'):
-    logged_hour = LoggedHoursHistory(student_id, staff_id, hours, status, None, None, datetime.datetime.utcnow()) # ! This could be wrong, I am not sure about the parameters
+def create_logged_hours(student_id, staff_id, hours, timestamp, status='approved'):
+    logged_hour = LoggedHoursHistory(student_id, staff_id, hours, status, None, None, date_completed=timestamp) # ! This could be wrong, I am not sure about the parameters
     db.session.add(logged_hour)
     db.session.commit()
     return logged_hour
