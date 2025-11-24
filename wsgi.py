@@ -149,9 +149,10 @@ def delete_all_students_command():
     confirmation = input("Are you sure you want to delete ALL students? This action cannot be undone. (yes/no): ")
     if confirmation.lower() == 'yes':
         try:
+            print("Nuking all students... 💣")
             num_deleted = Student.query.delete()
             db.session.commit()
-            print(f"All students have been deleted. Total deleted: {num_deleted}")
+            print(f"All {num_deleted} students are gone. 💥")
         except Exception as e:
             db.session.rollback()
             print(f"An error occurred: {e}")
@@ -422,9 +423,10 @@ def delete_all_staff_command():
     confirmation = input("Are you sure you want to delete ALL staff members? This action cannot be undone. (yes/no): ")
     if confirmation.lower() == 'yes':
         try:
+            print("Nuking all staff members... 💣")
             num_deleted = Staff.query.delete()
             db.session.commit()
-            print(f"All staff members have been deleted. Total deleted: {num_deleted}")
+            print(f"All {num_deleted} staff members are gone. 💥")
         except Exception as e:
             db.session.rollback()
             print(f"An error occurred: {e}")
