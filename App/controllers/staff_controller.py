@@ -1,5 +1,5 @@
 from App.database import db
-from App.models import User,Staff,Student,Request
+from App.models import User, Staff, Student, RequestHistory
 
 def register_staff(name,email,password): #registers a new staff member
     new_staff = Staff.create_staff(name, email, password)

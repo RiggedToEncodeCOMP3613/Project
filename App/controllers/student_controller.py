@@ -1,5 +1,5 @@
 from App.database import db
-from App.models import User,Staff,Student,Request
+from App.models import User, Staff, Student, RequestHistory
 
 def register_student(name,email,password):
     new_student=Student.create_student(name,email,password)

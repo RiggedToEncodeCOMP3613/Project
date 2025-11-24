@@ -5,7 +5,7 @@ from App.database import db, get_migrate
 from App.models import User
 from App.models import Student
 from App.models import Staff
-from App.models import Request
+from App.models import RequestHistory
 from App.main import create_app
 from App.controllers.student_controller import delete_student, query_router, register_student, get_approved_hours, create_hours_request, fetch_requests, fetch_accolades, generate_leaderboard, update_student_info
 from App.controllers.staff_controller import *

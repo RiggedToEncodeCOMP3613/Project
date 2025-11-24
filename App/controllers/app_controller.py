@@ -1,5 +1,5 @@
 from App.database import db
-from App.models import User,Staff,Student,Request,LoggedHours
+from App.models import User, Staff, Student, RequestHistory
 
 #Comamand to list all staff in the database
 def printAllStaff():
@@ -57,7 +57,8 @@ def listAllPendingRequests():
 #Comamand to list all logged hours in the database
 def listAllloggedHours():
     print("\nAll Logged Hours:")
-    logged_hours = LoggedHours.query.all()
+    from App.models import LoggedHoursHistory
+    logged_hours = LoggedHoursHistory.query.all()
     for log in logged_hours:
         print(log)
     print("\n")

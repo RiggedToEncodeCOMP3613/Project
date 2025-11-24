@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, jsonify, request, send_from_directory, flash, redirect, url_for
 from flask_jwt_extended import jwt_required, current_user as jwt_current_user
-from App.models import Student,Request,LoggedHours
+from App.models import Student, RequestHistory, LoggedHoursHistory
 from.index import index_views
 from App.controllers.student_controller import get_all_students_json,fetch_accolades,create_hours_request
 from App.controllers.staff_controller import process_request_approval,process_request_denial
@@ -18,7 +18,7 @@ def accept_request_action():
     if not data or 'request_id' not in data:
         return jsonify(message='Invalid request data'), 400
     # Logic to accept the request goes here
-    req = Request.query.get(data['request_id'])
+    req = RequestHistory.query.get(data['request_id'])
     if not req:
         return jsonify(message='Request not found'), 404
     
@@ -36,7 +36,7 @@ def deny_request_action():
     if not data or 'request_id' not in data:
         return jsonify(message='Invalid request data'), 400    
     # Logic to deny the request goes here
-    req = Request.query.get(data['request_id'])
+    req = RequestHistory.query.get(data['request_id'])
     if not req:
         return jsonify(message='Request not found'), 404    
     process_request_denial(user.staff_id, data['request_id'])
@@ -52,7 +52,7 @@ def delete_request_action():
     if not data or 'request_id' not in data:
         return jsonify(message='Invalid request data'), 400
     # Logic to delete the request goes here
-    req = Request.query.get(data['request_id'])
+    req = RequestHistory.query.get(data['request_id'])
     if not req:
         return jsonify(message='Request not found'), 404
     db.session.delete(req)
@@ -69,7 +69,7 @@ def delete_logs_action():
     data = request.json
     if not data or 'log_id' not in data:
         return jsonify(message='Invalid request data'), 400
-    log = LoggedHours.query.get(data['log_id'])
+    log = LoggedHoursHistory.query.get(data['log_id'])
     if not log:
         return jsonify(message='Log not found'), 404
     db.session.delete(log)
