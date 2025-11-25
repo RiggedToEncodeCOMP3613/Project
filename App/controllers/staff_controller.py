@@ -1,5 +1,5 @@
 from App.database import db
-from App.models import User, Staff, Student, RequestHistory
+from App.models import User, Staff, Student, RequestHistory, Accolade
 
 __all__ = ['register_staff', 'update_staff', 'fetch_all_requests', 'process_request_approval', 'process_request_denial', 'get_all_staff_json']
 
@@ -34,6 +34,29 @@ def update_staff(staff_id, username=None, email=None, password=None):
     db.session.commit()
     
     return staff
+
+
+def create_accolade(staff_id, description): #creates a new accolade
+    
+    staff = Staff.query.get(staff_id)
+    if not staff:
+        return None, f"Staff with ID {staff_id} not found"
+    
+    existing_accolade = Accolade.query.filter_by(description=description).first()
+    if existing_accolade:
+        return None, f"Accolade with description '{description}' already exists (ID: {existing_accolade.id})"
+    
+    try:
+        accolade = Accolade(staff_id=staff_id, description=description)
+        db.session.add(accolade)
+        db.session.commit()
+        
+        return accolade, None
+        
+    except Exception as e:
+        db.session.rollback()
+        return None, f"Error creating accolade: {str(e)}"
+    
 
 def fetch_all_requests(): #fetches all pending requests for staff to review
     pending_requests = RequestHistory.query.filter_by(status='pending').all()

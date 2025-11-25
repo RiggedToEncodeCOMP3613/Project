@@ -280,6 +280,24 @@ def update_staff_command(staff_id, username, email, password):
     except Exception as e:
         click.echo(f"An unexpected error occurred during update: {e}", err=True)
         sys.exit(1)
+ 
+@staff_cli.command("create-accolade", help="Creates a new accolade")
+@click.option("--staff_id", required=True, type=int, help="ID of the staff member creating the accolade")
+@click.option("--description", required=True, help="Description of the accolade")
+@with_appcontext
+def create_accolade_command(staff_id, description):
+    from App.controllers.staff_controller import create_accolade
+    
+    accolade, error = create_accolade(staff_id, description)
+    
+    if error:
+        click.echo(f"✗ Error: {error}")
+        return
+    
+    click.echo(f"Accolade created successfully!")
+    click.echo(f"ID: {accolade.id}")
+    click.echo(f"Description: '{description}'")
+    click.echo(f"Created by Staff ID: {staff_id}")
         
 #Command for staff to view all pending requests
 @staff_cli.command("requests", help="View all pending hour requests")
