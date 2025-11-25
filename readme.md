@@ -58,6 +58,13 @@ Intended users: administrators, staff reviewers, and students at educational ins
 
 ---
 
+## Request Commands
+
+| Command | Description |
+|---------|-------------|
+| `flask request delete` | Delete a request by ID |
+
+---
 ## Tests
 
 Run unit and integration tests via the Flask CLI testing command. Example commands:

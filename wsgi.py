@@ -10,6 +10,7 @@ from App.main import create_app
 from App.controllers.student_controller import *
 from App.controllers.staff_controller import *
 from App.controllers.app_controller import *
+from App.controllers.request_controller import *
 from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize )
 
 
@@ -379,6 +380,35 @@ def viewLeaderboard():
 
 app.cli.add_command(staff_cli) # add the group to the cli
 
+
+
+
+'''REQUEST COMMANDS'''
+
+
+
+request_cli = AppGroup('request', help='Request object commands')
+
+# Command to delete a request by ID
+@request_cli.command("delete", help="Delete a service hour request by ID")
+def delete_request():
+    print("\n")
+    try:
+        request_id = int(input("Enter the request ID to delete: ")) 
+        success, message = delete_request_entry(request_id)
+        
+        if success:
+            print(f"Success: {message}")
+        else:
+            print(f"Error: {message}")
+    
+    except ValueError:
+        print("Error: Request ID must be an integer.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+app.cli.add_command(request_cli) 
 
 
 # '''
