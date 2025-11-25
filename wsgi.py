@@ -249,34 +249,10 @@ def viewmyAccolades():
     except Exception as e:
         print(f"An error occurred: {e}")
     print("\n")
-
-
-#Student command to view leaderboard of students by approved hours
-@student_cli.command("viewLeaderboard", help="View leaderboard of students by approved hours")
-def viewLeaderboard():
-    print("\n")
-    try:
-        leaderboard = generate_leaderboard()
-
-        print("Leaderboard (by approved hours):")
-        if not leaderboard:
-            print("No students found or hour data found.")
-            return
-        for rank, data in enumerate(leaderboard, 1):
-            print(f"{rank:<6}. {data['name']:<10} ------ \t{data['hours']} hours")
-
-    except Exception as e:
-        print(f"An error occurred while generating the leaderboard: {e}")
-    print("\n")
-
 app.cli.add_command(student_cli) # add the group to the cli
 
 
-
-
 '''STAFF COMMANDS'''
-
-
 
 staff_cli = AppGroup('staff', help='Staff object commands')
 
@@ -373,25 +349,6 @@ def denyRequest():
         print(f"Error: {e}")
     except Exception as e:
         print(f"An error occurred: {e}")
-    print("\n")
-
-
-#staff command to view leaderboard of students by approved hours
-@staff_cli.command("viewLeaderboard", help="View leaderboard of students by approved hours")
-def viewLeaderboard():
-    print("\n")
-    try:
-        leaderboard = generate_leaderboard()
-
-        print("Leaderboard (by approved hours):")
-        if not leaderboard:
-            print("No students found or hour data found.")
-            return
-        for rank, data in enumerate(leaderboard, 1):
-            print(f"{rank:<6}. {data['name']:<10} ------ \t{data['hours']} hours")
-
-    except Exception as e:
-        print(f"An error occurred while generating the leaderboard: {e}")
     print("\n")
 
 # Command to search staff by field (name, email, or ID)
@@ -545,12 +502,12 @@ def search_logged_hours_command(query):
     print("\n")
     if query.isdigit() and query.startswith("8160"):  # Example student ID format
         search_type = "student_id"
-    elif query.isdigit() and query.startswith("5000"):  # !Example staff ID format not correct
+    elif query.isdigit() and query.startswith("3"):  #TODO Example staff ID format not correct
         search_type = "staff_id"
     else:
         try:
             # Try to parse the query as a date range
-            datetime.strptime(query, "%Y-%m-%d") # ! This is not fully correct, needs tuple unpacking
+            datetime.strptime(query, "%Y-%m-%d") #TODO This is not fully correct, needs tuple unpacking
             search_type = "date"
         except ValueError:
             search_type = "service" # If not date or id, assume service string
@@ -562,6 +519,8 @@ def search_logged_hours_command(query):
         print(f"Logged hours entries for {search_type} '{query}':")
         for log in results:
             print(log)
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 # Command to update a logged hours entry by ID
 @app.cli.command("updateLoggedHours", help="Update a logged hours entry by ID")
@@ -591,3 +550,42 @@ def update_logged_hours_command(log_id, student_id, staff_id, hours, status):
     except Exception as e:
         print(f"An error occurred: {e}")
     print("\n")
+    
+## LEADERBOARD COMMANDS ##
+@app.cli.command("viewLeaderboard", help="View leaderboard of students by approved hours")
+def viewLeaderboard(): #Duplicate entry fixed, this is the correct one. I deleted the old duplicates.
+    print("\n")
+    try:
+        leaderboard = generate_leaderboard() #reuse existing function from student controller
+
+        print("Leaderboard (by approved hours):")
+        if not leaderboard:
+            print("No students found or hour data found.")
+            return
+        for rank, data in enumerate(leaderboard, 1):
+            #Use rich table formatting for better CLI display
+            print(f"{rank:<6}. {data['name']:<10} ------ \t{data['hours']} hours")
+            
+    except Exception as e:
+        print(f"An error occurred while generating the leaderboard: {e}")
+        
+@app.cli.command("searchLeaderboard", help="Search leaderboard for a specific student by name or ID")
+@click.argument("query")
+def searchLeaderboard(query):
+    print("\n")
+    try:
+        leaderboard = generate_leaderboard() #reuse existing function from student controller
+
+        print(f"Searching leaderboard for '{query}':")
+        if not leaderboard:
+            print("No students found or hour data found.")
+            return
+        found = False
+        for rank, data in enumerate(leaderboard, 1):
+            if query.lower() in data['name'].lower() or query == str(data['student_id']):
+                print(f"{rank:<6}. {data['name']:<10} ------ \t{data['hours']} hours")
+                found = True
+        if not found:
+            print(f"No matching student found in the leaderboard for '{query}'.")
+    except Exception as e:
+        print(f"An error occurred while searching the leaderboard: {e}")
