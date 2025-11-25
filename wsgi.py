@@ -116,8 +116,28 @@ def create_student():
         print(f"An error occurred: {e}")
     print("\n")
 
-
-
+#Command to create a new request for a student (student_id, service, staff_id, hours, date_completed)
+@student_cli.command("request", help="Create a new service hour request via command line options")
+@click.option("--student_id", required=True, type=int, help="ID of the student making the request")
+@click.option("--service", required=True, help="Description of the service performed")
+@click.option("--staff_id", required=True, type=int, help="ID of the staff member to verify")
+@click.option("--hours", required=True, type=float, help="Number of hours to claim")
+@click.option("--date", required=True, help="Date of service (YYYY-MM-DD)")
+@with_appcontext
+def create_request_command_options(student_id, service, staff_id, hours, date):
+    """
+    Creates a new request for a student using command line options.
+    Usage: flask student request --student_id 1 --service "Gardening" --staff_id 2 --hours 4 --date 2023-10-25
+    """
+    request, message = create_request(student_id, service, staff_id, hours, date)
+    
+    if request:
+        click.echo(f"\nSuccess: {message}")
+        click.echo(f"Request ID: {request.id}")
+        click.echo(f"Status: {request.status}")
+        click.echo(f"Details: {request}") 
+    else:
+        click.echo(f"\nError: {message}")
 
 #Command for student to request hour confirmation (student_id, hours)
 @student_cli.command("requestHours", help="Student requests hour confirmation (interactive)")

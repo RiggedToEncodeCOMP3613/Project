@@ -22,7 +22,7 @@ def printAllStudents():
 def listAllRequests():
 
     print("\nAll Requests:")
-    requests = Request.query.all()
+    requests = RequestHistory.query.all()
     for request in requests:
         print(request)
     print("\n")
@@ -32,7 +32,7 @@ def listAllRequests():
 def listAllApprovedRequests():
 
     print("\nAll Approved Requests:")
-    requests = Request.query.filter_by(status='approved').all()
+    requests = RequestHistory.query.filter_by(status='approved').all()
     for request in requests:
         print(request)
     print("\n")
@@ -41,7 +41,7 @@ def listAllApprovedRequests():
 def listAllDeniedRequests():
 
     print("\nAll Denied Requests:")
-    requests = Request.query.filter_by(status='denied').all()
+    requests = RequestHistory.query.filter_by(status='denied').all()
     for request in requests:
         print(request)
     print("\n")
@@ -49,7 +49,7 @@ def listAllDeniedRequests():
 #Comamand to list all pending requests in the database
 def listAllPendingRequests():
     print("\nAll Pending Requests:")
-    requests = Request.query.filter_by(status='pending').all()
+    requests = RequestHistory.query.filter_by(status='pending').all()
     for request in requests:
         print(request)
     print("\n")

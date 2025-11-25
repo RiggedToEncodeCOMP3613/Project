@@ -36,6 +36,7 @@ Intended users: administrators, staff reviewers, and students at educational ins
 |---------|-------------|
 | `flask student create` | Create a new student (interactive: enter name + email) |
 | `flask student hours` | View total hours (enter student ID) |
+| `flask student request` | Creates a request (--student_id, --service, --staff_id, --hours, --date) |
 | `flask student requestHours` | Request hour confirmation (enter student ID + hours) |
 | `flask student viewmyRequests` | List all requests made by a student (enter student ID) |
 | `flask student viewmyAccolades` | List all accolades earned by a student (enter student ID) |
