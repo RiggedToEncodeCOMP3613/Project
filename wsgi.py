@@ -1,3 +1,4 @@
+import re
 import click, pytest, sys
 from datetime import datetime
 from flask.cli import with_appcontext, AppGroup
@@ -493,24 +494,40 @@ def delete_all_logged_hours_command():
             print(f"An error occurred: {e}")
     else:
         print("Operation cancelled.")
+        
+# Define regex patterns for date and date range detection        
+RANGE_PATTERN = r"^\d{4}-\d{2}-\d{2}:\d{4}-\d{2}-\d{2}$"
+DATE_PATTERN  = r"^\d{4}-\d{2}-\d{2}$"
+
+def detect_query_type(query):
+    # Student ID
+    if query.isdigit() and query.startswith("8160") and len(query) == 9: # Assuming student IDs start with '8160' and are 9 digits long, this can be adjusted as needed
+        return "student_id"
+
+    # Staff ID
+    if query.isdigit() and query.startswith("3") and len(query) == 9: # Assuming staff IDs start with '3', this can be adjusted as needed
+        return "staff_id"
+
+    # Date range
+    if re.match(RANGE_PATTERN, query):
+        start_str, end_str = query.split(":")
+        datetime.strptime(start_str, "%Y-%m-%d")
+        datetime.strptime(end_str, "%Y-%m-%d")
+        return "date_range"
+
+    # Single date
+    if re.match(DATE_PATTERN, query):
+        datetime.strptime(query, "%Y-%m-%d")
+        return "date"
+
+    # Fallback: treat as service string
+    return "service"
 
 # Command to search logged hours by student-id, staff-id, or date
-@app.cli.command("searchLoggedHours", help="Search logged hours by student-id, staff-id, date or service string")
+@app.cli.command("searchLoggedHours", help="Search logged hours by student-id, staff-id, date or service string. Dates follow YYYY-MM-DD format. Date ranges use YYYY-MM-DD:YYYY-MM-DD format.")
 @click.argument("query")
 def search_logged_hours_command(query):
-    #Automatically detect input type
-    print("\n")
-    if query.isdigit() and query.startswith("8160"):  # Example student ID format
-        search_type = "student_id"
-    elif query.isdigit() and query.startswith("3"):  #TODO Example staff ID format not correct
-        search_type = "staff_id"
-    else:
-        try:
-            # Try to parse the query as a date range
-            datetime.strptime(query, "%Y-%m-%d") #TODO This is not fully correct, needs tuple unpacking
-            search_type = "date"
-        except ValueError:
-            search_type = "service" # If not date or id, assume service string
+    search_type = detect_query_type(query)
     try:
         results = search_logged_hours(query, search_type)
         if not results:
