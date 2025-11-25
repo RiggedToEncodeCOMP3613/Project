@@ -13,6 +13,10 @@ def search_logged_hours_by_service(service):
     """Search logged hours history by service."""
     return models.loggedHoursHistory.LoggedHoursHistory.query.filter_by(service=service).all()
 
+def search_logged_hours_by_date(date_completed):
+    """Search logged hours history by date completed."""
+    return models.loggedHoursHistory.LoggedHoursHistory.query.filter_by(date_completed=date_completed).all()
+
 def search_logged_hours_by_date_range(start_date, end_date):
     """Search logged hours history within a date range."""
     return models.loggedHoursHistory.LoggedHoursHistory.query.filter(
@@ -28,6 +32,8 @@ def search_logged_hours (query, search_type):
         return search_logged_hours_by_staff(query)
     elif search_type == 'service':
         return search_logged_hours_by_service(query)
+    elif search_type == 'date':
+        return search_logged_hours_by_date(query)
     elif search_type == 'date_range':
         start_date, end_date = query
         return search_logged_hours_by_date_range(start_date, end_date) # ! This is not fully correct, needs tuple unpacking
