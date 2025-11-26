@@ -5,7 +5,7 @@ from App.models.milestone import Milestone
 from App.models.accolade import Accolade
 from App.models.requestHistory import RequestHistory
 from App.models.loggedHoursHistory import LoggedHoursHistory
-from App.models.ActivityHistory import ActivityHistory
+from App.models.activityHistory import ActivityHistory
 from sqlalchemy import func
 
 class Student(User):
@@ -16,7 +16,7 @@ class Student(User):
     rank = db.Column(db.Integer, default=0, nullable=False)
     
     # Relationships
-    activity_history = db.relationship('ActivityHistory', backref='student', lazy=True, cascade="all, delete-orphan")
+    activity_history = db.relationship('ActivityHistory', backref='student', lazy=True, cascade="all, delete-orphan", uselist=False)
 
     # Inheritance setup
     __mapper_args__ = {
@@ -71,7 +71,7 @@ class Student(User):
             date_completed=date_completed
         )
         request.activity_id = activity.id
-        request.status = 'pending'
+        #request.status = 'pending' #redudant
         db.session.add(request)
         db.session.commit()
         return request
@@ -101,6 +101,7 @@ class Student(User):
     # Check if student has unlocked new milestones based on total hours
     def calculate_new_milestones(self):
         all_milestones = Milestone.query.order_by(Milestone.milestone).all()
+        m = []
         for milestone in all_milestones:
             if self.total_hours >= milestone.milestone:
                 existing = MilestoneHistory.query.filter_by(
@@ -124,6 +125,8 @@ class Student(User):
                     milestone_history.activity_id = activity.id
                     db.session.add(milestone_history)
                     db.session.commit()
+                    m.append(milestone_history)
+        return m
     
     # Return a list of accolades that this student has earned
     def check_accolades(self):

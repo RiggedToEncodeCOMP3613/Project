@@ -12,23 +12,25 @@ class Milestone(db.Model):
     __tablename__ = 'milestone'
     id = db.Column(db.Integer, primary_key=True)
     milestone = db.Column(db.Integer, nullable=False, unique=True)
-    description = db.Column(db.String(255), nullable=True)
+    #description = db.Column(db.String(255), nullable=True)
     
     # Many-to-many relationship with students
     students = db.relationship('Student', secondary=student_milestone, backref=db.backref('achieved_milestones', lazy=True), lazy=True)
 
-    def __init__(self, milestone, description=None):
+    #def __init__(self, milestone, description=None):
+    def __init__(self, milestone):
         self.milestone = milestone
-        self.description = description
+        #self.description = description
 
     def __repr__(self):
-        return f"<Milestone(id={self.id}, milestone={self.milestone}, description='{self.description}')>"
+        #return f"<Milestone(id={self.id}, milestone={self.milestone}, description='{self.description}')>"
+        return f"<Milestone(id={self.id}, milestone={self.milestone})>"
     
     def get_json(self):
         return {
             'id': self.id,
-            'milestone': self.milestone,
-            'description': self.description
+            'milestone': self.milestone
+            #,'description': self.description
         }
     # Add a student to this milestone
     def add_student(self, student_id):

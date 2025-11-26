@@ -6,7 +6,7 @@ from App.models.accoladeHistory import AccoladeHistory
 from App.models.loggedHoursHistory import LoggedHoursHistory
 from datetime import datetime, timezone
 from App.models.student import Student
-from App.models.ActivityHistory import ActivityHistory
+from App.models.activityHistory import ActivityHistory
 from sqlalchemy import func
 
 class Staff(User):
@@ -80,7 +80,7 @@ class Staff(User):
     
     # Get all pending requests awaiting staff approval
     def get_pending_requests(self):
-        pending = RequestHistory.query.filter_by(status='pending').all()
+        pending = RequestHistory.query.filter_by(staff_id=self.staff_id, status='pending').all()
         return pending
     
     # Approve a pending request and create a LoggedHoursHistory entry
@@ -89,7 +89,7 @@ class Staff(User):
             return None
         
         # Update request status
-        request.status = 'approved'
+        request.status = 'Approved'
         request.date_responded = datetime.now(timezone.utc)
         db.session.commit()
         
@@ -105,9 +105,9 @@ class Staff(User):
     
     # Deny a pending request
     def deny_request(self, request):
-        if request.status != 'pending':
+        if request.status != 'Pending':
             return False
-        request.status = 'denied'
+        request.status = 'Denied'
         request.date_responded = datetime.now(timezone.utc)
         db.session.commit()
         return True
@@ -122,7 +122,8 @@ class Staff(User):
     def award_accolade(self, student_id, accolade_id):
         accolade = Accolade.query.get(accolade_id)
         if not accolade:
-            return None
+            raise ValueError("Invalid ID. Accolade not found")
+            #return None
         
         # Create activity history record
         activity = ActivityHistory(student_id=student_id)

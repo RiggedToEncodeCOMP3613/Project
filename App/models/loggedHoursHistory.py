@@ -1,6 +1,11 @@
 from App.database import db
 from datetime import datetime, timezone
 
+def parse_date(date_str: str) -> datetime:
+    if isinstance(date_str, datetime):
+        return date_str
+    return datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+
 class LoggedHoursHistory(db.Model):
     __tablename__ = 'loggedhours_history'
     id = db.Column(db.Integer, primary_key=True)
@@ -25,7 +30,8 @@ class LoggedHoursHistory(db.Model):
         student = Student.query.get(self.student_id)
         self.before = student.total_hours if student else 0.0
         self.after = (student.total_hours if student else 0.0) + after
-        self.date_completed = date_completed
+        self.date_completed = parse_date(date_completed)
+        #self.date_completed = date_completed
 
     def __repr__(self):
         return (
