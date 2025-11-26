@@ -337,6 +337,9 @@ def viewLeaderboard():
 app.cli.add_command(staff_cli) # add the group to the cli
 
 
+###############################################################################
+# # #>>>>>>>>>>>>>>>>>>>>>>>> MILESTONE COMMANDS <<<<<<<<<<<<<<<<<<<<<<<<<# # #
+###############################################################################
 
 milestone_cli = AppGroup('milestone', help='Milestone commands')
 
@@ -397,6 +400,37 @@ def drop_milestones_table_command():
     try:
         num_deleted = delete_all_milestones()
         print(f"Deleted {num_deleted} milestones.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+
+@milestone_cli.command("search", help="Search for a milestone by ID or hours")
+@click.option("--id", "milestone_id", type=int, help="The ID of the milestone to search for.")
+@click.option("--hours", "milestone_value", type=int, help="The hour value of the milestone to search for.")
+def search_milestone_command(milestone_id, milestone_value):
+    print("\n")
+    try:
+        if not milestone_id and not milestone_value:
+            print("Please provide either --id or --hours to search.")
+            return
+
+        milestones = search_milestones(milestone_id=milestone_id, milestone_value=milestone_value)
+
+        if not milestones:
+            print("No milestones found matching your criteria.")
+            return
+        
+        console = Console()
+        table = Table(title="Search Results")
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Value", style="magenta")
+
+        for milestone in milestones:
+            table.add_row(str(milestone['id']), str(milestone['milestone']))
+        
+        console.print(table)
+
     except Exception as e:
         print(f"An error occurred: {e}")
     print("\n")

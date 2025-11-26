@@ -27,3 +27,13 @@ def delete_all_milestones():
     num_deleted = db.session.query(Milestone).delete()
     db.session.commit()
     return num_deleted
+
+def search_milestones(milestone_id=None, milestone_value=None):
+    query = Milestone.query
+    if milestone_id is not None:
+        query = query.filter_by(id=milestone_id)
+    if milestone_value is not None:
+        query = query.filter_by(milestone=milestone_value)
+    
+    milestones = query.all()
+    return [m.get_json() for m in milestones]
