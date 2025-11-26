@@ -2,6 +2,7 @@ from App.database import db
 from App.models import Milestone
 from rich.table import Table
 from rich.console import Console
+from App.models import MilestoneHistory
 
 def create_milestone(hours):
     new_milestone = Milestone(hours=hours)
@@ -18,12 +19,15 @@ def list_all_milestones():
 def delete_milestone(milestone_id):
     milestone = Milestone.query.get(milestone_id)
     if milestone:
+        MilestoneHistory.query.filter_by(milestone_id=milestone_id).delete()
         db.session.delete(milestone)
         db.session.commit()
         return True
     return False
 
 def delete_all_milestones():
+    from App.models import MilestoneHistory
+    MilestoneHistory.query.delete()  # Delete all milestone history records
     num_deleted = db.session.query(Milestone).delete()
     db.session.commit()
     return num_deleted
