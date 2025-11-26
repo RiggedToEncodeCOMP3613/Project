@@ -1,7 +1,9 @@
 from App.database import db
 from App.models import User, Staff, Student, RequestHistory, Accolade
 
-__all__ = ['register_staff', 'update_staff', 'fetch_all_requests', 'process_request_approval', 'process_request_denial', 'get_all_staff_json']
+__all__ = ['register_staff', 'update_staff', 'create_accolade', 'delete_accolade',
+              'fetch_all_requests', 'process_request_approval', 'process_request_denial',
+              'get_all_staff_json']
 
 def register_staff(name,email,password): #registers a new staff member
     new_staff = Staff.create_staff(name, email, password)
@@ -57,6 +59,62 @@ def create_accolade(staff_id, description): #creates a new accolade
         db.session.rollback()
         return None, f"Error creating accolade: {str(e)}"
     
+def delete_accolade(accolade_id, delete_history=False):
+    """
+    Deletes an accolade by ID.
+    delete_history: If True, also deletes associated AccoladeHistory records
+    
+    """
+    
+    accolade = Accolade.query.get(accolade_id)
+    if not accolade:
+        return False, f"Accolade with ID {accolade_id} not found"
+    
+    try:
+        description = accolade.description
+        history_count = 0
+        activity_count = 0
+        
+        if delete_history:
+            from App.models import AccoladeHistory, ActivityHistory
+            history_records = AccoladeHistory.query.filter_by(accolade_id=accolade_id).all()
+            history_count = len(history_records)
+            
+            # Track activity IDs that might need cleanup
+            activity_ids = set()
+            
+            for record in history_records:
+                activity_ids.add(record.activity_id)
+                db.session.delete(record)
+            
+            # Check if any ActivityHistory records are now empty and delete them
+            for activity_id in activity_ids:
+                activity = ActivityHistory.query.get(activity_id)
+                if activity:
+                    # Check if this activity has any remaining history
+                    has_history = (
+                        len(activity.requests) > 0 or
+                        len(activity.loggedhours) > 0 or
+                        len(activity.accolades) > 0 or
+                        len(activity.milestones) > 0
+                    )
+                    if not has_history:
+                        db.session.delete(activity)
+                        activity_count += 1
+        
+        db.session.delete(accolade)
+        db.session.commit()
+        
+        return True, {
+            'description': description,
+            'history_deleted': history_count,
+            'empty_activities_deleted': activity_count
+        }
+        
+    except Exception as e:
+        db.session.rollback()
+        return False, f"Error deleting accolade: {str(e)}"
+
 
 def fetch_all_requests(): #fetches all pending requests for staff to review
     pending_requests = RequestHistory.query.filter_by(status='pending').all()

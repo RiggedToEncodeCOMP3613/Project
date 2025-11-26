@@ -281,7 +281,8 @@ def update_staff_command(staff_id, username, email, password):
         click.echo(f"An unexpected error occurred during update: {e}", err=True)
         sys.exit(1)
  
-@staff_cli.command("create-accolade", help="Creates a new accolade")
+#Command to create a new accolade (staff_id, description) 
+@staff_cli.command("createAccolade", help="Creates a new accolade")
 @click.option("--staff_id", required=True, type=int, help="ID of the staff member creating the accolade")
 @click.option("--description", required=True, help="Description of the accolade")
 @with_appcontext
@@ -291,13 +292,37 @@ def create_accolade_command(staff_id, description):
     accolade, error = create_accolade(staff_id, description)
     
     if error:
-        click.echo(f"✗ Error: {error}")
+        click.echo(f"Error: {error}")
         return
     
     click.echo(f"Accolade created successfully!")
     click.echo(f"ID: {accolade.id}")
     click.echo(f"Description: '{description}'")
     click.echo(f"Created by Staff ID: {staff_id}")
+
+#Command to delete an accolade by its ID, with option to delete all history records
+@staff_cli.command("deleteAccolade", help="Deletes an accolade by ID")
+@click.argument("accolade_id", type=int)
+@click.option("--delete_all_history", is_flag=True, help="Also delete all history records for this accolade")
+def delete_accolade_command(accolade_id, delete_all_history):
+
+    success, result = delete_accolade(accolade_id, delete_history=delete_all_history)
+    
+    if not success:
+        click.echo(f"Error: {result}")
+        return
+    
+    click.echo(f"Accolade deleted successfully!")
+    click.echo(f"ID: {accolade_id}")
+    click.echo(f"Description: '{result['description']}'")
+    
+    if delete_all_history:
+        click.echo(f"History records deleted: {result['history_deleted']}")
+        if result['empty_activities_deleted'] > 0:
+            click.echo(f"Empty activity records cleaned up: {result['empty_activities_deleted']}")
+    else:
+        click.echo(f"History records preserved")
+    
         
 #Command for staff to view all pending requests
 @staff_cli.command("requests", help="View all pending hour requests")
