@@ -63,6 +63,7 @@ Intended users: administrators, staff reviewers, and students at educational ins
 | Command | Description |
 |---------|-------------|
 | `flask request delete` | Delete a request by ID |
+| `flask request update` | Update a request's attributes via options (--student_id, --service, --hours, --status) |
 
 ---
 ## Tests
