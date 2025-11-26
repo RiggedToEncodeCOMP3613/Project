@@ -8,20 +8,20 @@ class MilestoneHistory(db.Model):
 
     milestone_id = db.Column(db.Integer, db.ForeignKey('milestone.id'), nullable=False)
     student_id = db.Column(db.Integer, db.ForeignKey('student.student_id'), nullable=False)
-    value = db.Column(db.Integer, nullable=False)
+    hours = db.Column(db.Integer, nullable=False)
     timestamp = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-    def __init__(self, milestone_id, student_id, value):
+    def __init__(self, milestone_id, student_id, hours):
         self.milestone_id = milestone_id
         self.student_id = student_id
-        self.value = value
+        self.hours = hours
 
     def __repr__(self):
         return (
             f'<MilestoneHistory ID: {self.id} | '
             f'Milestone ID: {self.milestone_id} | '
             f'Student ID: {self.student_id} | '
-            f'Value: {self.value} | '
+            f'Hours: {self.hours} | '
             f'Date Recorded: {self.timestamp}>')
 
 
@@ -30,6 +30,6 @@ class MilestoneHistory(db.Model):
             'id': self.id,
             'milestone_id': self.milestone_id,
             'student_id': self.student_id,
-            'value': self.value,
+            'hours': self.hours,
             'timestamp': self.timestamp.isoformat()
         }
