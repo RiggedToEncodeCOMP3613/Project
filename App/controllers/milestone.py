@@ -3,8 +3,8 @@ from App.models import Milestone
 from rich.table import Table
 from rich.console import Console
 
-def create_milestone(milestone_value):
-    new_milestone = Milestone(milestone=milestone_value)
+def create_milestone(hours):
+    new_milestone = Milestone(hours=hours)
     db.session.add(new_milestone)
     db.session.commit()
     return new_milestone
@@ -28,12 +28,12 @@ def delete_all_milestones():
     db.session.commit()
     return num_deleted
 
-def search_milestones(milestone_id=None, milestone_value=None):
+def search_milestones(milestone_id=None, hours=None):
     query = Milestone.query
     if milestone_id is not None:
         query = query.filter_by(id=milestone_id)
-    if milestone_value is not None:
-        query = query.filter_by(milestone=milestone_value)
+    if hours is not None:
+        query = query.filter_by(hours=hours)
     
     milestones = query.all()
     return [m.get_json() for m in milestones]

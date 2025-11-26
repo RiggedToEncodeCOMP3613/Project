@@ -344,11 +344,11 @@ app.cli.add_command(staff_cli) # add the group to the cli
 milestone_cli = AppGroup('milestone', help='Milestone commands')
 
 @milestone_cli.command("create", help="Create a new milestone")
-@click.argument("milestone_value", type=int)
-def create_milestone_command(milestone_value):
+@click.argument("hours", type=int)
+def create_milestone_command(hours):
     print("\n")
     try:
-        milestone = create_milestone(milestone_value)
+        milestone = create_milestone(hours)
         print(f"Created milestone: {milestone}")
     except ValueError as e:
         print(f"Error: {e}")
@@ -368,10 +368,10 @@ def list_milestones_command():
         console = Console()
         table = Table(title="Milestones")
         table.add_column("ID", style="cyan", no_wrap=True)
-        table.add_column("Value", style="magenta")
+        table.add_column("Hours", style="magenta")
 
         for milestone in milestones:
-            table.add_row(str(milestone['id']), str(milestone['milestone']))
+            table.add_row(str(milestone['id']), str(milestone['hours']))
         
         console.print(table)
 
@@ -407,15 +407,15 @@ def drop_milestones_table_command():
 
 @milestone_cli.command("search", help="Search for a milestone by ID or hours")
 @click.option("--id", "milestone_id", type=int, help="The ID of the milestone to search for.")
-@click.option("--hours", "milestone_value", type=int, help="The hour value of the milestone to search for.")
-def search_milestone_command(milestone_id, milestone_value):
+@click.option("--hours", "hours", type=int, help="The hour value of the milestone to search for.")
+def search_milestone_command(milestone_id, hours):
     print("\n")
     try:
-        if not milestone_id and not milestone_value:
+        if not milestone_id and not hours:
             print("Please provide either --id or --hours to search.")
             return
 
-        milestones = search_milestones(milestone_id=milestone_id, milestone_value=milestone_value)
+        milestones = search_milestones(milestone_id=milestone_id, hours=hours)
 
         if not milestones:
             print("No milestones found matching your criteria.")
@@ -427,7 +427,7 @@ def search_milestone_command(milestone_id, milestone_value):
         table.add_column("Value", style="magenta")
 
         for milestone in milestones:
-            table.add_row(str(milestone['id']), str(milestone['milestone']))
+            table.add_row(str(milestone['id']), str(milestone['hours']))
         
         console.print(table)
 

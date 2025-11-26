@@ -6,7 +6,7 @@ from App.models.accoladeHistory import AccoladeHistory
 from App.models.loggedHoursHistory import LoggedHoursHistory
 from datetime import datetime, timezone
 from App.models.student import Student
-from App.models.activityHistory import ActivityHistory
+from App.models.ActivityHistory import ActivityHistory
 from sqlalchemy import func
 
 class Staff(User):
