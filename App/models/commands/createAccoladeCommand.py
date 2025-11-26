@@ -9,14 +9,20 @@ class CreateAccoladeCommand(Command):
         self.staff = staff
         self.log: Accolade = None
 
-    def execute(self, description: str):
+    #def execute(self, description: str):
+    def execute(self):
         if not self.staff:
             raise ValueError("Staff member not set for CreateAccoladeCommand")
-        if not self.description:
-            raise ValueError("Description required to create accolade")
+        #if not self.description:
+        #    raise ValueError("Description required to create accolade")
         
+        description = input("Please enter a description for the accolade: ")
+
         self.log = self.staff.create_accolade(description)
+        print("Accolade created with description:", description)
         return self.log
 
     def get_log(self) -> Accolade:
+        if not self.log:
+            raise ValueError("No accolade has been created yet")
         return self.log
