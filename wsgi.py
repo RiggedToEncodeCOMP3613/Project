@@ -13,7 +13,7 @@ from App.models import RequestHistory
 from App.main import create_app
 from App.controllers.student_controller import *
 from App.controllers.staff_controller import *
-from App.controllers.milestone import create_milestone, list_all_milestones, delete_milestone
+from App.controllers.milestone import *
 from App.controllers.app_controller import *
 from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize )
 
@@ -386,6 +386,17 @@ def delete_milestone_command(milestone_id):
             print(f"Milestone with ID {milestone_id} deleted successfully.")
         else:
             print(f"Milestone with ID {milestone_id} not found.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+
+@milestone_cli.command("droptable", help="Delete all milestones")
+def drop_milestones_table_command():
+    print("\n")
+    try:
+        num_deleted = delete_all_milestones()
+        print(f"Deleted {num_deleted} milestones.")
     except Exception as e:
         print(f"An error occurred: {e}")
     print("\n")

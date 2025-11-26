@@ -22,3 +22,8 @@ def delete_milestone(milestone_id):
         db.session.commit()
         return True
     return False
+
+def delete_all_milestones():
+    num_deleted = db.session.query(Milestone).delete()
+    db.session.commit()
+    return num_deleted
