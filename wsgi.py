@@ -10,6 +10,7 @@ from App.models import RequestHistory
 from App.main import create_app
 from App.controllers.student_controller import *
 from App.controllers.staff_controller import *
+from App.controllers.milestone import *
 from App.controllers.app_controller import *
 from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize )
 
@@ -330,6 +331,24 @@ def viewLeaderboard():
 
 app.cli.add_command(staff_cli) # add the group to the cli
 
+
+
+milestone_cli = AppGroup('milestone', help='Milestone commands')
+
+@milestone_cli.command("create", help="Create a new milestone")
+def create_milestone_command():
+    print("\n")
+    try:
+        milestone_value = int(input("Enter milestone value: "))
+        milestone = create_milestone(milestone_value)
+        print(f"Created milestone: {milestone}")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+app.cli.add_command(milestone_cli) # add the group to the cli
 
 
 # '''
