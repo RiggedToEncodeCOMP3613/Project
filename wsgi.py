@@ -367,29 +367,61 @@ def delete_accolade_command(accolade_id, delete_all_history):
 
 #Command to assign a student to an accolade (accolade_id, student_id, staff_id)    
 @staff_cli.command("assignAccolade", help="Assigns a student to an accolade")
-@click.option("--accolade-id", "-a", type=int, required=True, help="ID of the accolade")
-@click.option("--student-id", "-s", type=int, required=True, help="ID of the student")
-@click.option("--staff-id", "-t", type=int, required=True, help="ID of the staff member making the assignment")
+@click.option("--accolade_id", type=int, required=True, help="ID of the accolade")
+@click.option("--student_id", type=int, required=True, help="ID of the student")
+@click.option("--staff_id", type=int, required=True, help="ID of the staff member making the assignment")
 def assign_accolade_command(accolade_id, student_id, staff_id):
   
     result, error = assign_accolade_to_student(accolade_id, student_id, staff_id)
     
     if error:
-        print(f"✗ Error: {error}")
+        click.echo(f"Error: {error}")
         return
     
     accolade = result['accolade']
     student = result['student']
     history = result['history']
     
-    print(f"Student assigned to accolade successfully!")
-    print(f"Accolade ID: {accolade.id}")
-    print(f"Description: '{accolade.description}'")
-    print(f"Student ID: {student.student_id}")
-    print(f"Assigned by Staff ID: {staff_id}")
-    print(f"History Record ID: {history.id}")
-    print(f"Timestamp: {history.timestamp}")
+    click.echo(f"Student assigned to accolade successfully!")
+    click.echo(f"Accolade ID: {accolade.id}")
+    click.echo(f"Description: '{accolade.description}'")
+    click.echo(f"Student ID: {student.student_id}")
+    click.echo(f"Assigned by Staff ID: {staff_id}")
+    click.echo(f"History Record ID: {history.id}")
+    click.echo(f"Timestamp: {history.timestamp}")
     
+ 
+#Command to remove a student from an accolade (accolade_id, student_id, delete_history) 
+@staff_cli.command("removeAccolade", help="Removes a student from an accolade")
+@click.option("--accolade_id", type=int, required=True, help="ID of the accolade")
+@click.option("--student_id", type=int, required=True, help="ID of the student")
+@click.option("--delete_history", is_flag=True, help="Also delete the history record for this assignment")
+def remove_accolade_command(accolade_id, student_id, delete_history):
+    
+    result, error = remove_accolade_from_student(accolade_id, student_id, delete_history=delete_history)
+    
+    if error:
+        click.echo(f"Error: {error}")
+        return
+    
+    accolade = result['accolade']
+    student = result['student']
+    
+    click.echo(f"Student removed from accolade successfully!")
+    click.echo(f"Accolade ID: {accolade.id}")
+    click.echo(f"Description: '{accolade.description}'")
+    click.echo(f"Student ID: {student.student_id}")
+    
+    if delete_history:
+        if result['history_deleted'] > 0:
+            click.echo(f" History record deleted: Yes")
+            if result['activity_deleted']:
+                click.echo(f"Empty activity record cleaned up: Yes")
+        else:
+            click.echo(f"History record deleted: None found")
+    else:
+        click.echo(f"History record preserved")
+        
           
 #Command for staff to view all pending requests
 @staff_cli.command("requests", help="View all pending hour requests")

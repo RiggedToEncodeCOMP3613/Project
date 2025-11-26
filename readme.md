@@ -56,6 +56,7 @@ Intended users: administrators, staff reviewers, and students at educational ins
 | `flask staff updateAccolade` | Updates an accolade's attributes |
 | `flask staff deleteAccolade` | Deletes an accolade by its ID, with option to delete all history records |
 | `flask staff assignAccolade` | Assigns an accolade to specific student |
+| `flask staff removeAccolade` | Remove an accolade from specific student |
 | `flask staff requests` | View all pending requests |
 | `flask staff approveRequest` | Approve a student’s request (enter staff ID + request ID) → logs hours |
 | `flask staff denyRequest` | Deny a student’s request (enter staff ID + request ID) |
