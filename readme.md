@@ -52,6 +52,7 @@ Intended users: administrators, staff reviewers, and students at educational ins
 | `flask staff create` | Create a new staff member (interactive: enter name + email) |
 | `flask staff update` | Update a staff member's attributes via options (--username, --email, and/or --password) |
 | `flask staff createAccolade` | Creates a new accolade |
+| `flask staff updateAccolade` | Updates an accolade's attributes |
 | `flask staff deleteAccolade` | Deletes an accolade by its ID, with option to delete all history records |
 | `flask staff requests` | View all pending requests |
 | `flask staff approveRequest` | Approve a student’s request (enter staff ID + request ID) → logs hours |

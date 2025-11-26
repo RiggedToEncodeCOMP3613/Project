@@ -253,6 +253,7 @@ def create_staff():
         print(f"An error occurred: {e}")
     print("\n")
 
+
 #Command to the update staff member's attributes (username, email, password)
 @staff_cli.command("update", help="Update a staff member's attributes via options")
 @click.option("--staff_id", required=True, type=int, help="ID of the staff member to update.")
@@ -281,6 +282,7 @@ def update_staff_command(staff_id, username, email, password):
         click.echo(f"An unexpected error occurred during update: {e}", err=True)
         sys.exit(1)
  
+ 
 #Command to create a new accolade (staff_id, description) 
 @staff_cli.command("createAccolade", help="Creates a new accolade")
 @click.option("--staff_id", required=True, type=int, help="ID of the staff member creating the accolade")
@@ -299,6 +301,41 @@ def create_accolade_command(staff_id, description):
     click.echo(f"ID: {accolade.id}")
     click.echo(f"Description: '{description}'")
     click.echo(f"Created by Staff ID: {staff_id}")
+
+
+#Command to update an accolade's attributes (staff_id, description)
+@staff_cli.command("updateAccolade", help="Updates an accolade's attributes")
+@click.option("--accolade_id", required=True, type=int, help="ID of the accolade to update")
+@click.option("--staff_id", default=None, type=int, help="New staff ID")
+@click.option("--description", default=None, type=str, help="New description")
+@with_appcontext
+def update_accolade_command(accolade_id, staff_id, description):
+      
+    if staff_id is None and description is None:
+        click.echo("Error: At least one attribute (--staff_id or --description) must be provided.")
+        return
+
+    try:
+        result, error = update_accolade(accolade_id, staff_id=staff_id, description=description)
+
+        if error:
+            click.echo(f"Error: {error}")
+            return
+
+        accolade = result.get('accolade')
+        click.echo("Accolade updated successfully!")
+        click.echo(f"ID: {accolade.id}")
+        click.echo("Updated fields:")
+        for field in result.get('updated_fields', []):
+            click.echo(f"  - {field}")
+
+    except ValueError as e:
+        click.echo(f"Update failed: {e}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"An unexpected error occurred during update: {e}", err=True)
+        sys.exit(1)
+        
 
 #Command to delete an accolade by its ID, with option to delete all history records
 @staff_cli.command("deleteAccolade", help="Deletes an accolade by ID")

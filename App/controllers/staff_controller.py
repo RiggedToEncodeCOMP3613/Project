@@ -1,9 +1,6 @@
 from App.database import db
 from App.models import User, Staff, Student, RequestHistory, Accolade
 
-__all__ = ['register_staff', 'update_staff', 'create_accolade', 'delete_accolade',
-              'fetch_all_requests', 'process_request_approval', 'process_request_denial',
-              'get_all_staff_json']
 
 def register_staff(name,email,password): #registers a new staff member
     new_staff = Staff.create_staff(name, email, password)
@@ -59,6 +56,48 @@ def create_accolade(staff_id, description): #creates a new accolade
         db.session.rollback()
         return None, f"Error creating accolade: {str(e)}"
     
+
+def update_accolade(accolade_id, staff_id=None, description=None): #Updates an accolade's attributes
+
+    accolade = Accolade.query.get(accolade_id)
+    if not accolade:
+        return None, f"Accolade with ID {accolade_id} not found"
+    
+    if staff_id is None and description is None:
+        return None, "No fields to update. Provide at least one of: staff_id, description"
+    
+    try:
+        updated_fields = []
+        
+        if staff_id is not None:
+            staff = Staff.query.get(staff_id)
+            if not staff:
+                return None, f"Staff with ID {staff_id} not found"
+            accolade.staff_id = staff_id
+            updated_fields.append(f"staff_id: {staff_id}")
+        
+        if description is not None:
+            existing = Accolade.query.filter(
+                Accolade.description == description,
+                Accolade.id != accolade_id
+            ).first()
+            if existing:
+                return None, f"Another accolade already has description '{description}' (ID: {existing.id})"
+            accolade.description = description
+            updated_fields.append(f"description: '{description}'")
+        
+        db.session.commit()
+        
+        return {
+            'accolade': accolade,
+            'updated_fields': updated_fields
+        }, None
+        
+    except Exception as e:
+        db.session.rollback()
+        return None, f"Error updating accolade: {str(e)}"
+
+
 def delete_accolade(accolade_id, delete_history=False):
     """
     Deletes an accolade by ID.
