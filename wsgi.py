@@ -1,5 +1,6 @@
 import click, pytest, sys
 from flask.cli import with_appcontext, AppGroup
+import warnings
 
 from App.database import db, get_migrate
 from App.models import User
@@ -12,6 +13,7 @@ from App.controllers.staff_controller import *
 from App.controllers.app_controller import *
 from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize )
 
+warnings.filterwarnings("ignore", category=UserWarning, module='flask_admin.contrib')
 
 '''APP COMMANDS(TESTING PURPOSES)'''
 
