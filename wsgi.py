@@ -426,6 +426,35 @@ def delete_request():
         print(f"An error occurred: {e}")
     print("\n")
 
+@request_cli.command("update", help="Update a request's attributes (student_id, service, hours, status)")
+@click.option("--request_id", required=True, type=int, help="ID of the request to update")
+@click.option("--student_id", default=None, type=int, help="New Student ID")
+@click.option("--service", default=None, help="New Service description")
+@click.option("--hours", default=None, type=float, help="New Hours value")
+@click.option("--status", default=None, help="New Status (Pending/Approved/Denied)")
+@with_appcontext
+def update_request_command(request_id, student_id, service, hours, status):
+
+    if not student_id and not service and not hours and not status:
+        click.echo("Error: At least one attribute (--student_id, --service, --hours, --status) must be provided.")
+        return
+
+    try:
+        request, message = update_request_entry(request_id, student_id, service, hours, status)
+
+        if request:
+            click.echo(f"Successfully updated Request ID {request.id}: {message}")
+        else:
+            click.echo(f"Error: {message}")
+
+    except ValueError as e:
+        click.echo(f"Update failed: {e}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"An unexpected error occurred during update: {e}", err=True)
+        sys.exit(1)
+
+
 app.cli.add_command(request_cli) 
 
 
