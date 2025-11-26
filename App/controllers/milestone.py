@@ -37,3 +37,11 @@ def search_milestones(milestone_id=None, hours=None):
     
     milestones = query.all()
     return [m.get_json() for m in milestones]
+
+def update_milestone(milestone_id, new_hours):
+    milestone = Milestone.query.get(milestone_id)
+    if milestone:
+        milestone.hours = new_hours
+        db.session.commit()
+        return milestone
+    return None

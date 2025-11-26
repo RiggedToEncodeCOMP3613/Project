@@ -424,7 +424,7 @@ def search_milestone_command(milestone_id, hours):
         console = Console()
         table = Table(title="Search Results")
         table.add_column("ID", style="cyan", no_wrap=True)
-        table.add_column("Value", style="magenta")
+        table.add_column("Hours", style="magenta")
 
         for milestone in milestones:
             table.add_row(str(milestone['id']), str(milestone['hours']))
@@ -434,6 +434,25 @@ def search_milestone_command(milestone_id, hours):
     except Exception as e:
         print(f"An error occurred: {e}")
     print("\n")
+
+
+@milestone_cli.command("update", help="Update a milestone's hours by ID")
+@click.argument("milestone_id", type=int)
+@click.argument("new_hours", type=int)
+def update_milestone_command(milestone_id, new_hours):
+    print("\n")
+    try:
+        milestone = update_milestone(milestone_id, new_hours)
+        if milestone:
+            print(f"Milestone ID {milestone_id} updated to {new_hours} hours.")
+        else:
+            print(f"Milestone with ID {milestone_id} not found.")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
 
 app.cli.add_command(milestone_cli) # add the group to the cli
 
