@@ -72,6 +72,7 @@ Intended users: administrators, staff reviewers, and students at educational ins
 | `flask request delete` | Delete a request by ID |
 | `flask request update` | Update a request's attributes via options (--student_id, --service, --hours, --status) |
 | `flask request search` | Command to search requests by student_id, service, or date (--student_id, --service, --date) |
+| `flask request dropRequestTable` | Drop requestHistory table |
 ---
 
 ## Accolade Commands

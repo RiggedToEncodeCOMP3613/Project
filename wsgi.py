@@ -616,6 +616,29 @@ def search_request_command(student_id, service, date):
     except Exception as e:
         click.echo(f"An error occurred during search: {e}", err=True)
 
+
+#Command to drop request table (all request records and associated activity records)
+@request_cli.command("dropRequestTable", help="Drops all request records from the database (WARNING: IRREVERSIBLE)")
+@click.confirmation_option(prompt="Are you sure you want to delete ALL request records? This cannot be undone")
+@with_appcontext
+def drop_request_table_command():
+    try:
+        result, error = drop_request_table()
+        
+        if error:
+            click.echo(f"Error: {error}", err=True)
+            return
+        
+        click.echo(f"Request table dropped successfully!")
+        click.echo(f"Requests deleted: {result['requests_deleted']}")
+        click.echo(f"Associated activity records cleaned up")
+        click.echo(f"\nAll request records have been permanently removed from the database.")
+        
+    except Exception as e:
+        click.echo(f"An error occurred during drop operation: {e}", err=True)
+        sys.exit(1)
+        
+        
 app.cli.add_command(request_cli) 
 
 

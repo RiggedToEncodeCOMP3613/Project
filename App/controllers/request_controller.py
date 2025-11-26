@@ -107,3 +107,20 @@ def search_requests(student_id=None, service=None, date=None):
         
     except Exception as e:
         return None, f"Error searching requests: {str(e)}"
+
+
+def drop_request_table(): #Deletes all entries in the RequestHistory table.
+
+    try:
+        request_count = RequestHistory.query.count()
+        RequestHistory.query.delete()
+        
+        db.session.commit()
+        
+        return {
+            'requests_deleted': request_count
+        }, None
+        
+    except Exception as e:
+        db.session.rollback()
+        return None, f"Error dropping request table: {str(e)}"
