@@ -1,6 +1,9 @@
 import click, pytest, sys
 from flask.cli import with_appcontext, AppGroup
 import warnings
+from rich.table import Table
+from rich.console import Console
+warnings.filterwarnings("ignore", message="pkg_resources is deprecated")
 
 from App.database import db, get_migrate
 from App.models import User
@@ -10,11 +13,13 @@ from App.models import RequestHistory
 from App.main import create_app
 from App.controllers.student_controller import *
 from App.controllers.staff_controller import *
-from App.controllers.milestone import *
+from App.controllers.milestone import create_milestone, list_all_milestones
 from App.controllers.app_controller import *
 from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize )
 
-warnings.filterwarnings("ignore", category=UserWarning, module='flask_admin.contrib')
+
+
+# Your Flask app code here
 
 '''APP COMMANDS(TESTING PURPOSES)'''
 
@@ -336,14 +341,37 @@ app.cli.add_command(staff_cli) # add the group to the cli
 milestone_cli = AppGroup('milestone', help='Milestone commands')
 
 @milestone_cli.command("create", help="Create a new milestone")
-def create_milestone_command():
+@click.argument("milestone_value", type=int)
+def create_milestone_command(milestone_value):
     print("\n")
     try:
-        milestone_value = int(input("Enter milestone value: "))
         milestone = create_milestone(milestone_value)
         print(f"Created milestone: {milestone}")
     except ValueError as e:
         print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+@milestone_cli.command("list", help="List all milestones")
+def list_milestones_command():
+    print("\n")
+    try:
+        milestones = list_all_milestones()
+        if not milestones:
+            print("No milestones found.")
+            return
+        
+        console = Console()
+        table = Table(title="Milestones")
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Value", style="magenta")
+
+        for milestone in milestones:
+            table.add_row(str(milestone['id']), str(milestone['milestone']))
+        
+        console.print(table)
+
     except Exception as e:
         print(f"An error occurred: {e}")
     print("\n")
