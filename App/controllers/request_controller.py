@@ -65,3 +65,45 @@ def update_request_entry(request_id, student_id=None, service=None, hours=None, 
     except Exception as e:
         db.session.rollback()
         return None, f"Error updating request: {str(e)}"
+
+
+def search_requests(student_id=None, service=None, date=None):
+    """
+    Search requests by student_id, service description, or date_completed.
+    
+    """
+    from datetime import datetime, timedelta
+    
+    try:
+        query = RequestHistory.query
+        
+        if student_id is not None:
+            student = Student.query.get(student_id)
+            if not student:
+                return None, f"Student with ID {student_id} not found."
+            query = query.filter_by(student_id=student_id)
+        
+        # Filter by service (partial match, case-insensitive)
+        if service is not None:
+            query = query.filter(RequestHistory.service.ilike(f'%{service}%'))
+        
+        # Filter by date_completed (full day match)
+        if date is not None:
+            try:
+                search_date = datetime.strptime(date, "%Y-%m-%d").date()
+                query = query.filter(
+                    RequestHistory.date_completed >= search_date,
+                    RequestHistory.date_completed < (search_date + timedelta(days=1))
+                )
+            except ValueError:
+                return None, "Invalid date format. Use YYYY-MM-DD"
+        
+        requests = query.all()
+        
+        if not requests:
+            return [], None
+        
+        return requests, None
+        
+    except Exception as e:
+        return None, f"Error searching requests: {str(e)}"

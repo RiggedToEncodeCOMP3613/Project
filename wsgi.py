@@ -581,6 +581,41 @@ def update_request_command(request_id, student_id, service, hours, status):
 
 
 
+# Command to search requests by student_id, service, or date
+@request_cli.command("search", help="Search requests by student_id, service, or date_completed")
+@click.option("--student_id", default=None, type=int, help="Student ID to filter requests")
+@click.option("--service", default=None, type=str, help="Service description to search for")
+@click.option("--date", default=None, type=str, help="Date completed (YYYY-MM-DD) to filter requests")
+@with_appcontext
+def search_request_command(student_id, service, date):
+    
+
+    if student_id is None and service is None and date is None:
+        click.echo("Error: At least one search criterion (--student_id, --service, or --date) must be provided.")
+        return
+    
+    try:
+        requests, error = search_requests(student_id=student_id, service=service, date=date)
+        
+        if error:
+            click.echo(f"Error: {error}")
+            return
+
+        if not requests:
+            click.echo("No requests found matching the criteria.")
+            return
+        
+        click.echo(f"\nFound {len(requests)} request(s):")
+        click.echo("-" * 120)
+        for req in requests:
+            student = Student.query.get(req.student_id)
+            student_name = student.username if student else "Unknown"
+            click.echo(f"Request ID: {req.id:<4} | Student: {student_name:<15} | Service: {req.service:<25} | Hours: {req.hours:<6} | Status: {req.status:<10} | Date: {req.date_completed.date()}")
+        click.echo("-" * 120)
+        
+    except Exception as e:
+        click.echo(f"An error occurred during search: {e}", err=True)
+
 app.cli.add_command(request_cli) 
 
 

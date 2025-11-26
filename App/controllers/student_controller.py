@@ -1,8 +1,6 @@
 from App.database import db
 from App.models import User, Staff, Student, RequestHistory
 
-__all_ = ['register_student', 'get_approved_hours', 'create_hours_request', 'fetch_requests', 'fetch_accolades', 'generate_leaderboard', 'get_all_students_json', 'create_request']
-
 def register_student(name,email,password):
     new_student=Student.create_student(name,email,password)
     return new_student
