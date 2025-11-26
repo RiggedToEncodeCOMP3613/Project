@@ -8,6 +8,27 @@ def create_milestone(hours):
     new_milestone = Milestone(hours=hours)
     db.session.add(new_milestone)
     db.session.commit()
+
+    from App.models import Student, ActivityHistory
+    students = Student.query.all()
+    for student in students:
+        if student.total_hours >= new_milestone.hours:
+            existing_history = MilestoneHistory.query.filter_by(
+                milestone_id=new_milestone.id,
+                student_id=student.student_id
+            ).first()
+            if not existing_history:
+                activity = ActivityHistory(student_id=student.student_id)
+                db.session.add(activity)
+                db.session.flush() # To get activity ID
+                milestone_history = MilestoneHistory(
+                    milestone_id=new_milestone.id,
+                    student_id=student.student_id,
+                    hours=new_milestone.hours
+                )
+                milestone_history.activity_id = activity.id
+                db.session.add(milestone_history)
+                db.session.commit()
     return new_milestone
 
 def list_all_milestones():
