@@ -382,10 +382,11 @@ def list_milestones_command():
 
 @milestone_cli.command("delete", help="Delete a milestone by ID")
 @click.argument("milestone_id", type=int)
-def delete_milestone_command(milestone_id):
+@click.option("--history", is_flag=True, help="Also delete associated milestone history records.")
+def delete_milestone_command(milestone_id, history):
     print("\n")
     try:
-        if delete_milestone(milestone_id):
+        if delete_milestone(milestone_id, delete_history=history):
             print(f"Milestone with ID {milestone_id} deleted successfully.")
         else:
             print(f"Milestone with ID {milestone_id} not found.")
@@ -395,10 +396,11 @@ def delete_milestone_command(milestone_id):
 
 
 @milestone_cli.command("droptable", help="Delete all milestones")
-def drop_milestones_table_command():
+@click.option("--history", is_flag=True, help="Also delete associated milestone history records.")
+def drop_milestones_table_command(history):
     print("\n")
     try:
-        num_deleted = delete_all_milestones()
+        num_deleted = delete_all_milestones(delete_history=history)
         print(f"Deleted {num_deleted} milestones.")
     except Exception as e:
         print(f"An error occurred: {e}")

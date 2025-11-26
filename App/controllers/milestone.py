@@ -16,18 +16,21 @@ def list_all_milestones():
         return []
     return [m.get_json() for m in milestones]
 
-def delete_milestone(milestone_id):
+def delete_milestone(milestone_id, delete_history=False):
     milestone = Milestone.query.get(milestone_id)
     if milestone:
-        MilestoneHistory.query.filter_by(milestone_id=milestone_id).delete()
+        if delete_history:
+            MilestoneHistory.query.filter_by(milestone_id=milestone_id).delete()
+        
         db.session.delete(milestone)
         db.session.commit()
         return True
     return False
 
-def delete_all_milestones():
+def delete_all_milestones(delete_history=False):
     from App.models import MilestoneHistory
-    MilestoneHistory.query.delete()  # Delete all milestone history records
+    if delete_history:
+        MilestoneHistory.query.delete()  # Delete all milestone history records
     num_deleted = db.session.query(Milestone).delete()
     db.session.commit()
     return num_deleted
