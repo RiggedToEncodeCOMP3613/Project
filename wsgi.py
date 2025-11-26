@@ -11,6 +11,7 @@ from App.controllers.student_controller import *
 from App.controllers.staff_controller import *
 from App.controllers.app_controller import *
 from App.controllers.request_controller import *
+from App.controllers.accolade_controller import *
 from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize )
 
 
@@ -580,6 +581,55 @@ def update_request_command(request_id, student_id, service, hours, status):
 
 
 app.cli.add_command(request_cli) 
+
+
+
+'''ACCOLADE COMMANDS'''
+
+
+
+accolade_cli = AppGroup('accolade', help='Accolade search commands')
+
+#Command to search accolades by id, staff_id, description, or student_id
+@accolade_cli.command("search", help="Search accolades by id, staff_id, description, or student_id")
+@click.option("--accolade_id", default=None, type=int, help="Accolade ID to search for")
+@click.option("--staff_id", default=None, type=int, help="Staff ID who created the accolade")
+@click.option("--description", default=None, type=str, help="Text to match in accolade description")
+@click.option("--student_id", default=None, type=int, help="Student ID to filter accolades for")
+@with_appcontext
+def search_accolade_command(accolade_id, staff_id, description, student_id):
+    try:
+        accolades, error = search_accolades(
+            accolade_id=accolade_id,
+            staff_id=staff_id,
+            description=description,
+            student_id=student_id
+        )
+        if error:
+            click.echo(f"Error: {error}")
+            return
+
+        if not accolades:
+            click.echo("No accolades found matching the criteria.")
+            return
+
+        click.echo(f"Found {len(accolades)} accolade(s):")
+        for accolade in accolades:
+            click.echo(f"Accolade ID: {accolade.id}")
+            click.echo(f"Description: '{accolade.description}'")
+            click.echo(f"Created by Staff ID: {accolade.staff_id}")
+            click.echo(f"Number of students: {len(accolade.students)}")
+            if accolade.students:
+                student_ids = [s.student_id for s in accolade.students]
+                click.echo(f"Student IDs: {', '.join(map(str, student_ids))}")
+            click.echo()
+
+    except Exception as e:
+        click.echo(f"An error occurred during search: {e}", err=True)
+
+
+
+app.cli.add_command(accolade_cli)
 
 
 # '''

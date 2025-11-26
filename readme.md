@@ -73,6 +73,15 @@ Intended users: administrators, staff reviewers, and students at educational ins
 | `flask request update` | Update a request's attributes via options (--student_id, --service, --hours, --status) |
 
 ---
+
+## Accolade Commands
+
+| Command | Description |
+|---------|-------------|
+| `flask accolade search` | Search accolades by accolade_id, staff_id, description, or student_id |
+
+---
+
 ## Tests
 
 Run unit and integration tests via the Flask CLI testing command. Example commands:
