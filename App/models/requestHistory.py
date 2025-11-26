@@ -27,7 +27,6 @@ class RequestHistory(db.Model):
         self.service = service
         self.hours = hours
         self.date_completed = parse_date(date_completed)
-        self.status = 'pending'
         self.date_responded = None
 
     
