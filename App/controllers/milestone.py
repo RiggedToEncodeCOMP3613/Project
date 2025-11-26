@@ -14,3 +14,11 @@ def list_all_milestones():
     if not milestones:
         return []
     return [m.get_json() for m in milestones]
+
+def delete_milestone(milestone_id):
+    milestone = Milestone.query.get(milestone_id)
+    if milestone:
+        db.session.delete(milestone)
+        db.session.commit()
+        return True
+    return False
