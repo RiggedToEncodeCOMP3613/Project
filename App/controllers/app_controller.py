@@ -1,5 +1,5 @@
 from App.database import db
-from App.models import User, Staff, Student, RequestHistory
+from App.models import User, Staff, Student, RequestHistory, Accolade
 
 #Comamand to list all staff in the database
 def printAllStaff():
@@ -16,6 +16,15 @@ def printAllStudents():
     students = Student.query.all()
     for student in students:
         print(student)
+    print("\n")
+
+#Comamand to list all accolades in the database
+def listAllAccolades():
+
+    print("\n")
+    accolades = Accolade.query.all()
+    for accolade in accolades:
+        print(accolade)
     print("\n")
 
 #Comamand to list all requests in the database

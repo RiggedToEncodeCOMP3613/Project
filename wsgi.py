@@ -45,6 +45,10 @@ def listStaff():
 def listStudents():
     printAllStudents()
 
+#Comamand to list all accolades in the database
+@app.cli.command ("listAccolades", help="Lists all accolades in the database")
+def listAccolades():
+    listAllAccolades()
 
 #Comamand to list all requests in the database
 @app.cli.command ("listRequests", help="Lists all requests in the database")

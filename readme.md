@@ -21,6 +21,7 @@ Intended users: administrators, staff reviewers, and students at educational ins
 | `flask listUsers` | Lists all users in the database |
 | `flask listStaff` | Lists all staff in the database |
 | `flask listStudents` | Lists all students in the database |
+| `flask listAccolades` | Lists all accolades in the database |
 | `flask listRequests` | Lists all requests in the database |
 | `flask listApprovedRequests` | Lists all approved requests |
 | `flask listPendingRequests` | Lists all pending requests |
