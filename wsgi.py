@@ -456,6 +456,39 @@ def update_milestone_command(milestone_id, new_hours):
     print("\n")
 
 
+@milestone_cli.command("history", help="List all milestone history records")
+def list_milestone_history_command():
+    print("\n")
+    try:
+        history_records = list_all_milestone_history()
+        if not history_records:
+            print("No milestone history records found.")
+            return
+        
+        console = Console()
+        table = Table(title="Milestone History")
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Milestone ID", style="magenta")
+        table.add_column("Student ID", style="green")
+        table.add_column("Hours", style="yellow")
+        table.add_column("Timestamp", style="blue")
+
+        for record in history_records:
+            table.add_row(
+                str(record['id']),
+                str(record['milestone_id']),
+                str(record['student_id']),
+                str(record['hours']),
+                record['timestamp']
+            )
+        
+        console.print(table)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+
 app.cli.add_command(milestone_cli) # add the group to the cli
 
 

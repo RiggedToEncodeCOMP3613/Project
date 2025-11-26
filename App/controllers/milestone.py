@@ -73,3 +73,9 @@ def update_milestone(milestone_id, new_hours):
         db.session.commit()
         return milestone
     return None
+
+def list_all_milestone_history():
+    history_records = MilestoneHistory.query.all()
+    if not history_records:
+        return []
+    return [h.get_json() for h in history_records]
