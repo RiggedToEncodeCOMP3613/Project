@@ -1,5 +1,5 @@
 from App.database import db
-from App.models import User, Staff, Student, RequestHistory, Accolade
+from App.models import User, Staff, Student, RequestHistory, Accolade, AccoladeHistory, ActivityHistory
 
 
 def register_staff(name,email,password): #registers a new staff member
@@ -154,6 +154,60 @@ def delete_accolade(accolade_id, delete_history=False):
         db.session.rollback()
         return False, f"Error deleting accolade: {str(e)}"
 
+
+def assign_accolade_to_student(accolade_id, student_id, staff_id): #assigns a student to an accolade
+    
+    accolade = Accolade.query.get(accolade_id)
+    if not accolade:
+        return None, f"Accolade with ID {accolade_id} not found"
+    
+    staff = Staff.query.get(staff_id)
+    if not staff:
+        return None, f"Staff with ID {staff_id} not found"
+    
+    try:
+        student = accolade.add_student(student_id)
+        
+        if not student:
+            return None, f"Student with ID {student_id} not found"
+        
+        # Check if student was already assigned
+        existing_history = AccoladeHistory.query.filter_by(
+            accolade_id=accolade_id,
+            student_id=student_id
+        ).first()
+        
+        if existing_history:
+            return None, f"Student {student_id} is already assigned to this accolade"
+        
+        # Get or create ActivityHistory for this student
+        activity = ActivityHistory.query.filter_by(student_id=student_id).first()
+        if not activity:
+            activity = ActivityHistory(student_id=student_id)
+            db.session.add(activity)
+            db.session.flush()
+        
+        # Create history record
+        history = AccoladeHistory(
+            accolade_id=accolade_id,
+            student_id=student_id,
+            staff_id=staff_id,
+            description=accolade.description
+        )
+        history.activity_id = activity.id
+        db.session.add(history)
+        db.session.commit()
+        
+        return {
+            'accolade': accolade,
+            'student': student,
+            'history': history
+        }, None
+        
+    except Exception as e:
+        db.session.rollback()
+        return None, f"Error assigning student to accolade: {str(e)}"
+    
 
 def fetch_all_requests(): #fetches all pending requests for staff to review
     pending_requests = RequestHistory.query.filter_by(status='pending').all()

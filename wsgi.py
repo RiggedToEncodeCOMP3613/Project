@@ -363,8 +363,34 @@ def delete_accolade_command(accolade_id, delete_all_history):
             click.echo(f"Empty activity records cleaned up: {result['empty_activities_deleted']}")
     else:
         click.echo(f"History records preserved")
+ 
+
+#Command to assign a student to an accolade (accolade_id, student_id, staff_id)    
+@staff_cli.command("assignAccolade", help="Assigns a student to an accolade")
+@click.option("--accolade-id", "-a", type=int, required=True, help="ID of the accolade")
+@click.option("--student-id", "-s", type=int, required=True, help="ID of the student")
+@click.option("--staff-id", "-t", type=int, required=True, help="ID of the staff member making the assignment")
+def assign_accolade_command(accolade_id, student_id, staff_id):
+  
+    result, error = assign_accolade_to_student(accolade_id, student_id, staff_id)
     
-        
+    if error:
+        print(f"✗ Error: {error}")
+        return
+    
+    accolade = result['accolade']
+    student = result['student']
+    history = result['history']
+    
+    print(f"Student assigned to accolade successfully!")
+    print(f"Accolade ID: {accolade.id}")
+    print(f"Description: '{accolade.description}'")
+    print(f"Student ID: {student.student_id}")
+    print(f"Assigned by Staff ID: {staff_id}")
+    print(f"History Record ID: {history.id}")
+    print(f"Timestamp: {history.timestamp}")
+    
+          
 #Command for staff to view all pending requests
 @staff_cli.command("requests", help="View all pending hour requests")
 def requests():
