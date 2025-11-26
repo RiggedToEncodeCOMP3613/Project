@@ -580,6 +580,7 @@ def update_request_command(request_id, student_id, service, hours, status):
         sys.exit(1)
 
 
+
 app.cli.add_command(request_cli) 
 
 
@@ -628,6 +629,27 @@ def search_accolade_command(accolade_id, staff_id, description, student_id):
         click.echo(f"An error occurred during search: {e}", err=True)
 
 
+#Command to drop accolade table (all accolade records and student-accolade associations)
+@accolade_cli.command("dropAccoladeTable", help="Drops all accolade records from the database (WARNING: IRREVERSIBLE)")
+@click.confirmation_option(prompt="Are you sure you want to delete ALL accolade records? This cannot be undone")
+@with_appcontext
+def drop_accolade_table_command():
+    try:
+        result, error = drop_accolade_table()
+        
+        if error:
+            click.echo(f"Error: {error}", err=True)
+            return
+        
+        click.echo(f"Accolade table dropped successfully!")
+        click.echo(f"Accolades deleted: {result['accolades_deleted']}")
+        click.echo(f"Student-accolade associations cleared")
+        click.echo(f"History records preserved")
+        click.echo(f"\nAll accolade records have been permanently removed from the database.")
+        
+    except Exception as e:
+        click.echo(f"An error occurred during drop operation: {e}", err=True)
+        sys.exit(1)
 
 app.cli.add_command(accolade_cli)
 

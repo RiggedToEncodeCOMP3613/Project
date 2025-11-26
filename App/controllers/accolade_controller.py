@@ -35,3 +35,21 @@ def search_accolades(accolade_id=None, staff_id=None, description=None, student_
         
     except Exception as e:
         return None, f"Error searching accolades: {str(e)}"
+    
+    
+# Drop accolade table (accolade records and accolade-student associations)
+def drop_accolade_table():
+
+    try:
+        accolade_count = Accolade.query.count()
+        Accolade.query.delete()
+        
+        db.session.commit()
+        
+        return {
+            'accolades_deleted': accolade_count
+        }, None
+        
+    except Exception as e:
+        db.session.rollback()
+        return None, f"Error dropping accolade table: {str(e)}"

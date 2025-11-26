@@ -79,6 +79,7 @@ Intended users: administrators, staff reviewers, and students at educational ins
 | Command | Description |
 |---------|-------------|
 | `flask accolade search` | Search accolades by accolade_id, staff_id, description, or student_id |
+| `flask accolade dropAccoladeTable` | Drop accolade table (all accolade records and student-accolade associations) |
 
 ---
 
