@@ -68,6 +68,14 @@ def search_history_by_student(student_id):
 
     return activity_history.sorted_history()
 
+def search_history_by_activity(activity_id):
+    '''Returns a sorted history list (with combined history objects) for a specific ActivityHistory ID'''
+    activity = ActivityHistory.query.get(activity_id)
+    if not activity:
+        raise ValueError(f"ActivityHistory with id {activity_id} not found.")
+
+    return activity.sorted_history()
+
 def search_history_by_request(student_id, request_id):
     student = Student.query.get(student_id)
     if not student:
@@ -115,6 +123,9 @@ def search_history_by_milestone(student_id, milestone_id):
 
     milestone = next((ms for ms in activity_history.milestones if ms.id == milestone_id), None)
     return milestone.get_json() if milestone else None
+
+
+
 
 
 
