@@ -5,17 +5,18 @@ from App.models.milestone import Milestone
 from App.models.accolade import Accolade
 from App.models.requestHistory import RequestHistory
 from App.models.loggedHoursHistory import LoggedHoursHistory
-from App.models.ActivityHistory import ActivityHistory
+from App.models.activityHistory import ActivityHistory
+from sqlalchemy import func
 
 class Student(User):
 
     __tablename__ = "student"
-    student_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), primary_key=True, autoincrement=False)
     total_hours = db.Column(db.Float, default=0.0, nullable=False)
     rank = db.Column(db.Integer, default=0, nullable=False)
     
     # Relationships
-    activity_history = db.relationship('ActivityHistory', backref='student', lazy=True, cascade="all, delete-orphan")
+    activity_history = db.relationship('ActivityHistory', backref='student', lazy=True, cascade="all, delete-orphan", uselist=False)
 
     # Inheritance setup
     __mapper_args__ = {
@@ -23,6 +24,13 @@ class Student(User):
     }
 
     def __init__(self, username, email, password):
+        prefix = 8160
+        max_id = db.session.query(func.max(Student.student_id)).filter(Student.student_id.between(prefix*10**5, (prefix+1)*10**5-1)).scalar()
+        if max_id:
+            suffix = int(str(max_id)[4:]) + 1
+        else:
+            suffix = 10000
+        self.student_id = int(f"{prefix}{suffix:05d}")
         super().__init__(username, email, password, role="student")
         self.total_hours = 0.0
         self.rank = 0
@@ -63,7 +71,7 @@ class Student(User):
             date_completed=date_completed
         )
         request.activity_id = activity.id
-        request.status = 'pending'
+        #request.status = 'pending' #redudant
         db.session.add(request)
         db.session.commit()
         return request
@@ -93,6 +101,7 @@ class Student(User):
     # Check if student has unlocked new milestones based on total hours
     def calculate_new_milestones(self):
         all_milestones = Milestone.query.order_by(Milestone.milestone).all()
+        m = []
         for milestone in all_milestones:
             if self.total_hours >= milestone.milestone:
                 existing = MilestoneHistory.query.filter_by(
@@ -116,6 +125,8 @@ class Student(User):
                     milestone_history.activity_id = activity.id
                     db.session.add(milestone_history)
                     db.session.commit()
+                    m.append(milestone_history)
+        return m
     
     # Return a list of accolades that this student has earned
     def check_accolades(self):

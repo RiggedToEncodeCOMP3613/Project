@@ -22,8 +22,9 @@ class ActivityHistory(db.Model):
     
     def sorted_history(self):
         history = self.requests + self.loggedhours + self.accolades + self.milestones
-        return {
-            'history': sorted([item.get_json() for item in history],
-                          key=lambda x: x['timestamp'],
-                          reverse=True)
-        }
+
+        return sorted(
+            [item.get_json() for item in history],
+            key=lambda x: x['timestamp'],
+            reverse=True
+        )
