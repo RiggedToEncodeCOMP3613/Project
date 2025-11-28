@@ -10,6 +10,7 @@ from App.main import create_app
 from App.controllers.student_controller import *
 from App.controllers.staff_controller import *
 from App.controllers.app_controller import *
+from App.controllers.activityhistory_controller import *
 from App.controllers.request_controller import *
 from App.controllers.accolade_controller import *
 from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize )
@@ -230,6 +231,105 @@ def viewLeaderboard():
     print("\n")
 
 app.cli.add_command(student_cli) # add the group to the cli
+
+
+# Student command to list activity history (all or by type)
+@student_cli.command("viewHistory", help="View activity history (all / request / logged / accolade / milestone)")
+def viewHistory():
+    print("\n")
+    try:
+        student_id = int(input("Enter your student ID: "))
+        print("Select type to view: [all/request/logged/accolade/milestone]")
+        type_choice = input("Type: ").strip().lower()
+
+        if type_choice in ("all", "a"):
+            history = list_all_acivity_history(student_id)
+        elif type_choice in ("request", "requests", "r"):
+            history = list_all_student_requests_history(student_id)
+        elif type_choice in ("logged", "loggedhours", "l"):
+            history = list_all_student_logged_hours_history(student_id)
+        elif type_choice in ("accolade", "accolades", "c"):
+            history = list_all_student_accolades_history(student_id)
+        elif type_choice in ("milestone", "milestones", "m"):
+            history = list_all_student_milestones_history(student_id)
+        else:
+            print(f"Unknown type '{type_choice}'. Use one of: all, request, logged, accolade, milestone.")
+            return
+
+        if not history:
+            print(f"No activity history found for student {student_id} (type: {type_choice}).")
+            return
+
+        print(f"Activity history for student {student_id} (type: {type_choice}):")
+        for entry in history:
+            print(entry)
+
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+
+# Student command to search activity history by type and id
+@student_cli.command("searchHistory", help="Search activity history by type and id (interactive)")
+def searchHistory():
+    print("\n")
+    try:
+        print("Select type to search: [activity/student/request/logged/accolade/milestone/all]")
+        type_choice = input("Type: ").strip().lower()
+
+        # Search by activity id does not need a student id
+        if type_choice in ("activity", "act"):
+            activity_id = int(input("Enter activity history ID: "))
+            result = search_history_by_activity(activity_id)
+            if not result:
+                print(f"No activity history found for activity id {activity_id}.")
+                return
+            for entry in result:
+                print(entry)
+            return
+
+        # For types that require a student id, prompt for it now
+        student_id = int(input("Enter your student ID: "))
+
+        if type_choice in ("all",):
+            result = search_history_by_student(student_id)
+            if not result:
+                print(f"No activity history found for student {student_id}.")
+                return
+            for entry in result:
+                print(entry)
+            return
+
+        if type_choice in ("request", "requests"):
+            req_id = int(input("Enter request ID: "))
+            result = search_history_by_request(student_id, req_id)
+        elif type_choice in ("logged", "loggedhours"):
+            lh_id = int(input("Enter logged hours ID: "))
+            result = search_history_by_logged_hours(student_id, lh_id)
+        elif type_choice in ("accolade", "accolades"):
+            ac_id = int(input("Enter accolade history ID: "))
+            result = search_history_by_accolade(student_id, ac_id)
+        elif type_choice in ("milestone", "milestones"):
+            ms_id = int(input("Enter milestone history ID: "))
+            result = search_history_by_milestone(student_id, ms_id)
+        else:
+            print(f"Unknown type '{type_choice}'. Use one of: activity, student/all, request, logged, accolade, milestone.")
+            return
+
+        if not result:
+            print("No matching entry found.")
+            return
+
+        print("Search result:")
+        print(result)
+
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
 
 
 
