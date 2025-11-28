@@ -11,6 +11,8 @@ from App.controllers.student_controller import *
 from App.controllers.staff_controller import *
 from App.controllers.app_controller import *
 from App.controllers.activityhistory_controller import *
+from App.controllers.request_controller import *
+from App.controllers.accolade_controller import *
 from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize )
 
 
@@ -45,6 +47,10 @@ def listStaff():
 def listStudents():
     printAllStudents()
 
+#Comamand to list all accolades in the database
+@app.cli.command ("listAccolades", help="Lists all accolades in the database")
+def listAccolades():
+    listAllAccolades()
 
 #Comamand to list all requests in the database
 @app.cli.command ("listRequests", help="Lists all requests in the database")
@@ -107,6 +113,8 @@ def create_student():
     try:
         name = input("Enter student name: ")
         email = input("Enter student email: ")
+        if "@" not in email:
+            raise ValueError("Invalid email address.")
         password = input("Enter student password: ")    
         student = register_student(name, email, password)
 
@@ -115,8 +123,28 @@ def create_student():
         print(f"An error occurred: {e}")
     print("\n")
 
-
-
+#Command to create a new request for a student (student_id, service, staff_id, hours, date_completed)
+@student_cli.command("request", help="Create a new service hour request via command line options")
+@click.option("--student_id", required=True, type=int, help="ID of the student making the request")
+@click.option("--service", required=True, help="Description of the service performed")
+@click.option("--staff_id", required=True, type=int, help="ID of the staff member to verify")
+@click.option("--hours", required=True, type=float, help="Number of hours to claim")
+@click.option("--date", required=True, help="Date of service (YYYY-MM-DD)")
+@with_appcontext
+def create_request_command_options(student_id, service, staff_id, hours, date):
+    """
+    Creates a new request for a student using command line options.
+    Usage: flask student request --student_id 1 --service "Gardening" --staff_id 2 --hours 4 --date 2023-10-25
+    """
+    request, message = create_request(student_id, service, staff_id, hours, date)
+    
+    if request:
+        click.echo(f"\nSuccess: {message}")
+        click.echo(f"Request ID: {request.id}")
+        click.echo(f"Status: {request.status}")
+        click.echo(f"Details: {request}") 
+    else:
+        click.echo(f"\nError: {message}")
 
 #Command for student to request hour confirmation (student_id, hours)
 @student_cli.command("requestHours", help="Student requests hour confirmation (interactive)")
@@ -319,6 +347,8 @@ def create_staff():
     try:
         name = input("Enter staff name: ")
         email = input("Enter staff email: ")
+        if "@" not in email:
+            raise ValueError("Invalid email address.")
         password = input("Enter staff password: ")  
         staff = register_staff(name, email, password)
 
@@ -329,6 +359,171 @@ def create_staff():
     print("\n")
 
 
+#Command to the update staff member's attributes (username, email, password)
+@staff_cli.command("update", help="Update a staff member's attributes via options")
+@click.option("--staff_id", required=True, type=int, help="ID of the staff member to update.")
+@click.option("--username", default=None, help="New username for the staff member.")
+@click.option("--email", default=None, help="New email for the staff member.")
+@click.option("--password", default=None, help="New password for the staff member.")
+@with_appcontext
+def update_staff_command(staff_id, username, email, password):
+    
+    if not username and not email and not password:
+        click.echo("Error: At least one attribute (--username, --email, or --password) must be provided.")
+        return
+    
+    try:
+        staff = update_staff(staff_id, username, email, password)
+        
+        if staff:
+            click.echo(f"Successfully updated Staff ID {staff.staff_id}: {staff.username}")
+        else:
+            click.echo(f"Error: Staff with ID {staff_id} not found.")
+
+    except ValueError as e:
+        click.echo(f"Update failed: {e}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"An unexpected error occurred during update: {e}", err=True)
+        sys.exit(1)
+ 
+ 
+#Command to create a new accolade (staff_id, description) 
+@staff_cli.command("createAccolade", help="Creates a new accolade")
+@click.option("--staff_id", required=True, type=int, help="ID of the staff member creating the accolade")
+@click.option("--description", required=True, help="Description of the accolade")
+@with_appcontext
+def create_accolade_command(staff_id, description):
+    from App.controllers.staff_controller import create_accolade
+    
+    accolade, error = create_accolade(staff_id, description)
+    
+    if error:
+        click.echo(f"Error: {error}")
+        return
+    
+    click.echo(f"Accolade created successfully!")
+    click.echo(f"ID: {accolade.id}")
+    click.echo(f"Description: '{description}'")
+    click.echo(f"Created by Staff ID: {staff_id}")
+
+
+#Command to update an accolade's attributes (staff_id, description)
+@staff_cli.command("updateAccolade", help="Updates an accolade's attributes")
+@click.option("--accolade_id", required=True, type=int, help="ID of the accolade to update")
+@click.option("--staff_id", default=None, type=int, help="New staff ID")
+@click.option("--description", default=None, type=str, help="New description")
+@with_appcontext
+def update_accolade_command(accolade_id, staff_id, description):
+      
+    if staff_id is None and description is None:
+        click.echo("Error: At least one attribute (--staff_id or --description) must be provided.")
+        return
+
+    try:
+        result, error = update_accolade(accolade_id, staff_id=staff_id, description=description)
+
+        if error:
+            click.echo(f"Error: {error}")
+            return
+
+        accolade = result.get('accolade')
+        click.echo("Accolade updated successfully!")
+        click.echo(f"ID: {accolade.id}")
+        click.echo("Updated fields:")
+        for field in result.get('updated_fields', []):
+            click.echo(f"  - {field}")
+
+    except ValueError as e:
+        click.echo(f"Update failed: {e}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"An unexpected error occurred during update: {e}", err=True)
+        sys.exit(1)
+        
+
+#Command to delete an accolade by its ID, with option to delete all history records
+@staff_cli.command("deleteAccolade", help="Deletes an accolade by ID")
+@click.argument("accolade_id", type=int)
+@click.option("--delete_all_history", is_flag=True, help="Also delete all history records for this accolade")
+def delete_accolade_command(accolade_id, delete_all_history):
+
+    success, result = delete_accolade(accolade_id, delete_history=delete_all_history)
+    
+    if not success:
+        click.echo(f"Error: {result}")
+        return
+    
+    click.echo(f"Accolade deleted successfully!")
+    click.echo(f"ID: {accolade_id}")
+    click.echo(f"Description: '{result['description']}'")
+    
+    if delete_all_history:
+        click.echo(f"History records deleted: {result['history_deleted']}")
+        if result['empty_activities_deleted'] > 0:
+            click.echo(f"Empty activity records cleaned up: {result['empty_activities_deleted']}")
+    else:
+        click.echo(f"History records preserved")
+ 
+
+#Command to assign a student to an accolade (accolade_id, student_id, staff_id)    
+@staff_cli.command("assignAccolade", help="Assigns a student to an accolade")
+@click.option("--accolade_id", type=int, required=True, help="ID of the accolade")
+@click.option("--student_id", type=int, required=True, help="ID of the student")
+@click.option("--staff_id", type=int, required=True, help="ID of the staff member making the assignment")
+def assign_accolade_command(accolade_id, student_id, staff_id):
+  
+    result, error = assign_accolade_to_student(accolade_id, student_id, staff_id)
+    
+    if error:
+        click.echo(f"Error: {error}")
+        return
+    
+    accolade = result['accolade']
+    student = result['student']
+    history = result['history']
+    
+    click.echo(f"Student assigned to accolade successfully!")
+    click.echo(f"Accolade ID: {accolade.id}")
+    click.echo(f"Description: '{accolade.description}'")
+    click.echo(f"Student ID: {student.student_id}")
+    click.echo(f"Assigned by Staff ID: {staff_id}")
+    click.echo(f"History Record ID: {history.id}")
+    click.echo(f"Timestamp: {history.timestamp}")
+    
+ 
+#Command to remove a student from an accolade (accolade_id, student_id, delete_history) 
+@staff_cli.command("removeAccolade", help="Removes a student from an accolade")
+@click.option("--accolade_id", type=int, required=True, help="ID of the accolade")
+@click.option("--student_id", type=int, required=True, help="ID of the student")
+@click.option("--delete_history", is_flag=True, help="Also delete the history record for this assignment")
+def remove_accolade_command(accolade_id, student_id, delete_history):
+    
+    result, error = remove_accolade_from_student(accolade_id, student_id, delete_history=delete_history)
+    
+    if error:
+        click.echo(f"Error: {error}")
+        return
+    
+    accolade = result['accolade']
+    student = result['student']
+    
+    click.echo(f"Student removed from accolade successfully!")
+    click.echo(f"Accolade ID: {accolade.id}")
+    click.echo(f"Description: '{accolade.description}'")
+    click.echo(f"Student ID: {student.student_id}")
+    
+    if delete_history:
+        if result['history_deleted'] > 0:
+            click.echo(f" History record deleted: Yes")
+            if result['activity_deleted']:
+                click.echo(f"Empty activity record cleaned up: Yes")
+        else:
+            click.echo(f"History record deleted: None found")
+    else:
+        click.echo(f"History record preserved")
+        
+          
 #Command for staff to view all pending requests
 @staff_cli.command("requests", help="View all pending hour requests")
 def requests():
@@ -428,6 +623,193 @@ def viewLeaderboard():
 
 app.cli.add_command(staff_cli) # add the group to the cli
 
+
+
+
+'''REQUEST COMMANDS'''
+
+
+
+request_cli = AppGroup('request', help='Request object commands')
+
+# Command to delete a request by ID
+@request_cli.command("delete", help="Delete a service hour request by ID")
+def delete_request():
+    print("\n")
+    try:
+        request_id = int(input("Enter the request ID to delete: ")) 
+        success, message = delete_request_entry(request_id)
+        
+        if success:
+            print(f"Success: {message}")
+        else:
+            print(f"Error: {message}")
+    
+    except ValueError:
+        print("Error: Request ID must be an integer.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+@request_cli.command("update", help="Update a request's attributes (student_id, service, hours, status)")
+@click.option("--request_id", required=True, type=int, help="ID of the request to update")
+@click.option("--student_id", default=None, type=int, help="New Student ID")
+@click.option("--service", default=None, help="New Service description")
+@click.option("--hours", default=None, type=float, help="New Hours value")
+@click.option("--status", default=None, help="New Status (Pending/Approved/Denied)")
+@with_appcontext
+def update_request_command(request_id, student_id, service, hours, status):
+
+    if not student_id and not service and not hours and not status:
+        click.echo("Error: At least one attribute (--student_id, --service, --hours, --status) must be provided.")
+        return
+
+    try:
+        request, message = update_request_entry(request_id, student_id, service, hours, status)
+
+        if request:
+            click.echo(f"Successfully updated Request ID {request.id}: {message}")
+        else:
+            click.echo(f"Error: {message}")
+
+    except ValueError as e:
+        click.echo(f"Update failed: {e}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"An unexpected error occurred during update: {e}", err=True)
+        sys.exit(1)
+
+
+
+# Command to search requests by student_id, service, or date
+@request_cli.command("search", help="Search requests by student_id, service, or date_completed")
+@click.option("--student_id", default=None, type=int, help="Student ID to filter requests")
+@click.option("--service", default=None, type=str, help="Service description to search for")
+@click.option("--date", default=None, type=str, help="Date completed (YYYY-MM-DD) to filter requests")
+@with_appcontext
+def search_request_command(student_id, service, date):
+    
+
+    if student_id is None and service is None and date is None:
+        click.echo("Error: At least one search criterion (--student_id, --service, or --date) must be provided.")
+        return
+    
+    try:
+        requests, error = search_requests(student_id=student_id, service=service, date=date)
+        
+        if error:
+            click.echo(f"Error: {error}")
+            return
+
+        if not requests:
+            click.echo("No requests found matching the criteria.")
+            return
+        
+        click.echo(f"\nFound {len(requests)} request(s):")
+        click.echo("-" * 120)
+        for req in requests:
+            student = Student.query.get(req.student_id)
+            student_name = student.username if student else "Unknown"
+            click.echo(f"Request ID: {req.id:<4} | Student: {student_name:<15} | Service: {req.service:<25} | Hours: {req.hours:<6} | Status: {req.status:<10} | Date: {req.date_completed.date()}")
+        click.echo("-" * 120)
+        
+    except Exception as e:
+        click.echo(f"An error occurred during search: {e}", err=True)
+
+
+#Command to drop request table (all request records and associated activity records)
+@request_cli.command("dropRequestTable", help="Drops all request records from the database (WARNING: IRREVERSIBLE)")
+@click.confirmation_option(prompt="Are you sure you want to delete ALL request records? This cannot be undone")
+@with_appcontext
+def drop_request_table_command():
+    try:
+        result, error = drop_request_table()
+        
+        if error:
+            click.echo(f"Error: {error}", err=True)
+            return
+        
+        click.echo(f"Request table dropped successfully!")
+        click.echo(f"Requests deleted: {result['requests_deleted']}")
+        click.echo(f"Associated activity records cleaned up")
+        click.echo(f"\nAll request records have been permanently removed from the database.")
+        
+    except Exception as e:
+        click.echo(f"An error occurred during drop operation: {e}", err=True)
+        sys.exit(1)
+        
+        
+app.cli.add_command(request_cli) 
+
+
+
+'''ACCOLADE COMMANDS'''
+
+
+
+accolade_cli = AppGroup('accolade', help='Accolade search commands')
+
+#Command to search accolades by id, staff_id, description, or student_id
+@accolade_cli.command("search", help="Search accolades by id, staff_id, description, or student_id")
+@click.option("--accolade_id", default=None, type=int, help="Accolade ID to search for")
+@click.option("--staff_id", default=None, type=int, help="Staff ID who created the accolade")
+@click.option("--description", default=None, type=str, help="Text to match in accolade description")
+@click.option("--student_id", default=None, type=int, help="Student ID to filter accolades for")
+@with_appcontext
+def search_accolade_command(accolade_id, staff_id, description, student_id):
+    try:
+        accolades, error = search_accolades(
+            accolade_id=accolade_id,
+            staff_id=staff_id,
+            description=description,
+            student_id=student_id
+        )
+        if error:
+            click.echo(f"Error: {error}")
+            return
+
+        if not accolades:
+            click.echo("No accolades found matching the criteria.")
+            return
+
+        click.echo(f"Found {len(accolades)} accolade(s):")
+        for accolade in accolades:
+            click.echo(f"Accolade ID: {accolade.id}")
+            click.echo(f"Description: '{accolade.description}'")
+            click.echo(f"Created by Staff ID: {accolade.staff_id}")
+            click.echo(f"Number of students: {len(accolade.students)}")
+            if accolade.students:
+                student_ids = [s.student_id for s in accolade.students]
+                click.echo(f"Student IDs: {', '.join(map(str, student_ids))}")
+            click.echo()
+
+    except Exception as e:
+        click.echo(f"An error occurred during search: {e}", err=True)
+
+
+#Command to drop accolade table (all accolade records and student-accolade associations)
+@accolade_cli.command("dropAccoladeTable", help="Drops all accolade records from the database (WARNING: IRREVERSIBLE)")
+@click.confirmation_option(prompt="Are you sure you want to delete ALL accolade records? This cannot be undone")
+@with_appcontext
+def drop_accolade_table_command():
+    try:
+        result, error = drop_accolade_table()
+        
+        if error:
+            click.echo(f"Error: {error}", err=True)
+            return
+        
+        click.echo(f"Accolade table dropped successfully!")
+        click.echo(f"Accolades deleted: {result['accolades_deleted']}")
+        click.echo(f"Student-accolade associations cleared")
+        click.echo(f"History records preserved")
+        click.echo(f"\nAll accolade records have been permanently removed from the database.")
+        
+    except Exception as e:
+        click.echo(f"An error occurred during drop operation: {e}", err=True)
+        sys.exit(1)
+
+app.cli.add_command(accolade_cli)
 
 
 # '''

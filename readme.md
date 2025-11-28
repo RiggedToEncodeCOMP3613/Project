@@ -21,6 +21,7 @@ Intended users: administrators, staff reviewers, and students at educational ins
 | `flask listUsers` | Lists all users in the database |
 | `flask listStaff` | Lists all staff in the database |
 | `flask listStudents` | Lists all students in the database |
+| `flask listAccolades` | Lists all accolades in the database |
 | `flask listRequests` | Lists all requests in the database |
 | `flask listApprovedRequests` | Lists all approved requests |
 | `flask listPendingRequests` | Lists all pending requests |
@@ -36,6 +37,7 @@ Intended users: administrators, staff reviewers, and students at educational ins
 |---------|-------------|
 | `flask student create` | Create a new student (interactive: enter name + email) |
 | `flask student hours` | View total hours (enter student ID) |
+| `flask student request` | Creates a request (--student_id, --service, --staff_id, --hours, --date) |
 | `flask student requestHours` | Request hour confirmation (enter student ID + hours) |
 | `flask student viewmyRequests` | List all requests made by a student (enter student ID) |
 | `flask student viewmyAccolades` | List all accolades earned by a student (enter student ID) |
@@ -49,10 +51,36 @@ Intended users: administrators, staff reviewers, and students at educational ins
 | Command | Description |
 |---------|-------------|
 | `flask staff create` | Create a new staff member (interactive: enter name + email) |
+| `flask staff update` | Update a staff member's attributes via options (--username, --email, and/or --password) |
+| `flask staff createAccolade` | Creates a new accolade |
+| `flask staff updateAccolade` | Updates an accolade's attributes |
+| `flask staff deleteAccolade` | Deletes an accolade by its ID, with option to delete all history records |
+| `flask staff assignAccolade` | Assigns an accolade to specific student |
+| `flask staff removeAccolade` | Remove an accolade from specific student |
 | `flask staff requests` | View all pending requests |
 | `flask staff approveRequest` | Approve a student’s request (enter staff ID + request ID) → logs hours |
 | `flask staff denyRequest` | Deny a student’s request (enter staff ID + request ID) |
 | `flask staff viewLeaderboard` | View leaderboard of students ranked by approved hours |
+
+
+---
+
+## Request Commands
+
+| Command | Description |
+|---------|-------------|
+| `flask request delete` | Delete a request by ID |
+| `flask request update` | Update a request's attributes via options (--student_id, --service, --hours, --status) |
+| `flask request search` | Command to search requests by student_id, service, or date (--student_id, --service, --date) |
+| `flask request dropRequestTable` | Drop requestHistory table |
+---
+
+## Accolade Commands
+
+| Command | Description |
+|---------|-------------|
+| `flask accolade search` | Search accolades by accolade_id, staff_id, description, or student_id |
+| `flask accolade dropAccoladeTable` | Drop accolade table (all accolade records and student-accolade associations) |
 
 ---
 
