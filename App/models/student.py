@@ -36,7 +36,7 @@ class Student(User):
         self.rank = 0
 
     def __repr__(self):
-        return f"[Student ID= {str(self.student_id)}  Name= {self.username} Email= {self.email}]"
+        return f"[Student ID= {str(self.student_id)}  Name= {self.username} Email= {self.email} Rank= {self.rank} Total Hours= {self.total_hours}]"
     
     def get_json(self):
         return {

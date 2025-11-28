@@ -3,9 +3,23 @@ from datetime import datetime, timezone
 
 
 def parse_date(date_str: str) -> datetime:
+
     if isinstance(date_str, datetime):
         return date_str
-    return datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    
+    formats = [
+        "%Y-%m-%d %H:%M:%S",  
+        "%Y-%m-%d %H:%M",     
+        "%Y-%m-%d"            
+    ]
+    
+    for fmt in formats:
+        try:
+            return datetime.strptime(date_str, fmt).replace(tzinfo=timezone.utc)
+        except ValueError:
+            continue
+        
+    raise ValueError(f"Date '{date_str}' is not in a valid format (YYYY-MM-DD HH:MM:SS)")
 
 class RequestHistory(db.Model):
     __tablename__ = 'request_history'

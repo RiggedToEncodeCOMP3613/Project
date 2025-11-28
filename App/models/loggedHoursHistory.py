@@ -20,7 +20,7 @@ class LoggedHoursHistory(db.Model):
     date_completed = db.Column(db.DateTime, nullable=False)
     timestamp = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-    def __init__(self, student_id, staff_id, service, hours, before, after, date_completed):
+    def __init__(self, student_id, staff_id, service, hours, before, after, date_completed= datetime.now(timezone.utc)):
         self.student_id = student_id
         self.staff_id = staff_id
         self.service = service
