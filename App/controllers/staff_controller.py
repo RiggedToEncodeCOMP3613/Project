@@ -336,3 +336,50 @@ def get_all_staff_json(): #returns all staff members in JSON format
     staff_members = Staff.query.all()
     return [staff.get_json() for staff in staff_members]
 
+def staff_query_router(string): # The user will enter a string, and this function will determine if it's an email, an ID, or a name and call the appropriate function
+    if "@" in string and "." in string:
+        return get_staff_by_email(string)
+    elif string.isdigit():
+        return get_staff_by_id(int(string))
+    else:
+        return get_staff_by_name(string)
+
+def get_staff_by_id(staff_id):
+    staff = Staff.query.get(staff_id)
+    if not staff:
+        raise ValueError(f"Staff with id {staff_id} not found.")
+    return staff
+
+def get_staff_by_email(email):
+    staff = Staff.query.filter_by(email=email).first()
+    if not staff:
+        raise ValueError(f"Staff with email {email} not found.")
+    return staff
+
+def get_staff_by_name(name):
+    staff = Staff.query.filter_by(username=name).first()
+    if not staff:
+        raise ValueError(f"Staff with name {name} not found.")
+    return staff
+
+def delete_staff(staff_id):
+    staff = Staff.query.get(staff_id)
+    if not staff:
+        raise ValueError(f"Staff member with id {staff_id} not found.")
+    db.session.delete(staff)
+    db.session.commit()
+    return True
+
+def update_staff_info(staff_id, name=None, email=None, password=None):
+    staff = Staff.query.get(staff_id)
+    if not staff:
+        raise ValueError(f"Staff with id {staff_id} not found.")
+    if name:
+        staff.username = name
+    if email:
+        staff.email = email
+    if password:
+        staff.set_password(password)
+    db.session.commit()
+    return staff
+

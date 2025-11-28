@@ -1,4 +1,6 @@
+import datetime
 from App.database import db
+from App.models import User, Staff, Student, RequestHistory, LoggedHoursHistory
 from App.models import User, Staff, Student, RequestHistory, Accolade
 
 #Comamand to list all staff in the database
@@ -79,3 +81,22 @@ def listAllUsers():
     for user in users:
         print(user)
     print("\n")
+
+def create_logged_hours(student_id, staff_id, hours, timestamp, status='approved', service=None):
+    logged_hour = LoggedHoursHistory(student_id, staff_id, hours, status, service, None, date_completed=timestamp) # ! This could be wrong, I am not sure about the parameters
+    db.session.add(logged_hour)
+    db.session.commit()
+    return logged_hour
+
+def delete_logged_hours(log_id):
+    log = LoggedHoursHistory.query.get(log_id)
+    if not log:
+        raise ValueError(f"LoggedHoursHistory entry with id {log_id} not found.")
+    db.session.delete(log)
+    db.session.commit()
+    return True
+
+def delete_all_logged_hours():
+    num_deleted = LoggedHoursHistory.query.delete()
+    db.session.commit()
+    return num_deleted

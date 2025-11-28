@@ -1,13 +1,17 @@
+import re
 import click, pytest, sys
+from datetime import datetime
 from flask.cli import with_appcontext, AppGroup
 
+from App.controllers.loggedHoursHistory import search_logged_hours
 from App.database import db, get_migrate
 from App.models import User
 from App.models import Student
 from App.models import Staff
 from App.models import RequestHistory
+from App.models import LoggedHoursHistory
 from App.main import create_app
-from App.controllers.student_controller import *
+from App.controllers.student_controller import delete_student, query_router, register_student, get_approved_hours, create_hours_request, fetch_requests, fetch_accolades, generate_leaderboard, update_student_info
 from App.controllers.staff_controller import *
 from App.controllers.app_controller import *
 from App.controllers.activityhistory_controller import *
@@ -46,6 +50,9 @@ def listStaff():
 @app.cli.command ("listStudents", help="Lists all students in the database")
 def listStudents():
     printAllStudents()
+    
+#Command to search students by field
+
 
 #Comamand to list all accolades in the database
 @app.cli.command ("listAccolades", help="Lists all accolades in the database")
@@ -87,6 +94,20 @@ def listloggedHours():
 
 student_cli = AppGroup('student', help='Student object commands')
 
+# Command to search students by field (name, email, or ID)
+@student_cli.command("search", help="Search for a student by name, email, or ID")
+@click.argument("query")
+def search_student(query):
+    print("\n")
+    try:
+        student = query_router(query)
+        print(f"Found student: {student}")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
 #Command to view total approved hours for a student (student_id)
 @student_cli.command("hours", help="View total approved hours for a student")
 
@@ -119,6 +140,56 @@ def create_student():
         student = register_student(name, email, password)
 
         print(f"Created student: {student}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+#Command to delete a student by id (student_id)
+@student_cli.command("delete", help="Delete a student by ID")
+def delete_student_command():
+    student_id = int(input("Enter the student ID to delete: "))
+    try:
+        delete_student(student_id)
+        print(f"Student with ID {student_id} has been deleted.")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        
+#Command to delete ALL students (for testing purposes)
+@student_cli.command("deleteAll", help="Delete ALL students (testing purposes only)")
+def delete_all_students_command():
+    confirmation = input("\033[91m\033[5m⚠️  Are you sure you want to delete ALL students? This action cannot be undone. (yes/no): ⚠️\033[0m ")
+    if confirmation.lower() == 'yes':
+        try:
+            print("Nuking all students... 💣")
+            num_deleted = Student.query.delete()
+            db.session.commit()
+            print(f"All {num_deleted} students are gone. 💥")
+        except Exception as e:
+            db.session.rollback()
+            print(f"An error occurred: {e}")
+    else:
+        print("Operation cancelled.")
+
+#Command to update a student's information (student_id, name, email, password) via CLI options
+@student_cli.command("update", help="Update a student's information")
+@click.argument("student_id", type=int)
+@click.option("--name", default=None, help="New name for the student")
+@click.option("--email", default=None, help="New email for the student")
+@click.option("--password", default=None, help="New password for the student")
+def update_student_command(student_id, name, email, password):
+    print("\n")
+    try:
+        updated_student = update_student_info(
+            student_id,
+            name if name else None,
+            email if email else None,
+            password if password else None
+        )
+        print(f"Updated student: {updated_student}")
+    except ValueError as e:
+        print(f"Error: {e}")
     except Exception as e:
         print(f"An error occurred: {e}")
     print("\n")
@@ -210,26 +281,6 @@ def viewmyAccolades():
     except Exception as e:
         print(f"An error occurred: {e}")
     print("\n")
-
-
-#Student command to view leaderboard of students by approved hours
-@student_cli.command("viewLeaderboard", help="View leaderboard of students by approved hours")
-def viewLeaderboard():
-    print("\n")
-    try:
-        leaderboard = generate_leaderboard()
-
-        print("Leaderboard (by approved hours):")
-        if not leaderboard:
-            print("No students found or hour data found.")
-            return
-        for rank, data in enumerate(leaderboard, 1):
-            print(f"{rank:<6}. {data['name']:<10} ------ \t{data['hours']} hours")
-
-    except Exception as e:
-        print(f"An error occurred while generating the leaderboard: {e}")
-    print("\n")
-
 app.cli.add_command(student_cli) # add the group to the cli
 
 
@@ -335,8 +386,6 @@ def searchHistory():
 
 
 '''STAFF COMMANDS'''
-
-
 
 staff_cli = AppGroup('staff', help='Staff object commands')
 
@@ -602,23 +651,68 @@ def denyRequest():
         print(f"An error occurred: {e}")
     print("\n")
 
-
-#staff command to view leaderboard of students by approved hours
-@staff_cli.command("viewLeaderboard", help="View leaderboard of students by approved hours")
-def viewLeaderboard():
+# Command to search staff by field (name, email, or ID)
+@staff_cli.command("search", help="Search for a staff member by name, email, or ID")
+@click.argument("query")
+def search_staff(query):
     print("\n")
     try:
-        leaderboard = generate_leaderboard()
-
-        print("Leaderboard (by approved hours):")
-        if not leaderboard:
-            print("No students found or hour data found.")
-            return
-        for rank, data in enumerate(leaderboard, 1):
-            print(f"{rank:<6}. {data['name']:<10} ------ \t{data['hours']} hours")
-
+        staff = staff_query_router(query)
+        print(f"Found staff member: {staff}")
+    except ValueError as e:
+        print(f"Error: {e}")
     except Exception as e:
-        print(f"An error occurred while generating the leaderboard: {e}")
+        print(f"An error occurred: {e}")
+    print("\n")
+
+# Command to delete a staff member by id (staff_id)
+@staff_cli.command("delete", help="Delete a staff member by ID")
+def delete_staff_command():
+    staff_id = int(input("Enter the staff ID to delete: "))
+    try:
+        delete_staff(staff_id)
+        print(f"Staff member with ID {staff_id} has been deleted.")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Command to delete ALL staff members (for testing purposes)
+@staff_cli.command("deleteAll", help="Delete ALL staff members (testing purposes only)")
+def delete_all_staff_command():
+    confirmation = input("\033[91m\033[5m⚠️  Are you sure you want to delete ALL staff members? This action cannot be undone. (yes/no): ⚠️\033[0m ")
+    if confirmation.lower() == 'yes':
+        try:
+            print("Nuking all staff members... 💣")
+            num_deleted = Staff.query.delete()
+            db.session.commit()
+            print(f"All {num_deleted} staff members are gone. 💥")
+        except Exception as e:
+            db.session.rollback()
+            print(f"An error occurred: {e}")
+    else:
+        print("Operation cancelled.")
+
+# Command to update a staff member's information (staff_id, name, email, password) via CLI options
+@staff_cli.command("update", help="Update a staff member's information")
+@click.argument("staff_id", type=int)
+@click.option("--name", default=None, help="New name for the staff member")
+@click.option("--email", default=None, help="New email for the staff member")
+@click.option("--password", default=None, help="New password for the staff member")
+def update_staff_command(staff_id, name, email, password):
+    print("\n")
+    try:
+        updated_staff = update_staff_info(
+            staff_id,
+            name if name else None,
+            email if email else None,
+            password if password else None
+        )
+        print(f"Updated staff member: {updated_staff}")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
     print("\n")
 
 app.cli.add_command(staff_cli) # add the group to the cli
@@ -843,3 +937,158 @@ def user_tests_command(type):
 
 
 app.cli.add_command(test)
+
+# Command to create a logged hours entry
+@app.cli.command("createLoggedHours", help="Create a logged hours entry")
+@click.argument("student_id", type=int)
+@click.argument("staff_id", type=int)
+@click.argument("hours", type=float)
+@click.option("--status", default="approved", help="Status for the logged hours (default: approved)")
+@click.option("--service", default=None, help="Service description for the logged hours (optional)")
+@click.option("--timestamp", default=datetime.utcnow(), help="Timestamp for the logged hours (optional, format: YYYY-MM-DD HH:MM:SS)")
+def create_logged_hours_command(student_id, staff_id, hours, status, service, timestamp):
+    print("\n")
+    try:
+        log = create_logged_hours(student_id, staff_id, hours, status, service, timestamp)
+        print(f"Created logged hours entry: {log}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+# Command to delete a logged hours entry by ID
+@app.cli.command("deleteLoggedHours", help="Delete a logged hours entry by ID")
+@click.argument("log_id", type=int)
+def delete_logged_hours_command(log_id):
+    try:
+        delete_logged_hours(log_id)
+        print(f"Logged hours entry with ID {log_id} has been deleted.")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Command to delete ALL logged hours entries (for testing purposes)
+@app.cli.command("deleteAllLoggedHours", help="Delete ALL logged hours entries (testing purposes only)")
+def delete_all_logged_hours_command():
+    confirmation = input("\033[91m\033[5m⚠️ Are you sure you want to delete ALL logged hours entries? This action cannot be undone. (yes/no): ")
+    if confirmation.lower() == 'yes':
+        try:
+            print ("Nuking all logged hours entries... 💣")
+            num_deleted = delete_all_logged_hours()
+            print(f"All {num_deleted} logged hours entries have been deleted. 💥")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+    else:
+        print("Operation cancelled.")
+        
+# Define regex patterns for date and date range detection        
+RANGE_PATTERN = r"^\d{4}-\d{2}-\d{2}:\d{4}-\d{2}-\d{2}$"
+DATE_PATTERN  = r"^\d{4}-\d{2}-\d{2}$"
+
+def detect_query_type(query):
+    # Student ID
+    if query.isdigit() and query.startswith("8160") and len(query) == 9: # Assuming student IDs start with '8160' and are 9 digits long, this can be adjusted as needed
+        return "student_id"
+
+    # Staff ID
+    if query.isdigit() and query.startswith("3") and len(query) == 9: # Assuming staff IDs start with '3', this can be adjusted as needed
+        return "staff_id"
+
+    # Date range
+    if re.match(RANGE_PATTERN, query):
+        start_str, end_str = query.split(":")
+        datetime.strptime(start_str, "%Y-%m-%d")
+        datetime.strptime(end_str, "%Y-%m-%d")
+        return "date_range"
+
+    # Single date
+    if re.match(DATE_PATTERN, query):
+        datetime.strptime(query, "%Y-%m-%d")
+        return "date"
+
+    # Fallback: treat as service string
+    return "service"
+
+# Command to search logged hours by student-id, staff-id, or date
+@app.cli.command("searchLoggedHours", help="Search logged hours by student-id, staff-id, date or service string. Dates follow YYYY-MM-DD format. Date ranges use YYYY-MM-DD:YYYY-MM-DD format.")
+@click.argument("query")
+def search_logged_hours_command(query):
+    search_type = detect_query_type(query)
+    try:
+        results = search_logged_hours(query, search_type)
+        if not results:
+            print(f"No logged hours entries found for {search_type} '{query}'.")
+            return
+        print(f"Logged hours entries for {search_type} '{query}':")
+        for log in results:
+            print(log)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Command to update a logged hours entry by ID
+@app.cli.command("updateLoggedHours", help="Update a logged hours entry by ID")
+@click.argument("log_id")
+@click.option("--student_id", type=int, default=None, help="New student ID")
+@click.option("--staff_id", type=int, default=None, help="New staff ID")
+@click.option("--hours", type=float, default=None, help="New hours")
+@click.option("--status", type=str, default=None, help="New status")
+
+def update_logged_hours_command(log_id, student_id, staff_id, hours, status):
+    print("\n")
+    try:
+        log = LoggedHoursHistory.query.get(int(log_id))
+        if not log:
+            print(f"LoggedHoursHistory entry with id {log_id} not found.")
+            return
+        if student_id is not None:
+            log.student_id = student_id
+        if staff_id is not None:
+            log.staff_id = staff_id
+        if hours is not None:
+            log.hours = hours
+        if status is not None:
+            log.status = status
+        db.session.commit()
+        print(f"Updated logged hours entry: {log}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+    
+## LEADERBOARD COMMANDS ##
+@app.cli.command("viewLeaderboard", help="View leaderboard of students by approved hours")
+def viewLeaderboard(): #Duplicate entry fixed, this is the correct one. I deleted the old duplicates.
+    print("\n")
+    try:
+        leaderboard = generate_leaderboard() #reuse existing function from student controller
+
+        print("Leaderboard (by approved hours):")
+        if not leaderboard:
+            print("No students found or hour data found.")
+            return
+        for rank, data in enumerate(leaderboard, 1):
+            #Use rich table formatting for better CLI display
+            print(f"{rank:<6}. {data['name']:<10} ------ \t{data['hours']} hours")
+            
+    except Exception as e:
+        print(f"An error occurred while generating the leaderboard: {e}")
+        
+@app.cli.command("searchLeaderboard", help="Search leaderboard for a specific student by name or ID")
+@click.argument("query")
+def searchLeaderboard(query):
+    print("\n")
+    try:
+        leaderboard = generate_leaderboard() #reuse existing function from student controller
+
+        print(f"Searching leaderboard for '{query}':")
+        if not leaderboard:
+            print("No students found or hour data found.")
+            return
+        found = False
+        for rank, data in enumerate(leaderboard, 1):
+            if query.lower() in data['name'].lower() or query == str(data['student_id']):
+                print(f"{rank:<6}. {data['name']:<10} ------ \t{data['hours']} hours")
+                found = True
+        if not found:
+            print(f"No matching student found in the leaderboard for '{query}'.")
+    except Exception as e:
+        print(f"An error occurred while searching the leaderboard: {e}")
