@@ -1479,7 +1479,8 @@ def viewHistory(requests, logged, accolade, milestone):
             if type_choice == "requests":
                 table.add_column("Service", style="green")
                 table.add_column("Hours", style="yellow")
-                table.add_column("Status", style="blue")
+                table.add_column("Staff ID", style="blue")
+                table.add_column("Status", style="magenta")
                 table.add_column("Timestamp", style="white", no_wrap=True)
                 for entry in history:
                     timestamp = entry.get('timestamp') or entry.get('date_completed')
@@ -1489,13 +1490,15 @@ def viewHistory(requests, logged, accolade, milestone):
                         str(entry.get('student_id', 'N/A')),
                         entry.get('service', 'N/A'),
                         str(entry.get('hours', 'N/A')),
+                        str(entry.get('staff_id', 'N/A')),
                         entry.get('status', 'N/A'),
                         timestamp_str
                     )
             elif type_choice == "logged":
                 table.add_column("Service", style="green")
                 table.add_column("Hours", style="yellow")
-                table.add_column("Timestamp", style="blue", no_wrap=True)
+                table.add_column("Staff ID", style="blue")
+                table.add_column("Timestamp", style="magenta", no_wrap=True)
                 for entry in history:
                     timestamp = entry.get('timestamp') or entry.get('date_completed')
                     timestamp_str = timestamp[:19] if isinstance(timestamp, str) and len(timestamp) > 19 else str(timestamp) if timestamp else 'N/A'
@@ -1504,6 +1507,7 @@ def viewHistory(requests, logged, accolade, milestone):
                         str(entry.get('student_id', 'N/A')),
                         entry.get('service', 'N/A'),
                         str(entry.get('hours', 'N/A')),
+                        str(entry.get('staff_id', 'N/A')),
                         timestamp_str
                     )
             elif type_choice == "accolade":
@@ -1614,7 +1618,8 @@ def searchHistory(student_id, requests, logged, accolade, milestone):
                 if type_choice == "requests":
                     table.add_column("Service", style="green")
                     table.add_column("Hours", style="yellow")
-                    table.add_column("Status", style="blue")
+                    table.add_column("Staff ID", style="blue")
+                    table.add_column("Status", style="magenta")
                     table.add_column("Timestamp", style="white", no_wrap=True)
                     for entry in history:
                         timestamp = entry.get('timestamp') or entry.get('date_completed')
@@ -1623,13 +1628,15 @@ def searchHistory(student_id, requests, logged, accolade, milestone):
                             str(entry.get('activity_id', entry.get('id', 'N/A'))),
                             entry.get('service', 'N/A'),
                             str(entry.get('hours', 'N/A')),
+                            str(entry.get('staff_id', 'N/A')),
                             entry.get('status', 'N/A'),
                             timestamp_str
                         )
                 elif type_choice == "logged":
                     table.add_column("Service", style="green")
                     table.add_column("Hours", style="yellow")
-                    table.add_column("Timestamp", style="blue", no_wrap=True)
+                    table.add_column("Staff ID", style="blue")
+                    table.add_column("Timestamp", style="magenta", no_wrap=True)
                     for entry in history:
                         timestamp = entry.get('timestamp') or entry.get('date_completed')
                         timestamp_str = timestamp[:19] if isinstance(timestamp, str) and len(timestamp) > 19 else str(timestamp) if timestamp else 'N/A'
@@ -1637,6 +1644,7 @@ def searchHistory(student_id, requests, logged, accolade, milestone):
                             str(entry.get('activity_id', entry.get('id', 'N/A'))),
                             entry.get('service', 'N/A'),
                             str(entry.get('hours', 'N/A')),
+                            str(entry.get('staff_id', 'N/A')),
                             timestamp_str
                         )
                 elif type_choice == "accolade":
