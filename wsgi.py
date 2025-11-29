@@ -1,28 +1,27 @@
 import re
-import click, pytest, sys
+import click
+import pytest
+import sys
 from datetime import datetime
 from flask.cli import with_appcontext, AppGroup
 import warnings
 from rich.table import Table
 from rich.console import Console
+
 warnings.filterwarnings("ignore", message="pkg_resources is deprecated")
 
-from App.controllers.loggedHoursHistory import search_logged_hours
-from App.database import db, get_migrate
-from App.models import User
-from App.models import Student
-from App.models import Staff
-from App.models import RequestHistory
-from App.models import LoggedHoursHistory
 from App.main import create_app
-from App.controllers.student_controller import delete_student, query_router, register_student, get_approved_hours, create_hours_request, fetch_requests, fetch_accolades, generate_leaderboard, update_student_info
+from App.database import db, get_migrate
+from App.models import Student, Staff, RequestHistory, LoggedHoursHistory
+from App.controllers import get_all_users, initialize
+from App.controllers.loggedHoursHistory import *
+from App.controllers.student_controller import *
 from App.controllers.staff_controller import *
 from App.controllers.milestone import *
 from App.controllers.app_controller import *
 from App.controllers.activityhistory_controller import *
 from App.controllers.request_controller import *
 from App.controllers.accolade_controller import *
-from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize )
 
 
 
@@ -41,60 +40,55 @@ migrate = get_migrate(app)
 def init():
     initialize()
     print('database intialized')
-
-
-@app.cli.command("listUsers", help="Lists all users in the database")
-def listUsers():
-    listAllUsers()
-
-
-#Comamand to list all staff in the database
-@app.cli.command ("listStaff", help="Lists all staff in the database")
-def listStaff():
-    printAllStaff()
-
-
-#Comamand to list all students in the database
-@app.cli.command ("listStudents", help="Lists all students in the database")
-def listStudents():
-    printAllStudents()
     
-#Command to search students by field
+    
+    
+    
+    
+    
+    
+'''USER COMMANDS'''
+
+user_cli = AppGroup('user', help='User management commands')
+
+# List all users in the database
+@user_cli.command("list", help="List all users in the database")
+def list_users():
+    print("\n")
+    try:
+        users = get_all_users()
+        if not users:
+            print("No users found.")
+            return
+        
+        console = Console()
+        table = Table(title="All Users")
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Username", style="magenta")
+        table.add_column("Email", style="green")
+        table.add_column("Type", style="yellow")
+
+        for user in users:
+            user_type = "Student" if hasattr(user, 'student_id') else ("Staff" if hasattr(user, 'staff_id') else "Unknown")
+            user_id = user.student_id if hasattr(user, 'student_id') else (user.staff_id if hasattr(user, 'staff_id') else "N/A")
+            table.add_row(
+                str(user_id),
+                user.username if hasattr(user, 'username') else "N/A",
+                user.email if hasattr(user, 'email') else "N/A",
+                user_type
+            )
+        
+        console.print(table)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+app.cli.add_command(user_cli)
 
 
-#Comamand to list all accolades in the database
-@app.cli.command ("listAccolades", help="Lists all accolades in the database")
-def listAccolades():
-    listAllAccolades()
-
-#Comamand to list all requests in the database
-@app.cli.command ("listRequests", help="Lists all requests in the database")
-def listRequests():
-    listAllRequests()
 
 
-#Comamand to list all approved requests in the database
-@app.cli.command ("listApprovedRequests", help="Lists all approved requests in the database")
-def listApprovedRequests():
-    listAllApprovedRequests()
-
-
-#Comamand to list all pending requests in the database
-@app.cli.command ("listPendingRequests", help="Lists all pending requests in the database")
-def listPendingRequests():
-    listAllPendingRequests()
-
-
-#Comamand to list all denied requests in the database
-@app.cli.command ("listDeniedRequests", help="Lists all denied requests in the database")
-def listDeniedRequests():
-    listAllDeniedRequests()
-
-
-#Comamand to list all logged hours in the database
-@app.cli.command ("listloggedHours", help="Lists all logged hours in the database")
-def listloggedHours():
-    listAllloggedHours()
 
 
 
@@ -109,7 +103,23 @@ def search_student(query):
     print("\n")
     try:
         student = query_router(query)
-        print(f"Found student: {student}")
+        if not student:
+            print("No student found.")
+            return
+        
+        console = Console()
+        table = Table(title="Student Search Result")
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Username", style="magenta")
+        table.add_column("Email", style="green")
+        
+        table.add_row(
+            str(student.student_id),
+            student.username if hasattr(student, 'username') else "N/A",
+            student.email if hasattr(student, 'email') else "N/A"
+        )
+        
+        console.print(table)
     except ValueError as e:
         print(f"Error: {e}")
     except Exception as e:
@@ -118,12 +128,10 @@ def search_student(query):
 
 #Command to view total approved hours for a student (student_id)
 @student_cli.command("hours", help="View total approved hours for a student")
-
-def hours ():
+@click.argument("student_id", type=int)
+def hours(student_id):
     print("\n")
     try:
-        student_id = int(input("Enter your student ID: "))
-
         student = get_approved_hours(student_id)
 
         name,total_hours = student
@@ -137,14 +145,14 @@ def hours ():
 
 #Command to create a new student (name, email)
 @student_cli.command("create", help="Create a new student")
-def create_student():
+@click.argument("name", type=str)
+@click.argument("email", type=str)
+@click.argument("password", type=str)
+def create_student(name, email, password):
     print("\n")
     try:
-        name = input("Enter student name: ")
-        email = input("Enter student email: ")
         if "@" not in email:
             raise ValueError("Invalid email address.")
-        password = input("Enter student password: ")    
         student = register_student(name, email, password)
 
         print(f"Created student: {student}")
@@ -154,8 +162,8 @@ def create_student():
 
 #Command to delete a student by id (student_id)
 @student_cli.command("delete", help="Delete a student by ID")
-def delete_student_command():
-    student_id = int(input("Enter the student ID to delete: "))
+@click.argument("student_id", type=int)
+def delete_student_command(student_id):
     try:
         delete_student(student_id)
         print(f"Student with ID {student_id} has been deleted.")
@@ -165,30 +173,33 @@ def delete_student_command():
         print(f"An error occurred: {e}")
         
 #Command to delete ALL students (for testing purposes)
-@student_cli.command("deleteAll", help="Delete ALL students (testing purposes only)")
+@student_cli.command("dropTable", help="Delete ALL students (testing purposes only)")
+@click.confirmation_option(prompt="⚠️  Are you sure you want to delete ALL students? This action cannot be undone.")
 def delete_all_students_command():
-    confirmation = input("\033[91m\033[5m⚠️  Are you sure you want to delete ALL students? This action cannot be undone. (yes/no): ⚠️\033[0m ")
-    if confirmation.lower() == 'yes':
-        try:
-            print("Nuking all students... 💣")
-            num_deleted = Student.query.delete()
-            db.session.commit()
-            print(f"All {num_deleted} students are gone. 💥")
-        except Exception as e:
-            db.session.rollback()
-            print(f"An error occurred: {e}")
-    else:
-        print("Operation cancelled.")
+    try:
+        print("Nuking all students... 💣")
+        num_deleted = Student.query.delete()
+        db.session.commit()
+        print(f"All {num_deleted} students are gone. 💥")
+    except Exception as e:
+        db.session.rollback()
+        print(f"An error occurred: {e}")
 
 #Command to update a student's information (student_id, name, email, password) via CLI options
 @student_cli.command("update", help="Update a student's information")
 @click.argument("student_id", type=int)
-@click.option("--name", default=None, help="New name for the student")
-@click.option("--email", default=None, help="New email for the student")
-@click.option("--password", default=None, help="New password for the student")
+@click.option("--name", type=str, default=None, help="New name for the student")
+@click.option("--email", type=str, default=None, help="New email for the student")
+@click.option("--password", type=str, default=None, help="New password for the student")
 def update_student_command(student_id, name, email, password):
     print("\n")
     try:
+        student = Student.query.get(student_id)
+        if not student:
+            print(f"Error: Student with ID {student_id} not found.")
+            print("\n")
+            return
+        
         updated_student = update_student_info(
             student_id,
             name if name else None,
@@ -204,36 +215,44 @@ def update_student_command(student_id, name, email, password):
 
 #Command to create a new request for a student (student_id, service, staff_id, hours, date_completed)
 @student_cli.command("request", help="Create a new service hour request via command line options")
-@click.option("--student_id", required=True, type=int, help="ID of the student making the request")
-@click.option("--service", required=True, help="Description of the service performed")
-@click.option("--staff_id", required=True, type=int, help="ID of the staff member to verify")
-@click.option("--hours", required=True, type=float, help="Number of hours to claim")
-@click.option("--date", required=True, help="Date of service (YYYY-MM-DD)")
+@click.argument("student_id", type=int)
+@click.argument("service", type=str)
+@click.argument("staff_id", type=int)
+@click.argument("hours", type=float)
+@click.argument("date", type=str)
 @with_appcontext
 def create_request_command_options(student_id, service, staff_id, hours, date):
-    """
-    Creates a new request for a student using command line options.
-    Usage: flask student request --student_id 1 --service "Gardening" --staff_id 2 --hours 4 --date 2023-10-25
-    """
-    request, message = create_request(student_id, service, staff_id, hours, date)
-    
-    if request:
-        click.echo(f"\nSuccess: {message}")
-        click.echo(f"Request ID: {request.id}")
-        click.echo(f"Status: {request.status}")
-        click.echo(f"Details: {request}") 
-    else:
-        click.echo(f"\nError: {message}")
-
-#Command for student to request hour confirmation (student_id, hours)
-@student_cli.command("requestHours", help="Student requests hour confirmation (interactive)")
-def requestHours():
     print("\n")
     try:
-        student_id = int(input("Enter your student ID: "))
-        hours = float(input("Enter the number of hours to request: "))
-    
-        req = create_hours_request(student_id,hours)
+        request, message = create_request(student_id, service, staff_id, hours, date)
+        
+        if request:
+            console = Console()
+            table = Table(title="Request Created Successfully")
+            table.add_column("Field", style="cyan")
+            table.add_column("Value", style="magenta")
+            table.add_row("Request ID", str(request.id))
+            table.add_row("Service", request.service if hasattr(request, 'service') else "N/A")
+            table.add_row("Hours", str(request.hours))
+            table.add_row("Status", request.status)
+            table.add_row("Message", message)
+            console.print(table)
+        else:
+            print(f"Error: {message}")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+#Command for student to request hour confirmation (student_id, hours)
+@student_cli.command("requestHours", help="Student requests hour confirmation")
+@click.argument("student_id", type=int)
+@click.argument("hours", type=float)
+def requestHours(student_id, hours):
+    print("\n")
+    try:
+        req = create_hours_request(student_id, hours)
         print(f"Requested {hours} hours for confirmation.\n")
         print(f"Request ID: {req.id}, Status: {req.status}")
 
@@ -247,20 +266,32 @@ def requestHours():
 
 #command to list all requests made by a specific student(student_id)
 @student_cli.command("viewmyRequests", help="List all requests for a student")
-def viewmyRequests():
+@click.argument("student_id", type=int)
+def viewmyRequests(student_id):
     print("\n")
     try:
-        student_id = int(input("Enter your student ID: "))
         requests = fetch_requests(student_id)
 
         if not requests:
             print(f"No requests found for student {student_id}.")
             return
-        else:
-            print(f"Requests for student {student_id}:")
-            for req in requests:
-                print(req)
-    
+        
+        console = Console()
+        table = Table(title=f"Requests for Student {student_id}")
+        table.add_column("Request ID", style="cyan", no_wrap=True)
+        table.add_column("Service", style="magenta")
+        table.add_column("Hours", style="green")
+        table.add_column("Status", style="yellow")
+        
+        for req in requests:
+            table.add_row(
+                str(req.id),
+                req.service if hasattr(req, 'service') else "N/A",
+                str(req.hours),
+                req.status
+            )
+        
+        console.print(table)
     except ValueError as e:
         print(f"Error: {e}")
     except Exception as e:
@@ -270,22 +301,62 @@ def viewmyRequests():
 
 #command to list all accolades for a specific student (student_id)
 @student_cli.command("viewmyAccolades", help="List all accolades for a student")
-def viewmyAccolades():
+@click.argument("student_id", type=int)
+def viewmyAccolades(student_id):
     print("\n")
     try:
-        student_id = int(input("Enter your student ID: "))
         accolades = fetch_accolades(student_id)
 
         if not accolades:
             print(f"No accolades found for student {student_id}.")
             return
-        else:
-            print(f"Accolades for student {student_id}:")
-            for accolade in accolades:
-                print(f"- {accolade}")
-
+        
+        console = Console()
+        table = Table(title=f"Accolades for Student {student_id}")
+        table.add_column("Accolade ID", style="cyan", no_wrap=True)
+        table.add_column("Description", style="magenta")
+        table.add_column("Created by Staff ID", style="green")
+        
+        for accolade in accolades:
+            table.add_row(
+                str(accolade.id),
+                accolade.description,
+                str(accolade.staff_id)
+            )
+        
+        console.print(table)
     except ValueError as e:
         print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+# List all students in the database
+@student_cli.command("list", help="List all students in the database")
+def list_students():
+    print("\n")
+    try:
+        students = get_all_users()
+        if not students:
+            print("No students found.")
+            return
+        
+        console = Console()
+        table = Table(title="All Students")
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Username", style="magenta")
+        table.add_column("Email", style="green")
+
+        for student in students:
+            if hasattr(student, 'student_id'):  # Filter for student objects
+                table.add_row(
+                    str(student.student_id),
+                    student.username if hasattr(student, 'username') else "N/A",
+                    student.email if hasattr(student, 'email') else "N/A"
+                )
+        
+        console.print(table)
+
     except Exception as e:
         print(f"An error occurred: {e}")
     print("\n")
@@ -294,12 +365,12 @@ app.cli.add_command(student_cli) # add the group to the cli
 
 # Student command to list activity history (all or by type)
 @student_cli.command("viewHistory", help="View activity history (all / request / logged / accolade / milestone)")
-def viewHistory():
+@click.argument("student_id", type=int)
+@click.option("--type", type=click.Choice(["all", "request", "logged", "accolade", "milestone"], case_sensitive=False), default="all", help="Type of history to view")
+def viewHistory(student_id, type):
     print("\n")
     try:
-        student_id = int(input("Enter your student ID: "))
-        print("Select type to view: [all/request/logged/accolade/milestone]")
-        type_choice = input("Type: ").strip().lower()
+        type_choice = type.lower()
 
         if type_choice in ("all", "a"):
             history = list_all_acivity_history(student_id)
@@ -319,10 +390,15 @@ def viewHistory():
             print(f"No activity history found for student {student_id} (type: {type_choice}).")
             return
 
-        print(f"Activity history for student {student_id} (type: {type_choice}):")
+        console = Console()
+        table = Table(title=f"Activity History for Student {student_id} (type: {type_choice})")
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Details", style="magenta")
+        
         for entry in history:
-            print(entry)
-
+            table.add_row(str(entry.id) if hasattr(entry, 'id') else "N/A", str(entry))
+        
+        console.print(table)
     except ValueError as e:
         print(f"Error: {e}")
     except Exception as e:
@@ -331,16 +407,24 @@ def viewHistory():
 
 
 # Student command to search activity history by type and id
-@student_cli.command("searchHistory", help="Search activity history by type and id (interactive)")
-def searchHistory():
+@student_cli.command("searchHistory", help="Search activity history by type and id")
+@click.argument("type", type=click.Choice(["activity", "student", "all", "request", "logged", "accolade", "milestone"], case_sensitive=False))
+@click.option("--activity-id", type=int, default=None, help="Activity history ID (for type=activity)")
+@click.option("--student-id", type=int, default=None, help="Student ID (for types: student, all, request, logged, accolade, milestone)")
+@click.option("--request-id", type=int, default=None, help="Request ID (for type=request)")
+@click.option("--logged-hours-id", type=int, default=None, help="Logged hours ID (for type=logged)")
+@click.option("--accolade-id", type=int, default=None, help="Accolade history ID (for type=accolade)")
+@click.option("--milestone-id", type=int, default=None, help="Milestone history ID (for type=milestone)")
+def searchHistory(type, activity_id, student_id, request_id, logged_hours_id, accolade_id, milestone_id):
     print("\n")
     try:
-        print("Select type to search: [activity/student/request/logged/accolade/milestone/all]")
-        type_choice = input("Type: ").strip().lower()
+        type_choice = type.lower()
 
         # Search by activity id does not need a student id
         if type_choice in ("activity", "act"):
-            activity_id = int(input("Enter activity history ID: "))
+            if not activity_id:
+                print("Error: --activity-id is required for type=activity")
+                return
             result = search_history_by_activity(activity_id)
             if not result:
                 print(f"No activity history found for activity id {activity_id}.")
@@ -349,8 +433,10 @@ def searchHistory():
                 print(entry)
             return
 
-        # For types that require a student id, prompt for it now
-        student_id = int(input("Enter your student ID: "))
+        # For types that require a student id, check it's provided now
+        if not student_id:
+            print(f"Error: --student-id is required for type={type_choice}")
+            return
 
         if type_choice in ("all",):
             result = search_history_by_student(student_id)
@@ -362,17 +448,25 @@ def searchHistory():
             return
 
         if type_choice in ("request", "requests"):
-            req_id = int(input("Enter request ID: "))
-            result = search_history_by_request(student_id, req_id)
+            if not request_id:
+                print("Error: --request-id is required for type=request")
+                return
+            result = search_history_by_request(student_id, request_id)
         elif type_choice in ("logged", "loggedhours"):
-            lh_id = int(input("Enter logged hours ID: "))
-            result = search_history_by_logged_hours(student_id, lh_id)
+            if not logged_hours_id:
+                print("Error: --logged-hours-id is required for type=logged")
+                return
+            result = search_history_by_logged_hours(student_id, logged_hours_id)
         elif type_choice in ("accolade", "accolades"):
-            ac_id = int(input("Enter accolade history ID: "))
-            result = search_history_by_accolade(student_id, ac_id)
+            if not accolade_id:
+                print("Error: --accolade-id is required for type=accolade")
+                return
+            result = search_history_by_accolade(student_id, accolade_id)
         elif type_choice in ("milestone", "milestones"):
-            ms_id = int(input("Enter milestone history ID: "))
-            result = search_history_by_milestone(student_id, ms_id)
+            if not milestone_id:
+                print("Error: --milestone-id is required for type=milestone")
+                return
+            result = search_history_by_milestone(student_id, milestone_id)
         else:
             print(f"Unknown type '{type_choice}'. Use one of: activity, student/all, request, logged, accolade, milestone.")
             return
@@ -389,24 +483,27 @@ def searchHistory():
     except Exception as e:
         print(f"An error occurred: {e}")
     print("\n")
-
-
-
-
+    
+    
+    
+    
+    
+    
+    
 '''STAFF COMMANDS'''
 
 staff_cli = AppGroup('staff', help='Staff object commands')
 
 #Command to create a new staff member (name, email)
 @staff_cli.command("create", help="Create a new staff member")
-def create_staff():
+@click.argument("name", type=str)
+@click.argument("email", type=str)
+@click.argument("password", type=str)
+def create_staff(name, email, password):
     print("\n")
     try:
-        name = input("Enter staff name: ")
-        email = input("Enter staff email: ")
         if "@" not in email:
             raise ValueError("Invalid email address.")
-        password = input("Enter staff password: ")  
         staff = register_staff(name, email, password)
 
         print(f"Created staff member: {staff}")
@@ -418,85 +515,115 @@ def create_staff():
 
 #Command to the update staff member's attributes (username, email, password)
 @staff_cli.command("update", help="Update a staff member's attributes via options")
-@click.option("--staff_id", required=True, type=int, help="ID of the staff member to update.")
-@click.option("--username", default=None, help="New username for the staff member.")
-@click.option("--email", default=None, help="New email for the staff member.")
-@click.option("--password", default=None, help="New password for the staff member.")
+@click.argument("staff_id", type=int)
+@click.option("--username", type=str, default=None, help="New username for the staff member.")
+@click.option("--email", type=str, default=None, help="New email for the staff member.")
+@click.option("--password", type=str, default=None, help="New password for the staff member.")
 @with_appcontext
 def update_staff_command(staff_id, username, email, password):
-    
+    print("\n")
     if not username and not email and not password:
-        click.echo("Error: At least one attribute (--username, --email, or --password) must be provided.")
+        print("Error: At least one attribute (--username, --email, or --password) must be provided.")
+        print("\n")
         return
     
     try:
+        staff_obj = Staff.query.get(staff_id)
+        if not staff_obj:
+            print(f"Error: Staff with ID {staff_id} not found.")
+            print("\n")
+            return
+        
         staff = update_staff(staff_id, username, email, password)
         
         if staff:
-            click.echo(f"Successfully updated Staff ID {staff.staff_id}: {staff.username}")
+            print(f"Successfully updated Staff ID {staff.staff_id}: {staff.username}")
         else:
-            click.echo(f"Error: Staff with ID {staff_id} not found.")
-
+            print(f"Error: Staff with ID {staff_id} not found.")
     except ValueError as e:
-        click.echo(f"Update failed: {e}", err=True)
-        sys.exit(1)
+        print(f"Error: {e}")
     except Exception as e:
-        click.echo(f"An unexpected error occurred during update: {e}", err=True)
-        sys.exit(1)
+        print(f"An error occurred: {e}")
+    print("\n")
  
  
 #Command to create a new accolade (staff_id, description) 
 @staff_cli.command("createAccolade", help="Creates a new accolade")
-@click.option("--staff_id", required=True, type=int, help="ID of the staff member creating the accolade")
-@click.option("--description", required=True, help="Description of the accolade")
+@click.argument("staff_id", type=int)
+@click.argument("description", type=str)
 @with_appcontext
 def create_accolade_command(staff_id, description):
-    from App.controllers.staff_controller import create_accolade
-    
-    accolade, error = create_accolade(staff_id, description)
-    
-    if error:
-        click.echo(f"Error: {error}")
-        return
-    
-    click.echo(f"Accolade created successfully!")
-    click.echo(f"ID: {accolade.id}")
-    click.echo(f"Description: '{description}'")
-    click.echo(f"Created by Staff ID: {staff_id}")
+    print("\n")
+    try:
+        staff_obj = Staff.query.get(staff_id)
+        if not staff_obj:
+            print(f"Error: Staff with ID {staff_id} not found.")
+            print("\n")
+            return
+        
+        from App.controllers.staff_controller import create_accolade
+        accolade, error = create_accolade(staff_id, description)
+        
+        if error:
+            print(f"Error: {error}")
+        else:
+            console = Console()
+            table = Table(title="Accolade Created Successfully")
+            table.add_column("Field", style="cyan")
+            table.add_column("Value", style="magenta")
+            table.add_row("ID", str(accolade.id))
+            table.add_row("Description", description)
+            table.add_row("Created by Staff ID", str(staff_id))
+            console.print(table)
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
 
 
 #Command to update an accolade's attributes (staff_id, description)
 @staff_cli.command("updateAccolade", help="Updates an accolade's attributes")
-@click.option("--accolade_id", required=True, type=int, help="ID of the accolade to update")
-@click.option("--staff_id", default=None, type=int, help="New staff ID")
-@click.option("--description", default=None, type=str, help="New description")
+@click.argument("accolade_id", type=int)
+@click.option("--staff_id", type=int, default=None, help="New staff ID")
+@click.option("--description", type=str, default=None, help="New description")
 @with_appcontext
 def update_accolade_command(accolade_id, staff_id, description):
-      
+    print("\n")
     if staff_id is None and description is None:
-        click.echo("Error: At least one attribute (--staff_id or --description) must be provided.")
+        print("Error: At least one attribute (--staff_id or --description) must be provided.")
+        print("\n")
         return
 
     try:
+        from App.models.accolade import Accolade
+        accolade_obj = Accolade.query.get(accolade_id)
+        if not accolade_obj:
+            print(f"Error: Accolade with ID {accolade_id} not found.")
+            print("\n")
+            return
+        
         result, error = update_accolade(accolade_id, staff_id=staff_id, description=description)
 
         if error:
-            click.echo(f"Error: {error}")
-            return
-
-        accolade = result.get('accolade')
-        click.echo("Accolade updated successfully!")
-        click.echo(f"ID: {accolade.id}")
-        click.echo("Updated fields:")
-        for field in result.get('updated_fields', []):
-            click.echo(f"  - {field}")
+            print(f"Error: {error}")
+        else:
+            accolade = result.get('accolade')
+            console = Console()
+            table = Table(title="Accolade Updated Successfully")
+            table.add_column("Field", style="cyan")
+            table.add_column("Value", style="magenta")
+            table.add_row("ID", str(accolade.id))
+            table.add_row("Description", accolade.description)
+            if result.get('updated_fields'):
+                table.add_row("Updated Fields", ", ".join(result.get('updated_fields', [])))
+            console.print(table)
 
     except ValueError as e:
-        click.echo(f"Update failed: {e}", err=True)
-        sys.exit(1)
+        print(f"Error: {e}")
     except Exception as e:
-        click.echo(f"An unexpected error occurred during update: {e}", err=True)
-        sys.exit(1)
+        print(f"An error occurred: {e}")
+    print("\n")
         
 
 #Command to delete an accolade by its ID, with option to delete all history records
@@ -504,81 +631,144 @@ def update_accolade_command(accolade_id, staff_id, description):
 @click.argument("accolade_id", type=int)
 @click.option("--delete_all_history", is_flag=True, help="Also delete all history records for this accolade")
 def delete_accolade_command(accolade_id, delete_all_history):
-
-    success, result = delete_accolade(accolade_id, delete_history=delete_all_history)
-    
-    if not success:
-        click.echo(f"Error: {result}")
-        return
-    
-    click.echo(f"Accolade deleted successfully!")
-    click.echo(f"ID: {accolade_id}")
-    click.echo(f"Description: '{result['description']}'")
-    
-    if delete_all_history:
-        click.echo(f"History records deleted: {result['history_deleted']}")
-        if result['empty_activities_deleted'] > 0:
-            click.echo(f"Empty activity records cleaned up: {result['empty_activities_deleted']}")
-    else:
-        click.echo(f"History records preserved")
+    print("\n")
+    try:
+        from App.models.accolade import Accolade
+        accolade_obj = Accolade.query.get(accolade_id)
+        if not accolade_obj:
+            print(f"Error: Accolade with ID {accolade_id} not found.")
+            print("\n")
+            return
+        
+        success, result = delete_accolade(accolade_id, delete_history=delete_all_history)
+        
+        if not success:
+            print(f"Error: {result}")
+        else:
+            console = Console()
+            table = Table(title="Accolade Deleted Successfully")
+            table.add_column("Field", style="cyan")
+            table.add_column("Value", style="magenta")
+            table.add_row("ID", str(accolade_id))
+            table.add_row("Description", result['description'])
+            if delete_all_history:
+                table.add_row("History Records Deleted", str(result['history_deleted']))
+                if result['empty_activities_deleted'] > 0:
+                    table.add_row("Activities Cleaned Up", str(result['empty_activities_deleted']))
+            else:
+                table.add_row("History Records", "Preserved")
+            console.print(table)
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
  
 
 #Command to assign a student to an accolade (accolade_id, student_id, staff_id)    
 @staff_cli.command("assignAccolade", help="Assigns a student to an accolade")
-@click.option("--accolade_id", type=int, required=True, help="ID of the accolade")
-@click.option("--student_id", type=int, required=True, help="ID of the student")
-@click.option("--staff_id", type=int, required=True, help="ID of the staff member making the assignment")
+@click.argument("accolade_id", type=int)
+@click.argument("student_id", type=int)
+@click.argument("staff_id", type=int)
 def assign_accolade_command(accolade_id, student_id, staff_id):
-  
-    result, error = assign_accolade_to_student(accolade_id, student_id, staff_id)
-    
-    if error:
-        click.echo(f"Error: {error}")
-        return
-    
-    accolade = result['accolade']
-    student = result['student']
-    history = result['history']
-    
-    click.echo(f"Student assigned to accolade successfully!")
-    click.echo(f"Accolade ID: {accolade.id}")
-    click.echo(f"Description: '{accolade.description}'")
-    click.echo(f"Student ID: {student.student_id}")
-    click.echo(f"Assigned by Staff ID: {staff_id}")
-    click.echo(f"History Record ID: {history.id}")
-    click.echo(f"Timestamp: {history.timestamp}")
+    print("\n")
+    try:
+        from App.models.accolade import Accolade
+        accolade_obj = Accolade.query.get(accolade_id)
+        student_obj = Student.query.get(student_id)
+        staff_obj = Staff.query.get(staff_id)
+        
+        if not accolade_obj:
+            print(f"Error: Accolade with ID {accolade_id} not found.")
+            print("\n")
+            return
+        if not student_obj:
+            print(f"Error: Student with ID {student_id} not found.")
+            print("\n")
+            return
+        if not staff_obj:
+            print(f"Error: Staff with ID {staff_id} not found.")
+            print("\n")
+            return
+        
+        result, error = assign_accolade_to_student(accolade_id, student_id, staff_id)
+        
+        if error:
+            print(f"Error: {error}")
+        else:
+            accolade = result['accolade']
+            student = result['student']
+            history = result['history']
+            
+            console = Console()
+            table = Table(title="Student Assigned to Accolade Successfully")
+            table.add_column("Field", style="cyan")
+            table.add_column("Value", style="magenta")
+            table.add_row("Accolade ID", str(accolade.id))
+            table.add_row("Description", accolade.description)
+            table.add_row("Student ID", str(student.student_id))
+            table.add_row("Assigned by Staff ID", str(staff_id))
+            table.add_row("History Record ID", str(history.id))
+            table.add_row("Timestamp", str(history.timestamp))
+            console.print(table)
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
     
  
 #Command to remove a student from an accolade (accolade_id, student_id, delete_history) 
 @staff_cli.command("removeAccolade", help="Removes a student from an accolade")
-@click.option("--accolade_id", type=int, required=True, help="ID of the accolade")
-@click.option("--student_id", type=int, required=True, help="ID of the student")
+@click.argument("accolade_id", type=int)
+@click.argument("student_id", type=int)
 @click.option("--delete_history", is_flag=True, help="Also delete the history record for this assignment")
 def remove_accolade_command(accolade_id, student_id, delete_history):
-    
-    result, error = remove_accolade_from_student(accolade_id, student_id, delete_history=delete_history)
-    
-    if error:
-        click.echo(f"Error: {error}")
-        return
-    
-    accolade = result['accolade']
-    student = result['student']
-    
-    click.echo(f"Student removed from accolade successfully!")
-    click.echo(f"Accolade ID: {accolade.id}")
-    click.echo(f"Description: '{accolade.description}'")
-    click.echo(f"Student ID: {student.student_id}")
-    
-    if delete_history:
-        if result['history_deleted'] > 0:
-            click.echo(f" History record deleted: Yes")
-            if result['activity_deleted']:
-                click.echo(f"Empty activity record cleaned up: Yes")
+    print("\n")
+    try:
+        from App.models.accolade import Accolade
+        accolade_obj = Accolade.query.get(accolade_id)
+        student_obj = Student.query.get(student_id)
+        
+        if not accolade_obj:
+            print(f"Error: Accolade with ID {accolade_id} not found.")
+            print("\n")
+            return
+        if not student_obj:
+            print(f"Error: Student with ID {student_id} not found.")
+            print("\n")
+            return
+        
+        result, error = remove_accolade_from_student(accolade_id, student_id, delete_history=delete_history)
+        
+        if error:
+            print(f"Error: {error}")
         else:
-            click.echo(f"History record deleted: None found")
-    else:
-        click.echo(f"History record preserved")
+            accolade = result['accolade']
+            student = result['student']
+            
+            console = Console()
+            table = Table(title="Student Removed from Accolade Successfully")
+            table.add_column("Field", style="cyan")
+            table.add_column("Value", style="magenta")
+            table.add_row("Accolade ID", str(accolade.id))
+            table.add_row("Description", accolade.description)
+            table.add_row("Student ID", str(student.student_id))
+            if delete_history:
+                if result['history_deleted'] > 0:
+                    table.add_row("History Record", "Deleted")
+                    if result['activity_deleted']:
+                        table.add_row("Activity Record", "Cleaned Up")
+                else:
+                    table.add_row("History Record", "None found")
+            else:
+                table.add_row("History Record", "Preserved")
+            console.print(table)
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
         
           
 #Command for staff to view all pending requests
@@ -606,13 +796,12 @@ def requests():
 #Command for staff to approve a student's request (staff_id, request_id)
 #Once approved it is added to logged hours database
 @staff_cli.command("approveRequest", help="Staff approves a student's request")
-def approveRequest():
+@click.argument("staff_id", type=int)
+@click.argument("request_id", type=int)
+def approveRequest(staff_id, request_id):
     print("\n")
     try:
-        staff_id = int(input("Enter your staff ID: "))
-        request_id = int(input("Enter the request ID to approve: "))
-
-        results = process_request_approval(staff_id,request_id)
+        results = process_request_approval(staff_id, request_id)
     
         req=results['request']
         student_name=results['student_name']
@@ -635,13 +824,12 @@ def approveRequest():
 # Command for staff to deny a student's request (staff_id, request_id)
 #change request status to denied, no logged hours created
 @staff_cli.command("denyRequest", help="Staff denies a student's request") 
-def denyRequest():
+@click.argument("staff_id", type=int)
+@click.argument("request_id", type=int)
+def denyRequest(staff_id, request_id):
     print("\n")
     try:
-        staff_id = int(input("Enter your staff ID: "))
-        request_id = int(input("Enter the request ID to deny: "))
-
-        results = process_request_denial(staff_id,request_id)
+        results = process_request_denial(staff_id, request_id)
 
         req=results['request']
         student_name=results['student_name']
@@ -666,7 +854,23 @@ def search_staff(query):
     print("\n")
     try:
         staff = staff_query_router(query)
-        print(f"Found staff member: {staff}")
+        if not staff:
+            print("No staff member found.")
+            return
+        
+        console = Console()
+        table = Table(title="Staff Search Result")
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Username", style="magenta")
+        table.add_column("Email", style="green")
+        
+        table.add_row(
+            str(staff.staff_id),
+            staff.username if hasattr(staff, 'username') else "N/A",
+            staff.email if hasattr(staff, 'email') else "N/A"
+        )
+        
+        console.print(table)
     except ValueError as e:
         print(f"Error: {e}")
     except Exception as e:
@@ -675,8 +879,8 @@ def search_staff(query):
 
 # Command to delete a staff member by id (staff_id)
 @staff_cli.command("delete", help="Delete a staff member by ID")
-def delete_staff_command():
-    staff_id = int(input("Enter the staff ID to delete: "))
+@click.argument("staff_id", type=int)
+def delete_staff_command(staff_id):
     try:
         delete_staff(staff_id)
         print(f"Staff member with ID {staff_id} has been deleted.")
@@ -687,29 +891,32 @@ def delete_staff_command():
 
 # Command to delete ALL staff members (for testing purposes)
 @staff_cli.command("deleteAll", help="Delete ALL staff members (testing purposes only)")
+@click.confirmation_option(prompt="⚠️  Are you sure you want to delete ALL staff members? This action cannot be undone.")
 def delete_all_staff_command():
-    confirmation = input("\033[91m\033[5m⚠️  Are you sure you want to delete ALL staff members? This action cannot be undone. (yes/no): ⚠️\033[0m ")
-    if confirmation.lower() == 'yes':
-        try:
-            print("Nuking all staff members... 💣")
-            num_deleted = Staff.query.delete()
-            db.session.commit()
-            print(f"All {num_deleted} staff members are gone. 💥")
-        except Exception as e:
-            db.session.rollback()
-            print(f"An error occurred: {e}")
-    else:
-        print("Operation cancelled.")
+    try:
+        print("Nuking all staff members... 💣")
+        num_deleted = Staff.query.delete()
+        db.session.commit()
+        print(f"All {num_deleted} staff members are gone. 💥")
+    except Exception as e:
+        db.session.rollback()
+        print(f"An error occurred: {e}")
 
 # Command to update a staff member's information (staff_id, name, email, password) via CLI options
 @staff_cli.command("update", help="Update a staff member's information")
 @click.argument("staff_id", type=int)
-@click.option("--name", default=None, help="New name for the staff member")
-@click.option("--email", default=None, help="New email for the staff member")
-@click.option("--password", default=None, help="New password for the staff member")
+@click.option("--name", type=str, default=None, help="New name for the staff member")
+@click.option("--email", type=str, default=None, help="New email for the staff member")
+@click.option("--password", type=str, default=None, help="New password for the staff member")
 def update_staff_command(staff_id, name, email, password):
     print("\n")
     try:
+        staff_obj = Staff.query.get(staff_id)
+        if not staff_obj:
+            print(f"Error: Staff with ID {staff_id} not found.")
+            print("\n")
+            return
+        
         updated_staff = update_staff_info(
             staff_id,
             name if name else None,
@@ -723,12 +930,528 @@ def update_staff_command(staff_id, name, email, password):
         print(f"An error occurred: {e}")
     print("\n")
 
+# List all staff in the database
+@staff_cli.command("list", help="List all staff in the database")
+def list_staff():
+    print("\n")
+    try:
+        staff_list = get_all_users()
+        if not staff_list:
+            print("No staff members found.")
+            return
+        
+        console = Console()
+        table = Table(title="All Staff Members")
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Username", style="magenta")
+        table.add_column("Email", style="green")
+
+        for staff in staff_list:
+            if hasattr(staff, 'staff_id'):  # Filter for staff objects
+                table.add_row(
+                    str(staff.staff_id),
+                    staff.username if hasattr(staff, 'username') else "N/A",
+                    staff.email if hasattr(staff, 'email') else "N/A"
+                )
+        
+        console.print(table)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
 app.cli.add_command(staff_cli) # add the group to the cli
 
 
-###############################################################################
-# # #>>>>>>>>>>>>>>>>>>>>>>>> MILESTONE COMMANDS <<<<<<<<<<<<<<<<<<<<<<<<<# # #
-###############################################################################
+
+
+
+
+
+'''REQUEST COMMANDS'''
+
+request_cli = AppGroup('request', help='Request object commands')
+
+# Command to delete a request by ID
+@request_cli.command("delete", help="Delete a service hour request by ID")
+@click.argument("request_id", type=int)
+def delete_request(request_id):
+    print("\n")
+    try:
+        success, message = delete_request_entry(request_id)
+        
+        if success:
+            print(f"Success: {message}")
+        else:
+            print(f"Error: {message}")
+    
+    except ValueError:
+        print("Error: Request ID must be an integer.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+@request_cli.command("update", help="Update a request's attributes (student_id, service, hours, status)")
+@click.argument("request_id", type=int)
+@click.option("--student_id", type=int, default=None, help="New Student ID")
+@click.option("--service", type=str, default=None, help="New Service description")
+@click.option("--hours", type=float, default=None, help="New Hours value")
+@click.option("--status", type=str, default=None, help="New Status (Pending/Approved/Denied)")
+@with_appcontext
+def update_request_command(request_id, student_id, service, hours, status):
+    print("\n")
+    if not student_id and not service and not hours and not status:
+        print("Error: At least one attribute (--student_id, --service, --hours, --status) must be provided.")
+        print("\n")
+        return
+
+    try:
+        req = RequestHistory.query.get(request_id)
+        if not req:
+            print(f"Error: Request with ID {request_id} not found.")
+            print("\n")
+            return
+        
+        request, message = update_request_entry(request_id, student_id, service, hours, status)
+
+        if request:
+            print(f"Successfully updated Request ID {request.id}: {message}")
+        else:
+            print(f"Error: {message}")
+
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+
+
+# Command to search requests by student_id, service, or date
+@request_cli.command("search", help="Search requests by student_id, service, or date_completed")
+@click.option("--student_id", type=int, default=None, help="Student ID to filter requests")
+@click.option("--service", type=str, default=None, help="Service description to search for")
+@click.option("--date", type=str, default=None, help="Date completed (YYYY-MM-DD) to filter requests")
+@with_appcontext
+def search_request_command(student_id, service, date):
+    try:
+        if student_id is None and service is None and date is None:
+            print("Error: At least one search criterion (--student_id, --service, or --date) must be provided.")
+            return
+        
+        requests, error = search_requests(student_id=student_id, service=service, date=date)
+        
+        if error:
+            print(f"Error: {error}")
+            return
+
+        if not requests:
+            print("No requests found matching the criteria.")
+            return
+        
+        console = Console()
+        table = Table(title="Search Results")
+        table.add_column("Request ID", style="cyan", no_wrap=True)
+        table.add_column("Student", style="magenta")
+        table.add_column("Service", style="green")
+        table.add_column("Hours", style="yellow")
+        table.add_column("Status", style="blue")
+        table.add_column("Date", style="white")
+        
+        for req in requests:
+            student = Student.query.get(req.student_id)
+            student_name = student.username if student else "Unknown"
+            table.add_row(
+                str(req.id),
+                student_name,
+                req.service if hasattr(req, 'service') else "N/A",
+                str(req.hours),
+                req.status,
+                str(req.date_completed.date()) if hasattr(req, 'date_completed') else "N/A"
+            )
+        
+        console.print(table)
+        
+    except Exception as e:
+        print(f"An error occurred during search: {e}")
+
+
+#Command to drop request table (all request records and associated activity records)
+@request_cli.command("dropRequestTable", help="Drops all request records from the database (WARNING: IRREVERSIBLE)")
+@click.confirmation_option(prompt="Are you sure you want to delete ALL request records? This cannot be undone")
+@with_appcontext
+def drop_request_table_command():
+    print("\n")
+    try:
+        result, error = drop_request_table()
+        
+        if error:
+            print(f"Error: {error}")
+            print("\n")
+            return
+        
+        print(f"Request table dropped successfully!")
+        print(f"Requests deleted: {result['requests_deleted']}")
+        print(f"Associated activity records cleaned up")
+        print(f"\nAll request records have been permanently removed from the database.")
+        
+    except Exception as e:
+        print(f"An error occurred during drop operation: {e}")
+    print("\n")
+
+# List requests in the database with optional status filter
+@request_cli.command("list", help="List requests in the database (optionally filter by status)")
+@click.option("--status", type=click.Choice(["all", "approved", "pending", "denied"], case_sensitive=False), default="all", help="Filter by request status (default: all)")
+def list_requests(status):
+    print("\n")
+    try:
+        if status.lower() == "all":
+            requests = RequestHistory.query.all()
+            title = "All Requests"
+        else:
+            requests = RequestHistory.query.filter_by(status=status.lower()).all()
+            title = f"{status.capitalize()} Requests"
+        
+        if not requests:
+            print(f"No {title.lower()} found.")
+            return
+        
+        console = Console()
+        table = Table(title=title)
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Student ID", style="magenta")
+        table.add_column("Service", style="green")
+        table.add_column("Hours", style="yellow")
+        table.add_column("Status", style="blue")
+        table.add_column("Date", style="white")
+
+        for request in requests:
+            table.add_row(
+                str(request.id),
+                str(request.student_id),
+                request.service if hasattr(request, 'service') else "N/A",
+                str(request.hours),
+                request.status,
+                str(request.date_completed.date()) if hasattr(request, 'date_completed') else "N/A"
+            )
+        
+        console.print(table)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+        
+app.cli.add_command(request_cli) 
+
+
+# Define regex patterns for date and date range detection        
+RANGE_PATTERN = r"^\d{4}-\d{2}-\d{2}:\d{4}-\d{2}-\d{2}$"
+DATE_PATTERN  = r"^\d{4}-\d{2}-\d{2}$"
+
+def detect_query_type(query):
+    # Student ID
+    if query.isdigit() and query.startswith("8160") and len(query) == 9: # Assuming student IDs start with '8160' and are 9 digits long, this can be adjusted as needed
+        return "student_id"
+
+    # Staff ID
+    if query.isdigit() and query.startswith("3") and len(query) == 9: # Assuming staff IDs start with '3', this can be adjusted as needed
+        return "staff_id"
+
+    # Date range
+    if re.match(RANGE_PATTERN, query):
+        start_str, end_str = query.split(":")
+        datetime.strptime(start_str, "%Y-%m-%d")
+        datetime.strptime(end_str, "%Y-%m-%d")
+        return "date_range"
+
+    # Single date
+    if re.match(DATE_PATTERN, query):
+        datetime.strptime(query, "%Y-%m-%d")
+        return "date"
+
+    # Fallback: treat as service string
+    return "service"
+
+
+
+
+
+
+
+'''LOGGED HOURS COMMANDS'''
+
+logged_hours_cli = AppGroup('loggedHours', help='Logged hours commands')
+
+# Command to create a logged hours entry
+@logged_hours_cli.command("create", help="Create a logged hours entry")
+@click.argument("student_id", type=int)
+@click.argument("staff_id", type=int)
+@click.argument("hours", type=float)
+@click.option("--status", default="approved", help="Status for the logged hours (default: approved)")
+@click.option("--service", default=None, help="Service description for the logged hours (optional)")
+@click.option("--timestamp", default=None, help="Timestamp for the logged hours (optional, format: YYYY-MM-DD HH:MM:SS)")
+def create_logged_hours_command(student_id, staff_id, hours, status, service, timestamp):
+    if timestamp is None:
+        timestamp = datetime.utcnow()
+    print("\n")
+    try:
+        log = create_logged_hours(student_id, staff_id, hours, status, service, timestamp)
+        print(f"Created logged hours entry: {log}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+# Command to delete a logged hours entry by ID
+@logged_hours_cli.command("delete", help="Delete a logged hours entry by ID")
+@click.argument("log_id", type=int)
+def delete_logged_hours_command(log_id):
+    try:
+        delete_logged_hours(log_id)
+        print(f"Logged hours entry with ID {log_id} has been deleted.")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Command to delete ALL logged hours entries (for testing purposes)
+@logged_hours_cli.command("deleteAll", help="Delete ALL logged hours entries (testing purposes only)")
+@click.confirmation_option(prompt="⚠️ Are you sure you want to delete ALL logged hours entries? This action cannot be undone.")
+def delete_all_logged_hours_command():
+    try:
+        print ("Nuking all logged hours entries... 💣")
+        num_deleted = delete_all_logged_hours()
+        print(f"All {num_deleted} logged hours entries have been deleted. 💥")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# List all logged hours in the database
+@logged_hours_cli.command("list", help="List all logged hours in the database")
+def list_logged_hours():
+    print("\n")
+    try:
+        logged_hours = LoggedHoursHistory.query.all()
+        if not logged_hours:
+            print("No logged hours found.")
+            return
+        
+        console = Console()
+        table = Table(title="All Logged Hours")
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Student ID", style="magenta")
+        table.add_column("Staff ID", style="green")
+        table.add_column("Hours", style="yellow")
+        table.add_column("Status", style="blue")
+        table.add_column("Service", style="white")
+        table.add_column("Timestamp", style="bold")
+
+        for log in logged_hours:
+            table.add_row(
+                str(log.id),
+                str(log.student_id),
+                str(log.staff_id),
+                str(log.hours),
+                log.status,
+                log.service if hasattr(log, 'service') and log.service else "N/A",
+                str(log.timestamp) if hasattr(log, 'timestamp') else "N/A"
+            )
+        
+        console.print(table)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+        
+# Command to search logged hours by student-id, staff-id, or date
+@logged_hours_cli.command("search", help="Search logged hours by student-id, staff-id, date or service string. Dates follow YYYY-MM-DD format. Date ranges use YYYY-MM-DD:YYYY-MM-DD format.")
+@click.argument("query")
+def search_logged_hours_command(query):
+    search_type = detect_query_type(query)
+    try:
+        results = search_logged_hours(query, search_type)
+        if not results:
+            print(f"No logged hours entries found for {search_type} '{query}'.")
+            return
+        
+        console = Console()
+        table = Table(title=f"Search Results - {search_type}: {query}")
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Student ID", style="magenta")
+        table.add_column("Staff ID", style="green")
+        table.add_column("Hours", style="yellow")
+        table.add_column("Status", style="blue")
+        table.add_column("Service", style="white")
+        table.add_column("Timestamp", style="bold")
+
+        for log in results:
+            table.add_row(
+                str(log.id),
+                str(log.student_id),
+                str(log.staff_id),
+                str(log.hours),
+                log.status,
+                log.service if hasattr(log, 'service') and log.service else "N/A",
+                str(log.timestamp) if hasattr(log, 'timestamp') else "N/A"
+            )
+        
+        console.print(table)
+        
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Command to update a logged hours entry by ID
+@logged_hours_cli.command("update", help="Update a logged hours entry by ID")
+@click.argument("log_id", type=int)
+@click.option("--student_id", type=int, default=None, help="New student ID")
+@click.option("--staff_id", type=int, default=None, help="New staff ID")
+@click.option("--hours", type=float, default=None, help="New hours")
+@click.option("--status", type=str, default=None, help="New status")
+def update_logged_hours_command(log_id, student_id, staff_id, hours, status):
+    print("\n")
+    try:
+        log = LoggedHoursHistory.query.get(int(log_id))
+        if not log:
+            print(f"Error: LoggedHoursHistory entry with id {log_id} not found.")
+            print("\n")
+            return
+        if student_id is not None:
+            log.student_id = student_id
+        if staff_id is not None:
+            log.staff_id = staff_id
+        if hours is not None:
+            log.hours = hours
+        if status is not None:
+            log.status = status
+        db.session.commit()
+        print(f"Updated logged hours entry: {log}")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+app.cli.add_command(logged_hours_cli)
+
+
+
+
+
+
+
+'''ACCOLADE COMMANDS'''
+
+accolade_cli = AppGroup('accolade', help='Accolade search commands')
+
+#Command to search accolades by id, staff_id, description, or student_id
+@accolade_cli.command("search", help="Search accolades by id, staff_id, description, or student_id")
+@click.option("--accolade_id", type=int, default=None, help="Accolade ID to search for")
+@click.option("--staff_id", type=int, default=None, help="Staff ID who created the accolade")
+@click.option("--description", type=str, default=None, help="Text to match in accolade description")
+@click.option("--student_id", type=int, default=None, help="Student ID to filter accolades for")
+@with_appcontext
+def search_accolade_command(accolade_id, staff_id, description, student_id):
+    try:
+        accolades, error = search_accolades(
+            accolade_id=accolade_id,
+            staff_id=staff_id,
+            description=description,
+            student_id=student_id
+        )
+        if error:
+            print(f"Error: {error}")
+            return
+
+        if not accolades:
+            print("No accolades found matching the criteria.")
+            return
+
+        console = Console()
+        table = Table(title="Accolade Search Results")
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Description", style="magenta")
+        table.add_column("Staff ID", style="green")
+        table.add_column("Students Assigned", style="yellow")
+        
+        for accolade in accolades:
+            num_students = len(accolade.students) if hasattr(accolade, 'students') else 0
+            table.add_row(
+                str(accolade.id),
+                accolade.description,
+                str(accolade.staff_id),
+                str(num_students)
+            )
+        
+        console.print(table)
+
+    except Exception as e:
+        print(f"An error occurred during search: {e}")
+
+
+#Command to drop accolade table (all accolade records and student-accolade associations)
+@accolade_cli.command("dropAccoladeTable", help="Drops all accolade records from the database (WARNING: IRREVERSIBLE)")
+@click.confirmation_option(prompt="Are you sure you want to delete ALL accolade records? This cannot be undone")
+@with_appcontext
+def drop_accolade_table_command():
+    print("\n")
+    try:
+        result, error = drop_accolade_table()
+        
+        if error:
+            print(f"Error: {error}")
+            print("\n")
+            return
+        
+        print(f"Accolade table dropped successfully!")
+        print(f"Accolades deleted: {result['accolades_deleted']}")
+        print(f"Student-accolade associations cleared")
+        print(f"History records preserved")
+        print(f"\nAll accolade records have been permanently removed from the database.")
+        
+    except Exception as e:
+        print(f"An error occurred during drop operation: {e}")
+    print("\n")
+
+# List all accolades in the database
+@accolade_cli.command("list", help="List all accolades in the database")
+def list_accolades():
+    print("\n")
+    try:
+        from App.models.accolade import Accolade
+        accolades = Accolade.query.all()
+        if not accolades:
+            print("No accolades found.")
+            return
+        
+        console = Console()
+        table = Table(title="All Accolades")
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Description", style="magenta")
+        table.add_column("Created by Staff ID", style="green")
+        table.add_column("Students Assigned", style="yellow")
+
+        for accolade in accolades:
+            num_students = len(accolade.students) if hasattr(accolade, 'students') else 0
+            table.add_row(
+                str(accolade.id),
+                accolade.description,
+                str(accolade.staff_id),
+                str(num_students)
+            )
+        
+        console.print(table)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    print("\n")
+
+app.cli.add_command(accolade_cli)
+
+
+
+
+
+
+
+'''MILESTONE COMMANDS'''
 
 milestone_cli = AppGroup('milestone', help='Milestone commands')
 
@@ -797,8 +1520,8 @@ def drop_milestones_table_command(history):
 
 
 @milestone_cli.command("search", help="Search for a milestone by ID or hours")
-@click.option("--id", "milestone_id", type=int, help="The ID of the milestone to search for.")
-@click.option("--hours", "hours", type=int, help="The hour value of the milestone to search for.")
+@click.option("--id", "milestone_id", type=int, default=None, help="The ID of the milestone to search for.")
+@click.option("--hours", "hours", type=int, default=None, help="The hour value of the milestone to search for.")
 def search_milestone_command(milestone_id, hours):
     print("\n")
     try:
@@ -882,205 +1605,98 @@ app.cli.add_command(milestone_cli) # add the group to the cli
 
 
 
-'''REQUEST COMMANDS'''
 
 
 
-request_cli = AppGroup('request', help='Request object commands')
 
-# Command to delete a request by ID
-@request_cli.command("delete", help="Delete a service hour request by ID")
-def delete_request():
+'''LEADERBOARD COMMANDS'''
+@app.cli.command("viewLeaderboard", help="View leaderboard of students by approved hours")
+def viewLeaderboard():
     print("\n")
     try:
-        request_id = int(input("Enter the request ID to delete: ")) 
-        success, message = delete_request_entry(request_id)
+        leaderboard = generate_leaderboard()
+
+        if not leaderboard:
+            print("No students found or hour data found.")
+            return
         
-        if success:
-            print(f"Success: {message}")
-        else:
-            print(f"Error: {message}")
-    
-    except ValueError:
-        print("Error: Request ID must be an integer.")
+        console = Console()
+        table = Table(title="Leaderboard (by Approved Hours)")
+        table.add_column("Rank", style="cyan", no_wrap=True)
+        table.add_column("Student Name", style="magenta")
+        table.add_column("Student ID", style="green")
+        table.add_column("Hours", style="yellow")
+
+        for rank, data in enumerate(leaderboard, 1):
+            table.add_row(
+                str(rank),
+                data['name'],
+                str(data['student_id']),
+                str(data['hours'])
+            )
+        
+        console.print(table)
+            
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred while generating the leaderboard: {e}")
+        
+@app.cli.command("searchLeaderboard", help="Search leaderboard for a specific student by name or ID")
+@click.argument("query")
+def searchLeaderboard(query):
     print("\n")
-
-@request_cli.command("update", help="Update a request's attributes (student_id, service, hours, status)")
-@click.option("--request_id", required=True, type=int, help="ID of the request to update")
-@click.option("--student_id", default=None, type=int, help="New Student ID")
-@click.option("--service", default=None, help="New Service description")
-@click.option("--hours", default=None, type=float, help="New Hours value")
-@click.option("--status", default=None, help="New Status (Pending/Approved/Denied)")
-@with_appcontext
-def update_request_command(request_id, student_id, service, hours, status):
-
-    if not student_id and not service and not hours and not status:
-        click.echo("Error: At least one attribute (--student_id, --service, --hours, --status) must be provided.")
-        return
-
     try:
-        request, message = update_request_entry(request_id, student_id, service, hours, status)
+        leaderboard = generate_leaderboard()
 
-        if request:
-            click.echo(f"Successfully updated Request ID {request.id}: {message}")
-        else:
-            click.echo(f"Error: {message}")
-
-    except ValueError as e:
-        click.echo(f"Update failed: {e}", err=True)
-        sys.exit(1)
-    except Exception as e:
-        click.echo(f"An unexpected error occurred during update: {e}", err=True)
-        sys.exit(1)
-
-
-
-# Command to search requests by student_id, service, or date
-@request_cli.command("search", help="Search requests by student_id, service, or date_completed")
-@click.option("--student_id", default=None, type=int, help="Student ID to filter requests")
-@click.option("--service", default=None, type=str, help="Service description to search for")
-@click.option("--date", default=None, type=str, help="Date completed (YYYY-MM-DD) to filter requests")
-@with_appcontext
-def search_request_command(student_id, service, date):
-    
-
-    if student_id is None and service is None and date is None:
-        click.echo("Error: At least one search criterion (--student_id, --service, or --date) must be provided.")
-        return
-    
-    try:
-        requests, error = search_requests(student_id=student_id, service=service, date=date)
-        
-        if error:
-            click.echo(f"Error: {error}")
-            return
-
-        if not requests:
-            click.echo("No requests found matching the criteria.")
+        if not leaderboard:
+            print("No students found or hour data found.")
             return
         
-        click.echo(f"\nFound {len(requests)} request(s):")
-        click.echo("-" * 120)
-        for req in requests:
-            student = Student.query.get(req.student_id)
-            student_name = student.username if student else "Unknown"
-            click.echo(f"Request ID: {req.id:<4} | Student: {student_name:<15} | Service: {req.service:<25} | Hours: {req.hours:<6} | Status: {req.status:<10} | Date: {req.date_completed.date()}")
-        click.echo("-" * 120)
+        results = []
+        for rank, data in enumerate(leaderboard, 1):
+            if query.lower() in data['name'].lower() or query == str(data['student_id']):
+                results.append((rank, data))
+        
+        if not results:
+            print(f"No matching student found in the leaderboard for '{query}'.")
+            return
+        
+        console = Console()
+        table = Table(title=f"Leaderboard Search Results - '{query}'")
+        table.add_column("Rank", style="cyan", no_wrap=True)
+        table.add_column("Student Name", style="magenta")
+        table.add_column("Student ID", style="green")
+        table.add_column("Hours", style="yellow")
+
+        for rank, data in results:
+            table.add_row(
+                str(rank),
+                data['name'],
+                str(data['student_id']),
+                str(data['hours'])
+            )
+        
+        console.print(table)
         
     except Exception as e:
-        click.echo(f"An error occurred during search: {e}", err=True)
-
-
-#Command to drop request table (all request records and associated activity records)
-@request_cli.command("dropRequestTable", help="Drops all request records from the database (WARNING: IRREVERSIBLE)")
-@click.confirmation_option(prompt="Are you sure you want to delete ALL request records? This cannot be undone")
-@with_appcontext
-def drop_request_table_command():
-    try:
-        result, error = drop_request_table()
-        
-        if error:
-            click.echo(f"Error: {error}", err=True)
-            return
-        
-        click.echo(f"Request table dropped successfully!")
-        click.echo(f"Requests deleted: {result['requests_deleted']}")
-        click.echo(f"Associated activity records cleaned up")
-        click.echo(f"\nAll request records have been permanently removed from the database.")
-        
-    except Exception as e:
-        click.echo(f"An error occurred during drop operation: {e}", err=True)
-        sys.exit(1)
+        print(f"An error occurred while searching the leaderboard: {e}")
         
         
-app.cli.add_command(request_cli) 
-
-
-
-'''ACCOLADE COMMANDS'''
-
-
-
-accolade_cli = AppGroup('accolade', help='Accolade search commands')
-
-#Command to search accolades by id, staff_id, description, or student_id
-@accolade_cli.command("search", help="Search accolades by id, staff_id, description, or student_id")
-@click.option("--accolade_id", default=None, type=int, help="Accolade ID to search for")
-@click.option("--staff_id", default=None, type=int, help="Staff ID who created the accolade")
-@click.option("--description", default=None, type=str, help="Text to match in accolade description")
-@click.option("--student_id", default=None, type=int, help="Student ID to filter accolades for")
-@with_appcontext
-def search_accolade_command(accolade_id, staff_id, description, student_id):
-    try:
-        accolades, error = search_accolades(
-            accolade_id=accolade_id,
-            staff_id=staff_id,
-            description=description,
-            student_id=student_id
-        )
-        if error:
-            click.echo(f"Error: {error}")
-            return
-
-        if not accolades:
-            click.echo("No accolades found matching the criteria.")
-            return
-
-        click.echo(f"Found {len(accolades)} accolade(s):")
-        for accolade in accolades:
-            click.echo(f"Accolade ID: {accolade.id}")
-            click.echo(f"Description: '{accolade.description}'")
-            click.echo(f"Created by Staff ID: {accolade.staff_id}")
-            click.echo(f"Number of students: {len(accolade.students)}")
-            if accolade.students:
-                student_ids = [s.student_id for s in accolade.students]
-                click.echo(f"Student IDs: {', '.join(map(str, student_ids))}")
-            click.echo()
-
-    except Exception as e:
-        click.echo(f"An error occurred during search: {e}", err=True)
-
-
-#Command to drop accolade table (all accolade records and student-accolade associations)
-@accolade_cli.command("dropAccoladeTable", help="Drops all accolade records from the database (WARNING: IRREVERSIBLE)")
-@click.confirmation_option(prompt="Are you sure you want to delete ALL accolade records? This cannot be undone")
-@with_appcontext
-def drop_accolade_table_command():
-    try:
-        result, error = drop_accolade_table()
         
-        if error:
-            click.echo(f"Error: {error}", err=True)
-            return
         
-        click.echo(f"Accolade table dropped successfully!")
-        click.echo(f"Accolades deleted: {result['accolades_deleted']}")
-        click.echo(f"Student-accolade associations cleared")
-        click.echo(f"History records preserved")
-        click.echo(f"\nAll accolade records have been permanently removed from the database.")
         
-    except Exception as e:
-        click.echo(f"An error occurred during drop operation: {e}", err=True)
-        sys.exit(1)
-
-app.cli.add_command(accolade_cli)
-
-
-# '''
-# Test Commands
-# '''
-
-# test = AppGroup('test', help='Testing commands') 
-
-# @test.command("unit", help="Run User tests")
-# def unit_tests_command():
-    
-#     sys.exit(pytest.main(["-k", "UserUnitTests or StudentUnitTests or StaffUnitTests or RequestUnitTests or LoggedHoursUnitTests"]))
-    
-# app.cli.add_command(test)
-
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 '''
 Test Commands
 '''
@@ -1099,158 +1715,3 @@ def user_tests_command(type):
 
 
 app.cli.add_command(test)
-
-# Command to create a logged hours entry
-@app.cli.command("createLoggedHours", help="Create a logged hours entry")
-@click.argument("student_id", type=int)
-@click.argument("staff_id", type=int)
-@click.argument("hours", type=float)
-@click.option("--status", default="approved", help="Status for the logged hours (default: approved)")
-@click.option("--service", default=None, help="Service description for the logged hours (optional)")
-@click.option("--timestamp", default=datetime.utcnow(), help="Timestamp for the logged hours (optional, format: YYYY-MM-DD HH:MM:SS)")
-def create_logged_hours_command(student_id, staff_id, hours, status, service, timestamp):
-    print("\n")
-    try:
-        log = create_logged_hours(student_id, staff_id, hours, status, service, timestamp)
-        print(f"Created logged hours entry: {log}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    print("\n")
-
-# Command to delete a logged hours entry by ID
-@app.cli.command("deleteLoggedHours", help="Delete a logged hours entry by ID")
-@click.argument("log_id", type=int)
-def delete_logged_hours_command(log_id):
-    try:
-        delete_logged_hours(log_id)
-        print(f"Logged hours entry with ID {log_id} has been deleted.")
-    except ValueError as e:
-        print(f"Error: {e}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
-# Command to delete ALL logged hours entries (for testing purposes)
-@app.cli.command("deleteAllLoggedHours", help="Delete ALL logged hours entries (testing purposes only)")
-def delete_all_logged_hours_command():
-    confirmation = input("\033[91m\033[5m⚠️ Are you sure you want to delete ALL logged hours entries? This action cannot be undone. (yes/no): ")
-    if confirmation.lower() == 'yes':
-        try:
-            print ("Nuking all logged hours entries... 💣")
-            num_deleted = delete_all_logged_hours()
-            print(f"All {num_deleted} logged hours entries have been deleted. 💥")
-        except Exception as e:
-            print(f"An error occurred: {e}")
-    else:
-        print("Operation cancelled.")
-        
-# Define regex patterns for date and date range detection        
-RANGE_PATTERN = r"^\d{4}-\d{2}-\d{2}:\d{4}-\d{2}-\d{2}$"
-DATE_PATTERN  = r"^\d{4}-\d{2}-\d{2}$"
-
-def detect_query_type(query):
-    # Student ID
-    if query.isdigit() and query.startswith("8160") and len(query) == 9: # Assuming student IDs start with '8160' and are 9 digits long, this can be adjusted as needed
-        return "student_id"
-
-    # Staff ID
-    if query.isdigit() and query.startswith("3") and len(query) == 9: # Assuming staff IDs start with '3', this can be adjusted as needed
-        return "staff_id"
-
-    # Date range
-    if re.match(RANGE_PATTERN, query):
-        start_str, end_str = query.split(":")
-        datetime.strptime(start_str, "%Y-%m-%d")
-        datetime.strptime(end_str, "%Y-%m-%d")
-        return "date_range"
-
-    # Single date
-    if re.match(DATE_PATTERN, query):
-        datetime.strptime(query, "%Y-%m-%d")
-        return "date"
-
-    # Fallback: treat as service string
-    return "service"
-
-# Command to search logged hours by student-id, staff-id, or date
-@app.cli.command("searchLoggedHours", help="Search logged hours by student-id, staff-id, date or service string. Dates follow YYYY-MM-DD format. Date ranges use YYYY-MM-DD:YYYY-MM-DD format.")
-@click.argument("query")
-def search_logged_hours_command(query):
-    search_type = detect_query_type(query)
-    try:
-        results = search_logged_hours(query, search_type)
-        if not results:
-            print(f"No logged hours entries found for {search_type} '{query}'.")
-            return
-        print(f"Logged hours entries for {search_type} '{query}':")
-        for log in results:
-            print(log)
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
-# Command to update a logged hours entry by ID
-@app.cli.command("updateLoggedHours", help="Update a logged hours entry by ID")
-@click.argument("log_id")
-@click.option("--student_id", type=int, default=None, help="New student ID")
-@click.option("--staff_id", type=int, default=None, help="New staff ID")
-@click.option("--hours", type=float, default=None, help="New hours")
-@click.option("--status", type=str, default=None, help="New status")
-
-def update_logged_hours_command(log_id, student_id, staff_id, hours, status):
-    print("\n")
-    try:
-        log = LoggedHoursHistory.query.get(int(log_id))
-        if not log:
-            print(f"LoggedHoursHistory entry with id {log_id} not found.")
-            return
-        if student_id is not None:
-            log.student_id = student_id
-        if staff_id is not None:
-            log.staff_id = staff_id
-        if hours is not None:
-            log.hours = hours
-        if status is not None:
-            log.status = status
-        db.session.commit()
-        print(f"Updated logged hours entry: {log}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    print("\n")
-    
-## LEADERBOARD COMMANDS ##
-@app.cli.command("viewLeaderboard", help="View leaderboard of students by approved hours")
-def viewLeaderboard(): #Duplicate entry fixed, this is the correct one. I deleted the old duplicates.
-    print("\n")
-    try:
-        leaderboard = generate_leaderboard() #reuse existing function from student controller
-
-        print("Leaderboard (by approved hours):")
-        if not leaderboard:
-            print("No students found or hour data found.")
-            return
-        for rank, data in enumerate(leaderboard, 1):
-            #Use rich table formatting for better CLI display
-            print(f"{rank:<6}. {data['name']:<10} ------ \t{data['hours']} hours")
-            
-    except Exception as e:
-        print(f"An error occurred while generating the leaderboard: {e}")
-        
-@app.cli.command("searchLeaderboard", help="Search leaderboard for a specific student by name or ID")
-@click.argument("query")
-def searchLeaderboard(query):
-    print("\n")
-    try:
-        leaderboard = generate_leaderboard() #reuse existing function from student controller
-
-        print(f"Searching leaderboard for '{query}':")
-        if not leaderboard:
-            print("No students found or hour data found.")
-            return
-        found = False
-        for rank, data in enumerate(leaderboard, 1):
-            if query.lower() in data['name'].lower() or query == str(data['student_id']):
-                print(f"{rank:<6}. {data['name']:<10} ------ \t{data['hours']} hours")
-                found = True
-        if not found:
-            print(f"No matching student found in the leaderboard for '{query}'.")
-    except Exception as e:
-        print(f"An error occurred while searching the leaderboard: {e}")
