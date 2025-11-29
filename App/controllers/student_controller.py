@@ -121,3 +121,9 @@ def fetch_accolades(student_id):  # fetch accolades for a student
 def get_all_students_json():
     students = Student.query.all()
     return [student.get_json() for student in students]
+
+
+def delete_all_students():
+    num_deleted = Student.query.delete()
+    db.session.commit()
+    return num_deleted

@@ -239,11 +239,9 @@ def delete_student_command(student_id):
 def delete_all_students_command():
     try:
         print("Nuking all students... 💣")
-        num_deleted = Student.query.delete()
-        db.session.commit()
+        num_deleted = delete_all_students()
         print(f"All {num_deleted} students are gone. 💥")
     except Exception as e:
-        db.session.rollback()
         print(f"An error occurred: {e}")
     
     
@@ -382,11 +380,9 @@ def delete_staff_command(staff_id):
 def delete_all_staff_command():
     try:
         print("Nuking all staff members... 💣")
-        num_deleted = Staff.query.delete()
-        db.session.commit()
+        num_deleted = delete_all_staff()
         print(f"All {num_deleted} staff members are gone. 💥")
     except Exception as e:
-        db.session.rollback()
         print(f"An error occurred: {e}")
 
 
@@ -727,23 +723,11 @@ def search_logged_hours_command(query):
 def update_logged_hours_command(log_id, student_id, staff_id, hours, status):
     print("\n")
     try:
-        log = LoggedHoursHistory.query.get(int(log_id))
-        if not log:
-            print(f"Error: LoggedHoursHistory entry with id {log_id} not found.")
-            print("\n")
-            return
-        if student_id is not None:
-            log.student_id = student_id
-        if staff_id is not None:
-            log.staff_id = staff_id
-        if hours is not None:
-            log.hours = hours
-        if status is not None:
-            log.status = status
-        db.session.commit()
-        print(f"Updated logged hours entry: {log}")
-    except ValueError as e:
-        print(f"Error: {e}")
+        log, error = update_logged_hours(log_id, student_id=student_id, staff_id=staff_id, hours=hours, status=status)
+        if error:
+            print(f"Error: {error}")
+        else:
+            print(f"Updated logged hours entry: {log}")
     except Exception as e:
         print(f"An error occurred: {e}")
     print("\n")

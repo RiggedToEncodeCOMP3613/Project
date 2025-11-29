@@ -61,6 +61,46 @@ def delete_all_logged_hours():
     return num_deleted
 
 
+def update_logged_hours(log_id, student_id=None, staff_id=None, hours=None, status=None):
+    log = LoggedHoursHistory.query.get(log_id)
+    if not log:
+        return None, f"LoggedHoursHistory entry with id {log_id} not found."
+
+    if student_id is not None:
+        student = Student.query.get(student_id)
+        if not student:
+            return None, f"Student with ID {student_id} not found."
+        log.student_id = student_id
+
+    if staff_id is not None:
+        from App.models import Staff
+        staff = Staff.query.get(staff_id)
+        if not staff:
+            return None, f"Staff with ID {staff_id} not found."
+        log.staff_id = staff_id
+
+    if hours is not None:
+        try:
+            log.hours = float(hours)
+        except ValueError:
+            return None, "Hours must be a valid number."
+
+    if status is not None:
+        log.status = status
+
+    try:
+        db.session.commit()
+        # Update student's total hours if student_id or hours changed
+        if student_id is not None or hours is not None:
+            student = Student.query.get(log.student_id)
+            if student:
+                student.calculate_total_hours()
+        return log, None
+    except Exception as e:
+        db.session.rollback()
+        return None, f"Error updating logged hours: {str(e)}"
+
+
 # HELPER FUNCTIONS
 
 # Search logged hours history by student ID.

@@ -94,3 +94,9 @@ def update_staff(staff_id, username=None, email=None, password=None):
     db.session.commit()
 
     return staff
+
+
+def delete_all_staff():
+    num_deleted = Staff.query.delete()
+    db.session.commit()
+    return num_deleted
