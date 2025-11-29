@@ -1,27 +1,27 @@
-import models.loggedHoursHistory
+from App.models import LoggedHoursHistory
 from App.database import db
 
 def search_logged_hours_by_student(student_id):
     """Search logged hours history by student ID."""
-    return models.loggedHoursHistory.LoggedHoursHistory.query.filter_by(student_id=student_id).all()
+    return LoggedHoursHistory.query.filter_by(student_id=student_id).all()
 
 def search_logged_hours_by_staff(staff_id):
     """Search logged hours history by staff ID."""
-    return models.loggedHoursHistory.LoggedHoursHistory.query.filter_by(staff_id=staff_id).all()
+    return LoggedHoursHistory.query.filter_by(staff_id=staff_id).all()
 
 def search_logged_hours_by_service(service):
     """Search logged hours history by service."""
-    return models.loggedHoursHistory.LoggedHoursHistory.query.filter_by(service=service).all()
+    return LoggedHoursHistory.query.filter_by(service=service).all()
 
 def search_logged_hours_by_date(date_completed):
     """Search logged hours history by date completed."""
-    return models.loggedHoursHistory.LoggedHoursHistory.query.filter_by(date_completed=date_completed).all()
+    return LoggedHoursHistory.query.filter_by(date_completed=date_completed).all()
 
 def search_logged_hours_by_date_range(start_date, end_date):
     """Search logged hours history within a date range."""
-    return models.loggedHoursHistory.LoggedHoursHistory.query.filter(
-        models.loggedHoursHistory.LoggedHoursHistory.date_completed >= start_date,
-        models.loggedHoursHistory.LoggedHoursHistory.date_completed <= end_date
+    return LoggedHoursHistory.query.filter(
+        LoggedHoursHistory.date_completed >= start_date,
+        LoggedHoursHistory.date_completed <= end_date
     ).all()
     
 def search_logged_hours (query, search_type):
