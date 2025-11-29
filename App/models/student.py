@@ -121,7 +121,7 @@ class Student(User):
                     milestone_history = MilestoneHistory(
                         milestone_id=milestone.id,
                         student_id=self.student_id,
-                        value=milestone.hours
+                        hours=milestone.hours
                     )
                     milestone_history.activity_id = activity.id
                     db.session.add(milestone_history)

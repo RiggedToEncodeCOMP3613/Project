@@ -64,8 +64,8 @@ class Staff(User):
             staff_id=self.staff_id,
             service=service,
             hours=hours,
-            before=0,  # Will be set in LoggedHoursHistory.__init__
-            after=0,   # Will be set in LoggedHoursHistory.__init__
+            before=0,  
+            after=hours,
             date_completed=date_completed
         )
         logged.activity_id = activity.id
