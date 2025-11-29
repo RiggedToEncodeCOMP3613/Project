@@ -25,13 +25,13 @@ class Student(User):
 
     def __init__(self, username, email, password):
         prefix = 8160
-        max_id = db.session.query(func.max(Student.student_id)).filter(Student.student_id.between(prefix*10**5, (prefix+1)*10**5-1)).scalar()
+        max_id = db.session.query(func.max(User.user_id)).filter(User.role == 'student', User.user_id.between(prefix*10**5, (prefix+1)*10**5-1)).scalar()
         if max_id:
             suffix = int(str(max_id)[4:]) + 1
         else:
             suffix = 10000
         self.student_id = int(f"{prefix}{suffix:05d}")
-        self.user_id = self.student_id 
+        self.user_id = self.student_id
         super().__init__(username, email, password, role="student")
         self.total_hours = 0.0
         self.rank = 0

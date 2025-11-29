@@ -13,11 +13,11 @@ def parse_date(date_str: str) -> datetime:
 def detect_query_type(query):
     # Student ID
     if query.isdigit() and query.startswith("8160") and len(query) == 9:
-        return "student_id"
+        return "student"
 
     # Staff ID
     if query.isdigit() and query.startswith("3") and len(query) == 9:
-        return "staff_id"
+        return "staff"
 
     # Date range
     if re.match(RANGE_PATTERN, query):
