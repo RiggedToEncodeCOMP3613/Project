@@ -2,10 +2,10 @@ from .user import *
 from .auth import *
 from .initialize import *
 from .leaderboard_controller import *
-from .loggedHoursHistory import *
+from .loggedHoursHistory_controller import *
 from .student_controller import *
 from .staff_controller import *
-from .milestone import *
+from .milestone_controller import *
 from .app_controller import *
 from .activityhistory_controller import *
 from .request_controller import *

@@ -14,10 +14,10 @@ from App.main import create_app
 from App.database import db, get_migrate
 from App.models import Student, Staff, RequestHistory, LoggedHoursHistory
 from App.controllers import get_all_users, initialize
-from App.controllers.loggedHoursHistory import *
+from App.controllers.loggedHoursHistory_controller import *
 from App.controllers.student_controller import *
 from App.controllers.staff_controller import *
-from App.controllers.milestone import *
+from App.controllers.milestone_controller import *
 from App.controllers.app_controller import *
 from App.controllers.activityhistory_controller import *
 from App.controllers.request_controller import *
