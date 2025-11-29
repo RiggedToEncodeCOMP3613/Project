@@ -71,14 +71,30 @@ def list_users():
         table.add_column("Type", style="yellow")
 
         for user in users:
-            user_type = "Student" if hasattr(user, 'student_id') else ("Staff" if hasattr(user, 'staff_id') else "Unknown")
-            user_id = user.student_id if hasattr(user, 'student_id') else (user.staff_id if hasattr(user, 'staff_id') else "N/A")
-            table.add_row(
-                str(user_id),
-                user.username if hasattr(user, 'username') else "N/A",
-                user.email if hasattr(user, 'email') else "N/A",
-                user_type
-            )
+            try:
+                if user.role == 'student':
+                    user_type = "Student"
+                    user_id = user.student_id
+                elif user.role == 'staff':
+                    user_type = "Staff"
+                    user_id = user.staff_id
+                else:
+                    user_type = "Unknown"
+                    user_id = user.user_id
+                table.add_row(
+                    str(user_id),
+                    user.username if hasattr(user, 'username') else "N/A",
+                    user.email if hasattr(user, 'email') else "N/A",
+                    user_type
+                )
+            except:
+                # Handle case where specific record is deleted but user remains
+                table.add_row(
+                    str(user.user_id),
+                    user.username if hasattr(user, 'username') else "N/A",
+                    user.email if hasattr(user, 'email') else "N/A",
+                    f"Deleted {user.role.capitalize()}"
+                )
         
         console.print(table)
 
@@ -110,7 +126,15 @@ def create_student(username, email, password):
             raise ValueError("Invalid email address.")
         student = register_student(username, email, password)
 
-        print(f"Created student: {student}")
+        console = Console()
+        table = Table(title="Student Created Successfully")
+        table.add_column("Field", style="cyan")
+        table.add_column("Value", style="magenta")
+        table.add_row("ID", str(student.student_id))
+        table.add_row("Username", student.username)
+        table.add_row("Email", student.email)
+        table.add_row("Role", "student")
+        console.print(table)
     except Exception as e:
         print(f"An error occurred: {e}")
     print("\n")
@@ -159,14 +183,22 @@ def update_student_command(student_id, username, email, password):
             print(f"Error: Student with ID {student_id} not found.")
             print("\n")
             return
-        
+
         updated_student = update_student_info(
             student_id,
             username if username else None,
             email if email else None,
             password if password else None
         )
-        print(f"Updated student: {updated_student}")
+        console = Console()
+        table = Table(title="Student Updated Successfully")
+        table.add_column("Field", style="cyan")
+        table.add_column("Value", style="magenta")
+        table.add_row("ID", str(updated_student.student_id))
+        table.add_row("Username", updated_student.username)
+        table.add_row("Email", updated_student.email)
+        table.add_row("Role", "student")
+        console.print(table)
     except ValueError as e:
         print(f"Error: {e}")
     except Exception as e:
@@ -199,21 +231,25 @@ def list_students():
         if not students:
             print("No students found.")
             return
-        
+
         console = Console()
         table = Table(title="All Students")
         table.add_column("ID", style="cyan", no_wrap=True)
         table.add_column("Username", style="magenta")
         table.add_column("Email", style="green")
 
-        for student in students:
-            if hasattr(student, 'student_id'):  # Filter for student objects
-                table.add_row(
-                    str(student.student_id),
-                    student.username if hasattr(student, 'username') else "N/A",
-                    student.email if hasattr(student, 'email') else "N/A"
-                )
-        
+        for user in students:
+            if user.role == 'student':
+                try:
+                    table.add_row(
+                        str(user.student_id),
+                        user.username if hasattr(user, 'username') else "N/A",
+                        user.email if hasattr(user, 'email') else "N/A"
+                    )
+                except:
+                    # Skip if student record deleted
+                    pass
+
         console.print(table)
 
     except Exception as e:
@@ -266,7 +302,15 @@ def create_staff(username, email, password):
             raise ValueError("Invalid email address.")
         staff = register_staff(username, email, password)
 
-        print(f"Created staff member: {staff}")
+        console = Console()
+        table = Table(title="Staff Member Created Successfully")
+        table.add_column("Field", style="cyan")
+        table.add_column("Value", style="magenta")
+        table.add_row("ID", str(staff.staff_id))
+        table.add_row("Username", staff.username)
+        table.add_row("Email", staff.email)
+        table.add_row("Role", "staff")
+        console.print(table)
 
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -323,7 +367,15 @@ def update_staff_command(staff_id, username, email, password):
             email if email else None,
             password if password else None
         )
-        print(f"Updated staff member: {updated_staff}")
+        console = Console()
+        table = Table(title="Staff Member Updated Successfully")
+        table.add_column("Field", style="cyan")
+        table.add_column("Value", style="magenta")
+        table.add_row("ID", str(updated_staff.staff_id))
+        table.add_row("Username", updated_staff.username)
+        table.add_row("Email", updated_staff.email)
+        table.add_row("Role", "staff")
+        console.print(table)
     except ValueError as e:
         print(f"Error: {e}")
     except Exception as e:
@@ -346,13 +398,17 @@ def list_staff():
         table.add_column("Username", style="magenta")
         table.add_column("Email", style="green")
 
-        for staff in staff_list:
-            if hasattr(staff, 'staff_id'):  # Filter for staff objects
-                table.add_row(
-                    str(staff.staff_id),
-                    staff.username if hasattr(staff, 'username') else "N/A",
-                    staff.email if hasattr(staff, 'email') else "N/A"
-                )
+        for user in staff_list:
+            if user.role == 'staff':
+                try:
+                    table.add_row(
+                        str(user.staff_id),
+                        user.username if hasattr(user, 'username') else "N/A",
+                        user.email if hasattr(user, 'email') else "N/A"
+                    )
+                except:
+                    # Skip if staff record deleted
+                    pass
         
         console.print(table)
 
@@ -497,11 +553,20 @@ def update_request_command(request_id, student_id, service, hours, staff_id):
             print(f"Error: Request with ID {request_id} not found.")
             print("\n")
             return
-        
+
         request, message = update_request_entry(request_id, student_id, service, hours, staff_id=staff_id)
 
         if request:
-            print(f"Successfully updated Request ID {request.id}: {message}")
+            console = Console()
+            table = Table(title="Request Updated Successfully")
+            table.add_column("Field", style="cyan")
+            table.add_column("Value", style="magenta")
+            table.add_row("Request ID", str(request.id))
+            table.add_row("Service", request.service if hasattr(request, 'service') else "N/A")
+            table.add_row("Hours", str(request.hours))
+            table.add_row("Status", request.status)
+            table.add_row("Message", message)
+            console.print(table)
         else:
             print(f"Error: {message}")
 
@@ -520,17 +585,26 @@ def approveRequest(staff_id, request_id):
     print("\n")
     try:
         results = process_request_approval(staff_id, request_id)
-    
+
         req=results['request']
         student_name=results['student_name']
         staff_name=results['staff_name']
         logged=results['logged_hours']
 
         if logged:
-            print(f"Request {request_id} for {req.hours} hours made by {student_name} approved by Staff {staff_name} (ID: {staff_id}). Logged Hours ID: {logged.id}")
+            console = Console()
+            table = Table(title="Request Approved Successfully")
+            table.add_column("Field", style="cyan")
+            table.add_column("Value", style="magenta")
+            table.add_row("Request ID", str(request_id))
+            table.add_row("Hours", str(req.hours))
+            table.add_row("Student", student_name)
+            table.add_row("Approved by", f"{staff_name} (ID: {staff_id})")
+            table.add_row("Logged Hours ID", str(logged.id))
+            console.print(table)
         else:
             print(f"Request {request_id} for {req.hours} hours made by {student_name} could not be approved (Already Processed).")
-    
+
     except ValueError as e:
         print(f"Error: {e}")
     except Exception as e:
@@ -671,7 +745,17 @@ def create_logged_hours_command(student_id, staff_id, hours, service, date_compl
     try:
         # create_logged_hours now requires (student_id, staff_id, hours, service, date_completed)
         log = create_logged_hours(student_id, staff_id, hours, service, date_completed)
-        print(f"Created logged hours entry: {log}")
+        console = Console()
+        table = Table(title="Logged Hours Entry Created Successfully")
+        table.add_column("Field", style="cyan")
+        table.add_column("Value", style="magenta")
+        table.add_row("ID", str(log.id))
+        table.add_row("Student ID", str(log.student_id))
+        table.add_row("Staff ID", str(log.staff_id))
+        table.add_row("Hours", str(log.hours))
+        table.add_row("Service", log.service)
+        table.add_row("Date Completed", str(log.date_completed))
+        console.print(table)
     except Exception as e:
         print(f"An error occurred: {e}")
     print("\n")
@@ -693,9 +777,8 @@ def search_logged_hours_command(query):
         table.add_column("Student ID", style="magenta")
         table.add_column("Staff ID", style="green")
         table.add_column("Hours", style="yellow")
-        table.add_column("Status", style="blue")
         table.add_column("Service", style="white")
-        table.add_column("Timestamp", style="bold")
+        table.add_column("Date Completed", style="blue")
 
         for log in results:
             table.add_row(
@@ -703,9 +786,8 @@ def search_logged_hours_command(query):
                 str(log.student_id),
                 str(log.staff_id),
                 str(log.hours),
-                log.status,
                 log.service if hasattr(log, 'service') and log.service else "N/A",
-                str(log.timestamp) if hasattr(log, 'timestamp') else "N/A"
+                str(log.date_completed.date()) if hasattr(log, 'date_completed') else "N/A"
             )
         
         console.print(table)
@@ -727,7 +809,17 @@ def update_logged_hours_command(log_id, student_id, staff_id, hours, status):
         if error:
             print(f"Error: {error}")
         else:
-            print(f"Updated logged hours entry: {log}")
+            console = Console()
+            table = Table(title="Logged Hours Entry Updated Successfully")
+            table.add_column("Field", style="cyan")
+            table.add_column("Value", style="magenta")
+            table.add_row("ID", str(log.id))
+            table.add_row("Student ID", str(log.student_id))
+            table.add_row("Staff ID", str(log.staff_id))
+            table.add_row("Hours", str(log.hours))
+            table.add_row("Service", log.service)
+            table.add_row("Date Completed", str(log.date_completed))
+            console.print(table)
     except Exception as e:
         print(f"An error occurred: {e}")
     print("\n")
@@ -751,7 +843,7 @@ def list_logged_hours():
         table.add_column("Staff ID", style="green")
         table.add_column("Hours", style="yellow")
         table.add_column("Service", style="white")
-        table.add_column("Timestamp", style="bold")
+        table.add_column("Date Completed", style="blue")
 
         for log in logged_hours:
             table.add_row(
@@ -760,7 +852,7 @@ def list_logged_hours():
                 str(log.staff_id),
                 str(log.hours),
                 log.service if hasattr(log, 'service') and log.service else "N/A",
-                str(log.timestamp) if hasattr(log, 'timestamp') else "N/A"
+                str(log.date_completed.date()) if hasattr(log, 'date_completed') else "N/A"
             )
         
         console.print(table)
@@ -1087,7 +1179,13 @@ def create_milestone_command(hours):
     print("\n")
     try:
         milestone = create_milestone(hours)
-        print(f"Created milestone: {milestone}")
+        console = Console()
+        table = Table(title="Milestone Created Successfully")
+        table.add_column("Field", style="cyan")
+        table.add_column("Value", style="magenta")
+        table.add_row("ID", str(milestone.id))
+        table.add_row("Hours", str(milestone.hours))
+        console.print(table)
     except ValueError as e:
         print(f"Error: {e}")
     except Exception as e:
@@ -1133,7 +1231,13 @@ def update_milestone_command(milestone_id, new_hours):
     try:
         milestone = update_milestone(milestone_id, new_hours)
         if milestone:
-            print(f"Milestone ID {milestone_id} updated to {new_hours} hours.")
+            console = Console()
+            table = Table(title="Milestone Updated Successfully")
+            table.add_column("Field", style="cyan")
+            table.add_column("Value", style="magenta")
+            table.add_row("ID", str(milestone.id))
+            table.add_row("Hours", str(milestone.hours))
+            console.print(table)
         else:
             print(f"Milestone with ID {milestone_id} not found.")
     except ValueError as e:
