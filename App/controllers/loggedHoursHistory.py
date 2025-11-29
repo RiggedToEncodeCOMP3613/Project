@@ -30,7 +30,7 @@ def create_logged_hours(student_id, staff_id, hours, service, date_completed):
     return logged_hour
 
 
-def search_logged_hours (query, search_type):
+def search_logged_hours(query, search_type):
     if search_type == 'student':
         return search_logged_hours_by_student(query)
     elif search_type == 'staff':
@@ -40,10 +40,13 @@ def search_logged_hours (query, search_type):
     elif search_type == 'date':
         return search_logged_hours_by_date(query)
     elif search_type == 'date_range':
-        start_date, end_date = query
-        return search_logged_hours_by_date_range(start_date, end_date) # ! This is not fully correct, needs tuple unpacking
+        if isinstance(query, tuple) and len(query) == 2:
+            start_date, end_date = query
+            return search_logged_hours_by_date_range(start_date, end_date)
+        else:
+            raise ValueError("For date_range, query must be a tuple of (start_date, end_date).")
     else:
-        raise ValueError("Invalid search type. Use 'student', 'staff', 'service', or 'date_range'.")
+        raise ValueError("Invalid search type. Use 'student', 'staff', 'service', 'date', or 'date_range'.")
 
 
 def delete_logged_hours(log_id):

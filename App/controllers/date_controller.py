@@ -21,15 +21,21 @@ def detect_query_type(query):
 
     # Date range
     if re.match(RANGE_PATTERN, query):
-        start_str, end_str = query.split(":")
-        datetime.strptime(start_str, "%Y-%m-%d")
-        datetime.strptime(end_str, "%Y-%m-%d")
-        return "date_range"
+        try:
+            start_str, end_str = query.split(":")
+            datetime.strptime(start_str, "%Y-%m-%d")
+            datetime.strptime(end_str, "%Y-%m-%d")
+            return "date_range"
+        except ValueError:
+            pass
 
     # Single date
     if re.match(DATE_PATTERN, query):
-        datetime.strptime(query, "%Y-%m-%d")
-        return "date"
+        try:
+            datetime.strptime(query, "%Y-%m-%d")
+            return "date"
+        except ValueError:
+            pass
 
     # Fallback: treat as service string
     return "service"

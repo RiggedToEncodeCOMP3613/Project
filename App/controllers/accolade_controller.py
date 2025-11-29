@@ -1,11 +1,10 @@
 from App.database import db
-from App.models import User, Staff, Student, RequestHistory, Accolade, AccoladeHistory, ActivityHistory
+from App.models import Staff, Student, Accolade, AccoladeHistory, ActivityHistory
 
 
 # COMMAND FUNCTIONS
 
 def create_accolade(staff_id, description):
-
     staff = Staff.query.get(staff_id)
     if not staff:
         return None, f"Staff with ID {staff_id} not found"
@@ -27,8 +26,6 @@ def create_accolade(staff_id, description):
 
 
 def search_accolades(accolade_id=None, staff_id=None, description=None, student_id=None):
-
-    from App.models import Student
 
     try:
         query = Accolade.query
@@ -102,7 +99,6 @@ def update_accolade(accolade_id, staff_id=None, description=None):
 
 
 def assign_accolade_to_student(accolade_id, student_id, staff_id):
-
     accolade = Accolade.query.get(accolade_id)
     if not accolade:
         return None, f"Accolade with ID {accolade_id} not found"
@@ -111,20 +107,20 @@ def assign_accolade_to_student(accolade_id, student_id, staff_id):
     if not staff:
         return None, f"Staff with ID {staff_id} not found"
 
+    # Check if student was already assigned
+    existing_history = AccoladeHistory.query.filter_by(
+        accolade_id=accolade_id,
+        student_id=student_id,
+    ).first()
+
+    if existing_history:
+        return None, f"Student {student_id} is already assigned to this accolade"
+
     try:
         student = accolade.add_student(student_id)
 
         if not student:
             return None, f"Student with ID {student_id} not found"
-
-        # Check if student was already assigned
-        existing_history = AccoladeHistory.query.filter_by(
-            accolade_id=accolade_id,
-            student_id=student_id,
-        ).first()
-
-        if existing_history:
-            return None, f"Student {student_id} is already assigned to this accolade"
 
         # Get or create ActivityHistory for this student
         activity = ActivityHistory.query.filter_by(student_id=student_id).first()
