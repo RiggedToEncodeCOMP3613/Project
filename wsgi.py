@@ -1414,41 +1414,126 @@ def searchLeaderboard(query):
 
 history_cli = AppGroup('history', help='Activity history search commands')
 
-# Command to list activity history (all or by type)
-@history_cli.command("view", help="View activity history (all / request / logged / accolade / milestone)")
-@click.argument("student_id", type=int)
-@click.option("--type", type=click.Choice(["all", "request", "logged", "accolade", "milestone"], case_sensitive=False), default="all", help="Type of history to view")
-def viewHistory(student_id, type):
+# Command to list all activity history
+@history_cli.command("view", help="View all activity history")
+@click.option("--requests", is_flag=True, help="Show all requests")
+@click.option("--logged", is_flag=True, help="Show all logged hours")
+@click.option("--accolade", is_flag=True, help="Show all accolades")
+@click.option("--milestone", is_flag=True, help="Show all milestones")
+def viewHistory(requests, logged, accolade, milestone):
     print("\n")
     try:
-        type_choice = type.lower()
-
-        if type_choice in ("all", "a"):
-            history = list_all_acivity_history(student_id)
-        elif type_choice in ("request", "requests", "r"):
-            history = list_all_student_requests_history(student_id)
-        elif type_choice in ("logged", "loggedhours", "l"):
-            history = list_all_student_logged_hours_history(student_id)
-        elif type_choice in ("accolade", "accolades", "c"):
-            history = list_all_student_accolades_history(student_id)
-        elif type_choice in ("milestone", "milestones", "m"):
-            history = list_all_student_milestones_history(student_id)
+        # Determine type based on flags
+        flags = [requests, logged, accolade, milestone]
+        if sum(flags) > 1:
+            print("Error: Only one type flag can be used at a time.")
+            return
+        elif requests:
+            type_choice = "requests"
+            history, error = list_all_requests()
+        elif logged:
+            type_choice = "logged"
+            history, error = list_all_logged_hours()
+        elif accolade:
+            type_choice = "accolade"
+            history, error = list_all_accolades()
+        elif milestone:
+            type_choice = "milestone"
+            history, error = list_all_milestones()
         else:
-            print(f"Unknown type '{type_choice}'. Use one of: all, request, logged, accolade, milestone.")
+            # Default: show all activity history
+            type_choice = "all activity"
+            history, error = list_all_activity_history_global()
+
+        if error:
+            print(f"Error: {error}")
             return
 
         if not history:
-            print(f"No activity history found for student {student_id} (type: {type_choice}).")
+            print(f"No {type_choice} found.")
             return
 
         console = Console()
-        table = Table(title=f"Activity History for Student {student_id} (type: {type_choice})")
-        table.add_column("ID", style="cyan", no_wrap=True)
-        table.add_column("Details", style="magenta")
-        
-        for entry in history:
-            table.add_row(str(entry.id) if hasattr(entry, 'id') else "N/A", str(entry))
-        
+        if type_choice == "all activity":
+            # Unified table for all activity
+            table = Table(title="All Activity History")
+            table.add_column("Activity ID", style="cyan", no_wrap=True)
+            table.add_column("Student ID", style="magenta", no_wrap=True)
+            table.add_column("Summary", style="green")
+            table.add_column("Timestamp", style="yellow", no_wrap=True)
+            for entry in history:
+                timestamp = entry.get('timestamp') or entry.get('date_completed')
+                timestamp_str = timestamp[:19] if isinstance(timestamp, str) and len(timestamp) > 19 else str(timestamp) if timestamp else 'N/A'
+                table.add_row(
+                    str(entry.get('activity_id', entry.get('id', 'N/A'))),
+                    str(entry.get('student_id', 'N/A')),
+                    entry.get('summary', 'N/A'),
+                    timestamp_str
+                )
+        else:
+            # Specific type tables
+            table = Table(title=f"All {type_choice.capitalize()}")
+            table.add_column("Activity ID", style="cyan", no_wrap=True)
+            table.add_column("Student ID", style="magenta", no_wrap=True)
+            # Add specific columns based on type
+            if type_choice == "requests":
+                table.add_column("Service", style="green")
+                table.add_column("Hours", style="yellow")
+                table.add_column("Status", style="blue")
+                table.add_column("Timestamp", style="white", no_wrap=True)
+                for entry in history:
+                    timestamp = entry.get('timestamp') or entry.get('date_completed')
+                    timestamp_str = timestamp[:19] if isinstance(timestamp, str) and len(timestamp) > 19 else str(timestamp) if timestamp else 'N/A'
+                    table.add_row(
+                        str(entry.get('activity_id', entry.get('id', 'N/A'))),
+                        str(entry.get('student_id', 'N/A')),
+                        entry.get('service', 'N/A'),
+                        str(entry.get('hours', 'N/A')),
+                        entry.get('status', 'N/A'),
+                        timestamp_str
+                    )
+            elif type_choice == "logged":
+                table.add_column("Service", style="green")
+                table.add_column("Hours", style="yellow")
+                table.add_column("Timestamp", style="blue", no_wrap=True)
+                for entry in history:
+                    timestamp = entry.get('timestamp') or entry.get('date_completed')
+                    timestamp_str = timestamp[:19] if isinstance(timestamp, str) and len(timestamp) > 19 else str(timestamp) if timestamp else 'N/A'
+                    table.add_row(
+                        str(entry.get('activity_id', entry.get('id', 'N/A'))),
+                        str(entry.get('student_id', 'N/A')),
+                        entry.get('service', 'N/A'),
+                        str(entry.get('hours', 'N/A')),
+                        timestamp_str
+                    )
+            elif type_choice == "accolade":
+                table.add_column("Description", style="green")
+                table.add_column("Staff ID", style="yellow")
+                table.add_column("Timestamp", style="blue", no_wrap=True)
+                for entry in history:
+                    timestamp = entry.get('timestamp')
+                    timestamp_str = timestamp[:19] if isinstance(timestamp, str) and len(timestamp) > 19 else str(timestamp) if timestamp else 'N/A'
+                    table.add_row(
+                        str(entry.get('activity_id', entry.get('id', 'N/A'))),
+                        str(entry.get('student_id', 'N/A')),
+                        entry.get('description', 'N/A'),
+                        str(entry.get('staff_id', 'N/A')),
+                        timestamp_str
+                    )
+            elif type_choice == "milestone":
+                table.add_column("Milestone ID", style="green")
+                table.add_column("Hours", style="yellow")
+                table.add_column("Timestamp", style="blue", no_wrap=True)
+                for entry in history:
+                    timestamp = entry.get('timestamp')
+                    timestamp_str = timestamp[:19] if isinstance(timestamp, str) and len(timestamp) > 19 else str(timestamp) if timestamp else 'N/A'
+                    table.add_row(
+                        str(entry.get('activity_id', entry.get('id', 'N/A'))),
+                        str(entry.get('student_id', 'N/A')),
+                        str(entry.get('milestone_id', 'N/A')),
+                        str(entry.get('hours', 'N/A')),
+                        timestamp_str
+                    )
         console.print(table)
     except ValueError as e:
         print(f"Error: {e}")
@@ -1457,77 +1542,132 @@ def viewHistory(student_id, type):
     print("\n")
 
 
-# Command to search activity history by type and id
-@history_cli.command("search", help="Search activity history by type and id")
-@click.argument("type", type=click.Choice(["activity", "student", "all", "request", "logged", "accolade", "milestone"], case_sensitive=False))
-@click.option("--activity_id", type=int, default=None, help="Activity history ID (for type=activity)")
-@click.option("--student_id", type=int, default=None, help="Student ID (for types: student, all, request, logged, accolade, milestone)")
-@click.option("--request_id", type=int, default=None, help="Request ID (for type=request)")
-@click.option("--loggedhours_id", type=int, default=None, help="Logged hours ID (for type=logged)")
-@click.option("--accolade_id", type=int, default=None, help="Accolade history ID (for type=accolade)")
-@click.option("--milestone_id", type=int, default=None, help="Milestone history ID (for type=milestone)")
-def searchHistory(type, activity_id, student_id, request_id, logged_hours_id, accolade_id, milestone_id):
+# Command to search activity history by student
+@history_cli.command("search", help="Search activity history by student ID")
+@click.argument("student_id", type=int)
+@click.option("--requests", is_flag=True, help="Show requests for student")
+@click.option("--logged", is_flag=True, help="Show logged hours for student")
+@click.option("--accolade", is_flag=True, help="Show accolades for student")
+@click.option("--milestone", is_flag=True, help="Show milestones for student")
+def searchHistory(student_id, requests, logged, accolade, milestone):
     print("\n")
     try:
-        type_choice = type.lower()
-
-        # Search by activity id does not need a student id
-        if type_choice in ("activity", "act"):
-            if not activity_id:
-                print("Error: --activity-id is required for type=activity")
-                return
-            result = search_history_by_activity(activity_id)
-            if not result:
-                print(f"No activity history found for activity id {activity_id}.")
-                return
-            for entry in result:
-                print(entry)
+        # Determine type based on flags
+        flags = [requests, logged, accolade, milestone]
+        if sum(flags) > 1:
+            print("Error: Only one type flag can be used at a time.")
             return
-
-        # For types that require a student id, check it's provided now
-        if not student_id:
-            print(f"Error: --student-id is required for type={type_choice}")
-            return
-
-        if type_choice in ("all",):
-            result = search_history_by_student(student_id)
-            if not result:
-                print(f"No activity history found for student {student_id}.")
-                return
-            for entry in result:
-                print(entry)
-            return
-
-        if type_choice in ("request", "requests"):
-            if not request_id:
-                print("Error: --request-id is required for type=request")
-                return
-            result = search_history_by_request(student_id, request_id)
-        elif type_choice in ("logged", "loggedhours"):
-            if not logged_hours_id:
-                print("Error: --logged-hours-id is required for type=logged")
-                return
-            result = search_history_by_logged_hours(student_id, logged_hours_id)
-        elif type_choice in ("accolade", "accolades"):
-            if not accolade_id:
-                print("Error: --accolade-id is required for type=accolade")
-                return
-            result = search_history_by_accolade(student_id, accolade_id)
-        elif type_choice in ("milestone", "milestones"):
-            if not milestone_id:
-                print("Error: --milestone-id is required for type=milestone")
-                return
-            result = search_history_by_milestone(student_id, milestone_id)
+        elif requests:
+            type_choice = "requests"
+            history, error = list_all_student_requests_history(student_id)
+        elif logged:
+            type_choice = "logged"
+            history, error = list_all_student_logged_hours_history(student_id)
+        elif accolade:
+            type_choice = "accolade"
+            history, error = list_all_student_accolades_history(student_id)
+        elif milestone:
+            type_choice = "milestone"
+            history, error = list_all_student_milestones_history(student_id)
         else:
-            print(f"Unknown type '{type_choice}'. Use one of: activity, student/all, request, logged, accolade, milestone.")
+            type_choice = "all"
+            history, error = list_all_activity_history(student_id)
+
+        if error:
+            print(f"Error: {error}")
             return
 
-        if not result:
-            print("No matching entry found.")
+        if not history:
+            print(f"No activity history found for student {student_id} (type: {type_choice}).")
             return
 
-        print("Search result:")
-        print(result)
+        console = Console()
+        if isinstance(history, list) and history and isinstance(history[0], dict):
+            table = Table(title=f"Activity History for Student {student_id} (type: {type_choice})")
+            table.add_column("Activity ID", style="cyan", no_wrap=True)
+            if type_choice == "all":
+                table.add_column("Type", style="magenta")
+                table.add_column("Summary", style="green")
+                table.add_column("Timestamp", style="yellow", no_wrap=True)
+                for entry in history:
+                    entry_id = str(entry.get('activity_id', entry.get('id', 'N/A')))
+                    timestamp = entry.get('timestamp') or entry.get('date_completed')
+                    timestamp_str = timestamp[:19] if isinstance(timestamp, str) and len(timestamp) > 19 else str(timestamp) if timestamp else 'N/A'
+                    if 'service' in entry and 'status' in entry:
+                        entry_type = "Request"
+                        summary = f"{entry.get('service', 'N/A')} - {entry.get('hours', 'N/A')}h - {entry.get('status', 'N/A')}"
+                    elif 'service' in entry and 'staff_id' in entry and 'status' not in entry:
+                        entry_type = "Logged Hours"
+                        summary = f"{entry.get('service', 'N/A')} - {entry.get('hours', 'N/A')}h"
+                    elif 'description' in entry:
+                        entry_type = "Accolade"
+                        summary = entry.get('description', 'N/A')
+                    elif 'milestone_id' in entry:
+                        entry_type = "Milestone"
+                        summary = f"Milestone {entry.get('milestone_id', 'N/A')} - {entry.get('hours', 'N/A')}h"
+                    else:
+                        entry_type = "Unknown"
+                        summary = str(entry)
+                    table.add_row(entry_id, entry_type, summary, timestamp_str)
+            else:
+                # Specific type: add type-specific columns
+                if type_choice == "requests":
+                    table.add_column("Service", style="green")
+                    table.add_column("Hours", style="yellow")
+                    table.add_column("Status", style="blue")
+                    table.add_column("Timestamp", style="white", no_wrap=True)
+                    for entry in history:
+                        timestamp = entry.get('timestamp') or entry.get('date_completed')
+                        timestamp_str = timestamp[:19] if isinstance(timestamp, str) and len(timestamp) > 19 else str(timestamp) if timestamp else 'N/A'
+                        table.add_row(
+                            str(entry.get('activity_id', entry.get('id', 'N/A'))),
+                            entry.get('service', 'N/A'),
+                            str(entry.get('hours', 'N/A')),
+                            entry.get('status', 'N/A'),
+                            timestamp_str
+                        )
+                elif type_choice == "logged":
+                    table.add_column("Service", style="green")
+                    table.add_column("Hours", style="yellow")
+                    table.add_column("Timestamp", style="blue", no_wrap=True)
+                    for entry in history:
+                        timestamp = entry.get('timestamp') or entry.get('date_completed')
+                        timestamp_str = timestamp[:19] if isinstance(timestamp, str) and len(timestamp) > 19 else str(timestamp) if timestamp else 'N/A'
+                        table.add_row(
+                            str(entry.get('activity_id', entry.get('id', 'N/A'))),
+                            entry.get('service', 'N/A'),
+                            str(entry.get('hours', 'N/A')),
+                            timestamp_str
+                        )
+                elif type_choice == "accolade":
+                    table.add_column("Description", style="green")
+                    table.add_column("Staff ID", style="yellow")
+                    table.add_column("Timestamp", style="blue", no_wrap=True)
+                    for entry in history:
+                        timestamp = entry.get('timestamp')
+                        timestamp_str = timestamp[:19] if isinstance(timestamp, str) and len(timestamp) > 19 else str(timestamp) if timestamp else 'N/A'
+                        table.add_row(
+                            str(entry.get('activity_id', entry.get('id', 'N/A'))),
+                            entry.get('description', 'N/A'),
+                            str(entry.get('staff_id', 'N/A')),
+                            timestamp_str
+                        )
+                elif type_choice == "milestone":
+                    table.add_column("Milestone ID", style="green")
+                    table.add_column("Hours", style="yellow")
+                    table.add_column("Timestamp", style="blue", no_wrap=True)
+                    for entry in history:
+                        timestamp = entry.get('timestamp')
+                        timestamp_str = timestamp[:19] if isinstance(timestamp, str) and len(timestamp) > 19 else str(timestamp) if timestamp else 'N/A'
+                        table.add_row(
+                            str(entry.get('activity_id', entry.get('id', 'N/A'))),
+                            str(entry.get('milestone_id', 'N/A')),
+                            str(entry.get('hours', 'N/A')),
+                            timestamp_str
+                        )
+            console.print(table)
+        else:
+            print("No history found" if not history else str(history))
 
     except ValueError as e:
         print(f"Error: {e}")

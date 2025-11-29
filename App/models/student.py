@@ -16,7 +16,7 @@ class Student(User):
     rank = db.Column(db.Integer, default=0, nullable=False)
     
     # Relationships
-    activity_history = db.relationship('ActivityHistory', backref='student', lazy=True, cascade="all, delete-orphan", uselist=False)
+    activity_history = db.relationship('ActivityHistory', backref='student', lazy=True, cascade="all, delete-orphan", uselist=True)
 
     # Inheritance setup
     __mapper_args__ = {
