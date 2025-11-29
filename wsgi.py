@@ -41,7 +41,7 @@ migrate = get_migrate(app)
 @app.cli.command("init", help="Creates and initializes the database")
 def init():
     initialize()
-    print('database intialized')
+    print('database initialized')
     
     
     
@@ -513,7 +513,7 @@ def update_request_command(request_id, student_id, service, hours, staff_id):
     
 #Command for staff to approve a student's request (staff_id, request_id)
 #Once approved it is added to logged hours database
-@request_cli.command("approveRequest", help="Staff approves a student's request")
+@request_cli.command("approve", help="Staff approves a student's request")
 @click.argument("staff_id", type=int)
 @click.argument("request_id", type=int)
 def approveRequest(staff_id, request_id):
@@ -539,7 +539,7 @@ def approveRequest(staff_id, request_id):
 
 # Command for staff to deny a student's request (staff_id, request_id)
 #change request status to denied, no logged hours created
-@request_cli.command("denyRequest", help="Staff denies a student's request") 
+@request_cli.command("deny", help="Staff denies a student's request") 
 @click.argument("staff_id", type=int)
 @click.argument("request_id", type=int)
 def denyRequest(staff_id, request_id):
