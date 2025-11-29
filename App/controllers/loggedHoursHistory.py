@@ -1,31 +1,36 @@
-from App.models import LoggedHoursHistory
+from App.models import LoggedHoursHistory, ActivityHistory
 from App.database import db
+from App.models import Student
 
-def search_logged_hours_by_student(student_id):
-    """Search logged hours history by student ID."""
-    return LoggedHoursHistory.query.filter_by(student_id=student_id).all()
 
-def search_logged_hours_by_staff(staff_id):
-    """Search logged hours history by staff ID."""
-    return LoggedHoursHistory.query.filter_by(staff_id=staff_id).all()
+# CLI COMMAND FUNCTIONS
 
-def search_logged_hours_by_service(service):
-    """Search logged hours history by service."""
-    return LoggedHoursHistory.query.filter_by(service=service).all()
+def create_logged_hours(student_id, staff_id, hours, service, date_completed):
+    student = Student.query.get(student_id)
+    if not student:
+        raise ValueError(f"Student with id {student_id} not found")
 
-def search_logged_hours_by_date(date_completed):
-    """Search logged hours history by date completed."""
-    return LoggedHoursHistory.query.filter_by(date_completed=date_completed).all()
+    # Get or create activity history for the student
+    activity = ActivityHistory.query.filter_by(student_id=student_id).first()
+    if not activity:
+        activity = ActivityHistory(student_id=student_id)
+        db.session.add(activity)
+        db.session.flush()
 
-def search_logged_hours_by_date_range(start_date, end_date):
-    """Search logged hours history within a date range."""
-    return LoggedHoursHistory.query.filter(
-        LoggedHoursHistory.date_completed >= start_date,
-        LoggedHoursHistory.date_completed <= end_date
-    ).all()
-    
+    before = student.total_hours if student else 0.0
+    after = before + float(hours)
+    logged_hour = LoggedHoursHistory(student_id, staff_id, service, float(hours), before, after, date_completed=date_completed)
+    logged_hour.activity_id = activity.id
+    db.session.add(logged_hour)
+    db.session.commit()
+
+    # Update student's total hours
+    student.calculate_total_hours()
+
+    return logged_hour
+
+
 def search_logged_hours (query, search_type):
-    """General search function for logged hours history."""
     if search_type == 'student':
         return search_logged_hours_by_student(query)
     elif search_type == 'staff':
@@ -38,4 +43,49 @@ def search_logged_hours (query, search_type):
         start_date, end_date = query
         return search_logged_hours_by_date_range(start_date, end_date) # ! This is not fully correct, needs tuple unpacking
     else:
-        raise ValueError("Invalid search type. Use 'student', 'staff', 'service', or 'date_range'.")    
+        raise ValueError("Invalid search type. Use 'student', 'staff', 'service', or 'date_range'.")
+
+
+def delete_logged_hours(log_id):
+    log = LoggedHoursHistory.query.get(log_id)
+    if not log:
+        raise ValueError(f"LoggedHoursHistory entry with id {log_id} not found.")
+    db.session.delete(log)
+    db.session.commit()
+    return True
+
+
+def delete_all_logged_hours():
+    num_deleted = LoggedHoursHistory.query.delete()
+    db.session.commit()
+    return num_deleted
+
+
+# HELPER FUNCTIONS
+
+# Search logged hours history by student ID.
+def search_logged_hours_by_student(student_id):
+    return LoggedHoursHistory.query.filter_by(student_id=student_id).all()
+
+
+# Search logged hours history by staff ID.
+def search_logged_hours_by_staff(staff_id):
+    return LoggedHoursHistory.query.filter_by(staff_id=staff_id).all()
+
+
+# Search logged hours history by service.
+def search_logged_hours_by_service(service):
+    return LoggedHoursHistory.query.filter_by(service=service).all()
+
+
+# Search logged hours history by date completed.
+def search_logged_hours_by_date(date_completed):
+    return LoggedHoursHistory.query.filter_by(date_completed=date_completed).all()
+
+
+# Search logged hours history within a date range.
+def search_logged_hours_by_date_range(start_date, end_date):
+    return LoggedHoursHistory.query.filter(
+        LoggedHoursHistory.date_completed >= start_date,
+        LoggedHoursHistory.date_completed <= end_date
+    ).all()

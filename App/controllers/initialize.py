@@ -1,14 +1,10 @@
 from App.database import db
 
 
+# Initialize the database and seed sample data.
+# Args: drop_first (bool): if True, drop all tables before creating them.
+# Returns a dict with lists of created record IDs.
 def initialize_db(drop_first=True):
-    """Initialize the database and seed sample data.
-
-    Args:
-        drop_first (bool): if True, drop all tables before creating them.
-
-    Returns a dict with lists of created record IDs.
-    """
     # Import models here to avoid circular imports
     from App.models import Student, Staff, RequestHistory, LoggedHoursHistory, ActivityHistory
     from datetime import datetime, timezone
@@ -141,8 +137,8 @@ def initialize_db(drop_first=True):
     return result
 
 
+# Compatibility wrapper used by CLI (keeps previous name `initialize`).
 def initialize(drop_first=True):
-    """Compatibility wrapper used by CLI (keeps previous name `initialize`)."""
     return initialize_db(drop_first=drop_first)
 
 #from App.models import User,Student, Staff, Request
