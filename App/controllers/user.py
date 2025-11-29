@@ -33,34 +33,19 @@ def update_user(id, username):
         return True
     return None
 
-def view_leaderboard():
-    from App.models.student import Student
-    students = db.session.scalars(db.select(Student)).all()
-    leaderboard = []
-    for student in students:
-        total_hours = sum(lh.hours for lh in student.loggedhours if lh.status == 'approved')
-        leaderboard.append({
-            'student_id': student.student_id,
-            'username': student.username,
-            'total_approved_hours': total_hours
-        })
-    leaderboard.sort(key=lambda x: x['total_approved_hours'], reverse=True)
-    return leaderboard
 
 def get_all_requests_json():
-    from App.models.requestHistory import RequestHistory
-    
+    from App.models import RequestHistory
+
     requests = RequestHistory.query.all()
     if not requests:
         return []
-    requests = [req.get_json() for req in requests]
-    return requests
+    return [req.get_json() for req in requests]
 
 def get_all_logged_hours_json():
-    from App.models.loggedHoursHistory import LoggedHoursHistory
-    
+    from App.models import LoggedHoursHistory
+
     logs = LoggedHoursHistory.query.all()
     if not logs:
         return []
-    logs = [log.get_json() for log in logs]
-    return logs
+    return [log.get_json() for log in logs]

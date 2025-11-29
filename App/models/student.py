@@ -5,7 +5,7 @@ from App.models.milestone import Milestone
 from App.models.accolade import Accolade
 from App.models.requestHistory import RequestHistory
 from App.models.loggedHoursHistory import LoggedHoursHistory
-from App.models.activityHistory import ActivityHistory
+from App.models.ActivityHistory import ActivityHistory
 from sqlalchemy import func
 
 class Student(User):
@@ -85,7 +85,7 @@ class Student(User):
         self.total_hours = total
         db.session.commit()
         self.calculate_rank()
-        self.calculate_milestones()
+        self.calculate_new_milestones()
         return self.total_hours
     
     # Calculate the student's rank based on total hours compared to all other students
@@ -100,10 +100,10 @@ class Student(User):
     
     # Check if student has unlocked new milestones based on total hours
     def calculate_new_milestones(self):
-        all_milestones = Milestone.query.order_by(Milestone.milestone).all()
+        all_milestones = Milestone.query.order_by(Milestone.hours).all()
         m = []
         for milestone in all_milestones:
-            if self.total_hours >= milestone.milestone:
+            if self.total_hours >= milestone.hours:
                 existing = MilestoneHistory.query.filter_by(
                     milestone_id=milestone.id,
                     student_id=self.student_id
@@ -120,7 +120,7 @@ class Student(User):
                     milestone_history = MilestoneHistory(
                         milestone_id=milestone.id,
                         student_id=self.student_id,
-                        value=milestone.milestone
+                        value=milestone.hours
                     )
                     milestone_history.activity_id = activity.id
                     db.session.add(milestone_history)

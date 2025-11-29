@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, current_user as jwt_current_user
 from App.models import Student, RequestHistory, LoggedHoursHistory
 from.index import index_views
 from App.controllers.student_controller import get_all_students_json,fetch_accolades,create_hours_request
-from App.controllers.staff_controller import process_request_approval,process_request_denial
+from App.controllers.request_controller import process_request_approval, process_request_denial
 from App import db
 
 staff_views = Blueprint('staff_views', __name__, template_folder='../templates')
