@@ -32,6 +32,7 @@ class Staff(User):
         else:
             suffix = 10000
         self.staff_id = int(f"{prefix}{suffix:05d}")
+        self.user_id = self.staff_id
         super().__init__(username, email, password, role="staff")
 
     def __repr__(self):

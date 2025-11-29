@@ -31,6 +31,7 @@ class Student(User):
         else:
             suffix = 10000
         self.student_id = int(f"{prefix}{suffix:05d}")
+        self.user_id = self.student_id 
         super().__init__(username, email, password, role="student")
         self.total_hours = 0.0
         self.rank = 0
