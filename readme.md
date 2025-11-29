@@ -109,8 +109,16 @@ Intended users: administrators, staff reviewers, and students at educational ins
 
 | Command | Description |
 |---------|-------------|
-| `flask history view <student_id> [--type]` | View activity history (all / request / logged / accolade / milestone) |
-| `flask history search <type> [options]` | Search activity history by type and id |
+| `flask history view` | View all activity history |
+| `flask history view --requests` | View all request history |
+| `flask history view --logged` | View all logged hours history |
+| `flask history view --accolade` | View all accolade history |
+| `flask history view --milestone` | View all milestone history |
+| `flask history search <student_id>` | View all activity history for a student |
+| `flask history search <student_id> --requests` | View request history for a student |
+| `flask history search <student_id> --logged` | View logged hours history for a student |
+| `flask history search <student_id> --accolade` | View accolade history for a student |
+| `flask history search <student_id> --milestone` | View milestone history for a student |
 
 ### Test Commands
 
