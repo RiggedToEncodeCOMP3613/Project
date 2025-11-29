@@ -49,11 +49,11 @@ def initialize(drop_first=True):
         while True:
             first = random.choice(first_names)
             last = random.choice(last_names)
-            prefix = random.choice(["Mr.", "Mrs.", "Dr."])
+            prefix = random.choice(["Mr_", "Mrs_", "Dr_"])
             username = prefix + first.lower()
             if username not in used_names:
                 used_names.add(username)
-                email = f"{prefix.replace('.', '')}{first.lower()}.{last.lower()}@{random.choice(['gmail.com', 'outlook.com'])}"
+                email = f"{prefix}{first.lower()}.{last.lower()}@{random.choice(['gmail.com', 'outlook.com'])}"
                 password = f"staffpass{i+1}"
                 staff_data.append((username, email, password))
                 break
@@ -79,7 +79,7 @@ def initialize(drop_first=True):
     for i in range(50):
         student = random.choice(students)
         staff_member = random.choice(staff_members)
-        hours = random.uniform(1, 12)
+        hours = round(random.uniform(1, 12))
 
         # Create activity history record
         activity = ActivityHistory(student_id=student.user_id)
@@ -137,7 +137,7 @@ def initialize(drop_first=True):
     for i in range(10):
         student = random.choice(students)
         staff_member = random.choice(staff_members)
-        hours = random.uniform(1, 12)
+        hours = round(random.uniform(1, 12))
 
         activity = ActivityHistory(student_id=student.user_id)
         db.session.add(activity)
