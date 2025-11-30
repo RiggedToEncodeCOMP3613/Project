@@ -6,7 +6,7 @@ from App.models.accoladeHistory import AccoladeHistory
 from App.models.loggedHoursHistory import LoggedHoursHistory
 from datetime import datetime, timezone
 from App.models.student import Student
-from App.models.activityHistory import ActivityHistory
+from App.models.ActivityHistory import ActivityHistory
 from sqlalchemy import func
 
 class Staff(User):
@@ -26,12 +26,13 @@ class Staff(User):
 
     def __init__(self, username, email, password):
         prefix = 3000
-        max_id = db.session.query(func.max(Staff.staff_id)).filter(Staff.staff_id.between(prefix*10**5, (prefix+1)*10**5-1)).scalar()
+        max_id = db.session.query(func.max(User.user_id)).filter(User.role == 'staff', User.user_id.between(prefix*10**5, (prefix+1)*10**5-1)).scalar()
         if max_id:
             suffix = int(str(max_id)[4:]) + 1
         else:
             suffix = 10000
         self.staff_id = int(f"{prefix}{suffix:05d}")
+        self.user_id = self.staff_id
         super().__init__(username, email, password, role="staff")
 
     def __repr__(self):
@@ -63,8 +64,8 @@ class Staff(User):
             staff_id=self.staff_id,
             service=service,
             hours=hours,
-            before=0,  # Will be set in LoggedHoursHistory.__init__
-            after=0,   # Will be set in LoggedHoursHistory.__init__
+            before=0,  
+            after=hours,
             date_completed=date_completed
         )
         logged.activity_id = activity.id
