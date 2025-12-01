@@ -25,7 +25,7 @@ class Staff(User):
     }
 
     def __init__(self, username, email, password):
-        prefix = 3000
+        prefix = 300
         max_id = db.session.query(func.max(User.user_id)).filter(User.role == 'staff', User.user_id.between(prefix*10**5, (prefix+1)*10**5-1)).scalar()
         if max_id:
             suffix = int(str(max_id)[4:]) + 1
