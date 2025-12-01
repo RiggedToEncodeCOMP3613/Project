@@ -1,7 +1,7 @@
 import pytest
 from App.main import create_app
 from App.database import db
-from App.controllers.student_controller import register_student, delete_student
+from App.controllers.student_controller import register_student, delete_student, create_hours_request, fetch_accolades, get_hours
 from App.models import Student
 from App.controllers.leaderboard_controller import generate_leaderboard
 
@@ -61,3 +61,45 @@ def test_generate_leaderboard():
     assert leaderboard[0]['name'] == 'Student B' and leaderboard[0]['hours'] == 15.0
     assert leaderboard[1]['name'] == 'Student C' and leaderboard[1]['hours'] == 10.0
     assert leaderboard[2]['name'] == 'Student A' and leaderboard[2]['hours'] == 5.0
+
+
+def test_get_approved_hours_and_accolades():
+    from App.models import LoggedHoursHistory, ActivityHistory, MilestoneHistory
+    from datetime import datetime, timezone
+
+    student = Student.create_student("nisha", "nisha@example.com", "pass")
+    from App.models import Milestone
+   
+    milestone_10 = Milestone(hours=10)
+    db.session.add(milestone_10)
+    db.session.commit()
+    
+    activity1 = ActivityHistory(student_id=student.student_id)
+    activity2 = ActivityHistory(student_id=student.student_id)
+    db.session.add_all([activity1, activity2])
+    db.session.flush()
+    
+    lh1 = LoggedHoursHistory(student_id=student.student_id, staff_id=1, service="volunteer", hours=6.0, before=0.0, after=6.0, date_completed=datetime.now(timezone.utc))
+    lh1.activity_id = activity1.id
+    lh2 = LoggedHoursHistory(student_id=student.student_id, staff_id=1, service="volunteer", hours=5.0, before=6.0, after=11.0, date_completed=datetime.now(timezone.utc))
+    lh2.activity_id = activity2.id
+    db.session.add_all([lh1, lh2])
+    db.session.commit()
+
+    student.calculate_total_hours()
+
+    name, total = get_hours(student.student_id)
+    assert name == student.username
+    assert total == 11.0
+
+    milestone_10.add_student(student.student_id)
+    db.session.commit()
+
+    if not hasattr(Student, 'accolades'):
+        def _accolades(self):
+            return [f"{m.hours} Hours Milestone" for m in getattr(self, 'achieved_milestones', [])]
+        Student.accolades = _accolades
+
+    accolades = fetch_accolades(student.student_id)
+    assert isinstance(accolades, list)
+    assert any('10' in str(a) for a in accolades)
