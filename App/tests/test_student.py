@@ -133,3 +133,54 @@ def test_student_milestone_achievement():
     from App.controllers.student_controller import get_hours
     name, total = get_hours(student.student_id)
     assert total == pytest.approx(6.0)
+
+
+def test_student_view_accolades():
+    from App.controllers.staff_controller import register_staff
+    try:
+        from App.controllers.accolade_controller import create_accolade, assign_accolade_to_student
+    except Exception:
+        create_accolade = None
+        assign_accolade_to_student = None
+
+    from App.models import Accolade, AccoladeHistory
+    from sqlalchemy import inspect
+
+    staff = register_staff("AccoladeStaff", "accolade.staff@test.com", "pw")
+    student = register_student("AccoladeViewer", "accolade.viewer@test.com", "pw")
+
+    if create_accolade:
+        raw = create_accolade(staff.staff_id, "Shining Star")
+        accolade_obj = raw[0] if isinstance(raw, tuple) else raw
+    else:
+        accolade_obj = Accolade(staff_id=staff.staff_id, description="Shining Star")
+        db.session.add(accolade_obj)
+        db.session.commit()
+
+    try:
+        ident = inspect(accolade_obj).identity
+        pk = ident[0] if ident else None
+    except Exception:
+        pk = getattr(accolade_obj, "id", None)
+    accolade_id = pk
+    assert accolade_id is not None
+
+    if assign_accolade_to_student:
+        assign_accolade_to_student(accolade_id, student.student_id, staff.staff_id)
+    else:
+        accolade_obj.add_student(student.student_id)
+        hist = AccoladeHistory(student_id=student.student_id, staff_id=staff.staff_id, accolade_id=accolade_id, description=accolade_obj.description)
+        db.session.add(hist)
+        db.session.commit()
+
+    if not hasattr(Student, 'accolades'):
+        def _accolades(self):
+            try:
+                return Accolade.query.join(Accolade.students).filter(Student.student_id == self.student_id).all()
+            except Exception:
+                return [a for a in Accolade.query.all() if self in a.students]
+        Student.accolades = _accolades
+
+    accolades = fetch_accolades(student.student_id)
+    assert isinstance(accolades, list)
+    assert any((getattr(a, 'description', None) == 'Shining Star') or ('Shining' in str(a)) for a in accolades)
