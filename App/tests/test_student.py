@@ -14,6 +14,7 @@ def app_context():
         db.session.remove()
         db.drop_all()
 
+#Unit Tests
 def test_register_student():
     student = register_student("Alice", "alice@email.com", "pass123")
     assert student.username == "Alice"
@@ -26,3 +27,19 @@ def test_delete_student():
     result = delete_student(sid)
     assert result is True
     assert Student.query.get(sid) is None
+
+
+#Integration Test
+def test_create_student():
+    student_model = Student.create_student("Student Model", "student.model@test.com", "pw")
+    assert isinstance(student_model, Student)
+    db_student = Student.query.filter_by(student_id=student_model.student_id).first()
+    assert db_student is not None
+    assert db_student.username == "Student Model"
+
+    registered = register_student("Student Registered", "student.registered@test.com", "pw")
+    assert registered is not None
+    assert registered.student_id is not None
+    db_registered = Student.query.filter_by(student_id=registered.student_id).first()
+    assert db_registered is not None
+    assert db_registered.username == "Student Registered"
