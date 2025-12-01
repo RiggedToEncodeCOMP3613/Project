@@ -126,3 +126,32 @@ def test_update_request_hours():
     db_req = RequestHistory.query.filter_by(id=request_id).first()
     assert db_req is not None
     assert db_req.hours == 10.5
+
+def test_update_request_status():
+    student = register_student("StatusStudent", "status@test.com", "pw")
+    
+    activity = ActivityHistory(student_id=student.student_id)
+    db.session.add(activity)
+    db.session.commit()
+    
+    req = RequestHistory(
+        student_id=student.student_id,
+        staff_id=1,
+        service="Test Service",
+        hours=3.0,
+        date_completed="2025-12-01"
+    )
+    req.activity_id = activity.id
+    db.session.add(req)
+    db.session.commit()
+    request_id = req.id
+
+    updated_req, message = update_request_entry(request_id, status="Approved")
+    
+    assert updated_req is not None
+    assert "successfully" in message.lower()
+    assert updated_req.status.lower() == "approved"
+    
+    db_req = RequestHistory.query.filter_by(id=request_id).first()
+    assert db_req is not None
+    assert db_req.status.lower() == "approved"
