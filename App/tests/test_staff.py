@@ -1,7 +1,7 @@
 import pytest
 from App.main import create_app
 from App.database import db
-from App.controllers.staff_controller import register_staff, update_staff
+from App.controllers.staff_controller import register_staff, update_staff, delete_staff
 from App.models import Staff
 
 @pytest.fixture(autouse=True)
@@ -38,3 +38,10 @@ def test_update_staff_password():
     assert updated is not None
     assert updated.check_password("newpass") is True
     assert updated.check_password("gamma") is False
+
+def test_delete_staff():
+    staff = register_staff("Dr. Palmer", "palmer@hospital.com", "healing")
+    result = delete_staff(staff.staff_id)
+    assert result is True
+    db_staff = Staff.query.filter_by(staff_id=staff.staff_id).first()
+    assert db_staff is None
