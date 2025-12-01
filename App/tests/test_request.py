@@ -40,7 +40,6 @@ def test_delete_request_entry_unit():
     assert deleted_req is None
 
 def test_update_request_student_id():
-    # create two students
     student1 = register_student("Student1", "student1@test.com", "pw1")
     student2 = register_student("Student2", "student2@test.com", "pw2")
     
@@ -69,3 +68,32 @@ def test_update_request_student_id():
     db_req = RequestHistory.query.filter_by(id=request_id).first()
     assert db_req is not None
     assert db_req.student_id == student2.student_id
+
+def test_update_request_service():
+    student = register_student("ServiceStudent", "service@test.com", "pw")
+    
+    activity = ActivityHistory(student_id=student.student_id)
+    db.session.add(activity)
+    db.session.commit()
+    
+    req = RequestHistory(
+        student_id=student.student_id,
+        staff_id=1,
+        service="Original Service",
+        hours=2.0,
+        date_completed="2025-12-01"
+    )
+    req.activity_id = activity.id
+    db.session.add(req)
+    db.session.commit()
+    request_id = req.id
+
+    updated_req, message = update_request_entry(request_id, service="New Service")
+    
+    assert updated_req is not None
+    assert "successfully" in message.lower()
+    assert updated_req.service == "New Service"
+    
+    db_req = RequestHistory.query.filter_by(id=request_id).first()
+    assert db_req is not None
+    assert db_req.service == "New Service"
