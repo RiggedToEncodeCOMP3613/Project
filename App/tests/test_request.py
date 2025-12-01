@@ -1,8 +1,9 @@
 import pytest
 from App.main import create_app
 from App.database import db
-from App.controllers.request_controller import delete_request_entry
-from App.models import RequestHistory
+from App.controllers.request_controller import delete_request_entry, update_request_entry
+from App.controllers.student_controller import register_student
+from App.models import RequestHistory, ActivityHistory
 
 @pytest.fixture(autouse=True)
 def app_context():
@@ -37,3 +38,34 @@ def test_delete_request_entry_unit():
     
     deleted_req = RequestHistory.query.filter_by(id=request_id).first()
     assert deleted_req is None
+
+def test_update_request_student_id():
+    # create two students
+    student1 = register_student("Student1", "student1@test.com", "pw1")
+    student2 = register_student("Student2", "student2@test.com", "pw2")
+    
+    activity = ActivityHistory(student_id=student1.student_id)
+    db.session.add(activity)
+    db.session.commit()
+    
+    req = RequestHistory(
+        student_id=student1.student_id,
+        staff_id=1,
+        service="Test Service",
+        hours=2.0,
+        date_completed="2025-12-01"
+    )
+    req.activity_id = activity.id
+    db.session.add(req)
+    db.session.commit()
+    request_id = req.id
+
+    updated_req, message = update_request_entry(request_id, student_id=student2.student_id)
+    
+    assert updated_req is not None
+    assert "successfully" in message.lower()
+    assert updated_req.student_id == student2.student_id
+    
+    db_req = RequestHistory.query.filter_by(id=request_id).first()
+    assert db_req is not None
+    assert db_req.student_id == student2.student_id
