@@ -47,7 +47,7 @@ export function StudentProfile({ onNavigate, isStaff = false }: StudentProfilePr
                     <User className="w-6 h-6" />
                   </div>
                   <div className="text-left">
-                    <div className="text-gray-800">Update Username</div>
+                    <div className="text-gray-800">Change Username</div>
                     <div className="text-gray-600">Change your display name</div>
                   </div>
                 </div>
@@ -63,7 +63,7 @@ export function StudentProfile({ onNavigate, isStaff = false }: StudentProfilePr
                     <Mail className="w-6 h-6" />
                   </div>
                   <div className="text-left">
-                    <div className="text-gray-800">Update Email</div>
+                    <div className="text-gray-800">Change Email</div>
                     <div className="text-gray-600">Change your email address</div>
                   </div>
                 </div>
@@ -79,7 +79,7 @@ export function StudentProfile({ onNavigate, isStaff = false }: StudentProfilePr
                     <Lock className="w-6 h-6" />
                   </div>
                   <div className="text-left">
-                    <div className="text-gray-800">Update Password</div>
+                    <div className="text-gray-800">Change Password</div>
                     <div className="text-gray-600">Change your password</div>
                   </div>
                 </div>
