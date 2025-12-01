@@ -25,3 +25,9 @@ def test_update_staff_username():
     updated = update_staff(staff.staff_id, username="New Name")
     assert updated is not None
     assert updated.username == "New Name"
+
+def test_update_staff_email():
+    staff = register_staff("Dr. House", "house@hospital.com", "vicodin")
+    updated = update_staff(staff.staff_id, email="house.new@hospital.com")
+    assert updated is not None
+    assert updated.email == "house.new@hospital.com"
