@@ -50,7 +50,7 @@ export function ChangeEmail({ onNavigate, userType = 'student' }: ChangeEmailPro
             </div>
 
             <div>
-              <label className="block mb-2 text-gray-600">Current Password</label>
+              <label className="block mb-2 text-gray-600">Confirm Password</label>
               <div className="border-2 border-gray-800 px-4 py-3 bg-white">
                 <span className="text-gray-400">Enter your password to confirm</span>
               </div>
