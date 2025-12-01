@@ -1,8 +1,8 @@
 import pytest
 from App.main import create_app
 from App.database import db
-from App.controllers.staff_controller import register_staff, update_staff, delete_staff
-from App.models import Staff
+from App.controllers.staff_controller import register_staff, update_staff, delete_staff, fetch_all_requests
+from App.models import Staff, RequestHistory, ActivityHistory, Student
 
 @pytest.fixture(autouse=True)
 def app_context():
@@ -62,3 +62,36 @@ def test_create_staff():
     db_registered = Staff.query.filter_by(staff_id=registered.staff_id).first()
     assert db_registered is not None
     assert db_registered.username == "Dr. Gray Registered"
+
+def test_request_fetch():
+    initial = fetch_all_requests()
+    assert isinstance(initial, list)
+
+    staff = register_staff("Dr. Tester", "tester@hospital.com", "pw")
+
+    student = Student(username="TestStudent", email="student@test.com", password="studentpw")
+    db.session.add(student)
+    db.session.flush()
+
+    activity = ActivityHistory(student_id=student.student_id)
+    db.session.add(activity)
+    db.session.commit()
+
+    req = RequestHistory(
+        student_id=student.student_id,
+        staff_id=staff.staff_id,
+        service="Volunteer Service",
+        hours=5.0,
+        date_completed="2025-12-01 10:00:00"
+    )
+    req.activity_id = activity.id
+    db.session.add(req)
+    db.session.commit()
+
+    all_requests = fetch_all_requests()
+    assert isinstance(all_requests, list)
+    assert len(all_requests) > 0
+    
+    assert any(r.get("student_name") == "TestStudent" for r in all_requests)
+    assert any(r.get("hours") == 5.0 for r in all_requests)
+    assert any(r.get("status") == "pending" for r in all_requests)
