@@ -1,7 +1,7 @@
 import pytest
 from App.main import create_app
 from App.database import db
-from App.controllers.staff_controller import register_staff
+from App.controllers.staff_controller import register_staff, update_staff
 from App.models import Staff
 
 @pytest.fixture(autouse=True)
@@ -19,3 +19,9 @@ def test_register_staff():
     assert staff.username == "Dr. Smith"
     assert staff.staff_id is not None
     assert str(staff.staff_id).startswith("3000")
+
+def test_update_staff_username():
+    staff = register_staff("Dr. Who", "who@email.com", "tardis")
+    updated = update_staff(staff.staff_id, username="New Name")
+    assert updated is not None
+    assert updated.username == "New Name"
