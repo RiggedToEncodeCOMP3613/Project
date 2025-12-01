@@ -3,6 +3,7 @@ from App.main import create_app
 from App.database import db
 from App.controllers.student_controller import register_student, delete_student
 from App.models import Student
+from App.controllers.leaderboard_controller import generate_leaderboard
 
 @pytest.fixture(autouse=True)
 def app_context():
@@ -43,3 +44,20 @@ def test_create_student():
     db_registered = Student.query.filter_by(student_id=registered.student_id).first()
     assert db_registered is not None
     assert db_registered.username == "Student Registered"
+
+
+def test_generate_leaderboard():
+    s_a = Student.create_student("Student A", "a@test.com", "pw")
+    s_b = Student.create_student("Student B", "b@test.com", "pw")
+    s_c = Student.create_student("Student C", "c@test.com", "pw")
+
+    s_a.total_hours = 5.0
+    s_b.total_hours = 15.0
+    s_c.total_hours = 10.0
+    db.session.commit()
+
+    leaderboard = generate_leaderboard()
+    assert isinstance(leaderboard, list)
+    assert leaderboard[0]['name'] == 'Student B' and leaderboard[0]['hours'] == 15.0
+    assert leaderboard[1]['name'] == 'Student C' and leaderboard[1]['hours'] == 10.0
+    assert leaderboard[2]['name'] == 'Student A' and leaderboard[2]['hours'] == 5.0
