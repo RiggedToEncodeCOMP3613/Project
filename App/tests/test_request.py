@@ -1,7 +1,7 @@
 import pytest
 from App.main import create_app
 from App.database import db
-from App.controllers.request_controller import delete_request_entry, update_request_entry
+from App.controllers.request_controller import delete_request_entry, update_request_entry, drop_request_table
 from App.controllers.student_controller import register_student
 from App.models import RequestHistory, ActivityHistory
 
@@ -155,3 +155,34 @@ def test_update_request_status():
     db_req = RequestHistory.query.filter_by(id=request_id).first()
     assert db_req is not None
     assert db_req.status.lower() == "approved"
+
+def test_drop_request_table():
+    student = register_student("DropStudent", "drop@test.com", "pw")
+    
+    activity = ActivityHistory(student_id=student.student_id)
+    db.session.add(activity)
+    db.session.commit()
+    
+    for i in range(3):
+        req = RequestHistory(
+            student_id=student.student_id,
+            staff_id=1,
+            service=f"Service {i}",
+            hours=float(i + 1),
+            date_completed="2025-12-01"
+        )
+        req.activity_id = activity.id
+        db.session.add(req)
+    db.session.commit()
+    
+    count_before = RequestHistory.query.count()
+    assert count_before >= 3
+    
+    result, error = drop_request_table()
+    
+    assert isinstance(result, dict)
+    assert result.get('requests_deleted') >= 0
+    assert error is None
+    
+    count_after = RequestHistory.query.count()
+    assert count_after == 0
