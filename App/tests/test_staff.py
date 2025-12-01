@@ -31,3 +31,10 @@ def test_update_staff_email():
     updated = update_staff(staff.staff_id, email="house.new@hospital.com")
     assert updated is not None
     assert updated.email == "house.new@hospital.com"
+
+def test_update_staff_password():
+    staff = register_staff("Dr. Banner", "banner@avengers.com", "gamma")
+    updated = update_staff(staff.staff_id, password="newpass")
+    assert updated is not None
+    assert updated.check_password("newpass") is True
+    assert updated.check_password("gamma") is False
