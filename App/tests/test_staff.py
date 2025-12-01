@@ -14,6 +14,7 @@ def app_context():
         db.session.remove()
         db.drop_all()
 
+# Unit Tests for Staff
 def test_register_staff():
     staff = register_staff("Dr. Smith", "smith@email.com", "pass123")
     assert staff.username == "Dr. Smith"
@@ -45,3 +46,19 @@ def test_delete_staff():
     assert result is True
     db_staff = Staff.query.filter_by(staff_id=staff.staff_id).first()
     assert db_staff is None
+
+
+# Integration Test for Staff 
+def test_create_staff():
+    staff_model = Staff.create_staff("Dr. Gray Model", "gray.model@hospital.com", "secure")
+    assert isinstance(staff_model, Staff)
+    db_staff = Staff.query.filter_by(staff_id=staff_model.staff_id).first()
+    assert db_staff is not None
+    assert db_staff.username == "Dr. Gray Model"
+
+    registered = register_staff("Dr. Gray Registered", "gray.registered@hospital.com", "secure")
+    assert registered is not None
+    assert registered.staff_id is not None
+    db_registered = Staff.query.filter_by(staff_id=registered.staff_id).first()
+    assert db_registered is not None
+    assert db_registered.username == "Dr. Gray Registered"
