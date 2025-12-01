@@ -103,3 +103,33 @@ def test_get_approved_hours_and_accolades():
     accolades = fetch_accolades(student.student_id)
     assert isinstance(accolades, list)
     assert any('10' in str(a) for a in accolades)
+
+
+def test_student_milestone_achievement():
+    from App.controllers.milestone_controller import create_milestone
+    from App.controllers.loggedHoursHistory_controller import create_logged_hours
+    from App.models import MilestoneHistory
+    from datetime import datetime, timezone
+
+    student = register_student("Milestoner", "milestone.student@test.com", "pw")
+    milestone = create_milestone(5)
+
+    # No milestone history should exist yet
+    before = MilestoneHistory.query.filter_by(student_id=student.student_id, milestone_id=milestone.id).first()
+    assert before is None
+
+    # Log some hours below the threshold
+    create_logged_hours(student.student_id, staff_id=1, hours=3.0, service="volunteer", date_completed=datetime.now(timezone.utc))
+    mid = MilestoneHistory.query.filter_by(student_id=student.student_id, milestone_id=milestone.id).first()
+    assert mid is None
+
+    # Log additional hours to cross the milestone threshold
+    create_logged_hours(student.student_id, staff_id=1, hours=3.0, service="volunteer", date_completed=datetime.now(timezone.utc))
+
+    # Now the milestone history record should exist
+    after = MilestoneHistory.query.filter_by(student_id=student.student_id, milestone_id=milestone.id).first()
+    assert after is not None
+    # And the student's total hours should reflect both logs
+    from App.controllers.student_controller import get_hours
+    name, total = get_hours(student.student_id)
+    assert total == pytest.approx(6.0)
