@@ -35,7 +35,7 @@ from App.controllers.milestone_controller import create_milestone
 LOGGER = logging.getLogger(__name__)
 
 # This fixture creates an empty database for the test and deletes it after the test
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture(autouse=True, scope="function")
 def empty_db():
     app = create_app({'TESTING': True, 'SQLALCHEMY_DATABASE_URI': 'sqlite:///test.db'})
     create_db()
