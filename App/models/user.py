@@ -1,78 +1,30 @@
-from werkzeug.security import check_password_hash, generate_password_hash
-from App.database import db
 import pytest
+from App.models import User
 
-class User(db.Model):
-    __tablename__ = "users"
-    user_id = db.Column(db.Integer, primary_key=True)
-    username =  db.Column(db.String(20), nullable=False, unique=True)
-    password = db.Column(db.String(256), nullable=False)
-    email = db.Column(db.String(256), nullable=False)
-    role= db.Column(db.String(256),nullable=False, default="user")  #Create role column to distinguish user types
 
-    __mapper_args__ = {
-        "polymorphic_on": role,
-        "polymorphic_identity": "user"
-    }
+@pytest.fixture
+def user():
+    return User(username="testuser", email="testuser@example.com", password="password", role="user")
 
-    def __init__(self, username, email,password,role):
-        self.username = username
-        self.role=role
-        self.set_password(password)
-        self.email= email
 
-    def get_json(self):
-        return{
-            'id': self.user_id,
-            'username': self.username,
-            'email': self.email
-        }
+class TestUser:
 
-    def set_password(self, password):
-        """Create hashed password."""
-        self.password = generate_password_hash(password)
-    
-    def check_password(self, password):
-        """Check hashed password."""
-        return check_password_hash(self.password, password)
-    
-class testUser:
-    @pytest.fixture
-    def user(self):
-        return User(username="testuser", email="testuser@example.com", password="password", role="user")
-    def test_check_password(self, user):
+    def test_check_password(self):
+        test_user = User("David Goggins", "goggs@gmail.com", "goggs123", "student")
+        assert test_user.check_password("goggs123")
+
+    def test_set_password(self):
+        password = "passtest"
+        new_password = "passtest"
+        test_user = User("bob", "bob@email.com", password, "user")
+        test_user.set_password(new_password)
+        assert test_user.check_password(new_password)
+
+    def test_check_password_with_fixture(self, user):
         user.set_password("newpassword")
-        assert user.check_password("newpassword") is True
-        assert user.check_password("wrongpassword") is False
-    def test_hashed_password(self, user):
+        assert user.check_password("newpassword")
+        assert not user.check_password("wrongpassword")
+
+    def test_password_is_hashed(self, user):
         user.set_password("something")
         assert user.password != "something"
-
-
-# from werkzeug.security import check_password_hash, generate_password_hash
-# from App.database import db
-
-# class User(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     username =  db.Column(db.String(20), nullable=False, unique=True)
-#     password = db.Column(db.String(256), nullable=False)
-
-#     def __init__(self, username, password):
-#         self.username = username
-#         self.set_password(password)
-
-    
-#     def get_json(self):
-#         return{
-#             'id': self.id,
-#             'username': self.username
-#         }
-
-#     def set_password(self, password):
-#         """Create hashed password."""
-#         self.password = generate_password_hash(password)
-    
-#     def check_password(self, password):
-#         """Check hashed password."""
-#         return check_password_hash(self.password, password)
-

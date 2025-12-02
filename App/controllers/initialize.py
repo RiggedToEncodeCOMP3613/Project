@@ -18,7 +18,7 @@ def initialize(drop_first=True):
     first_names = ["Aliyah", "Bob", "Bobart", "Bobrick", "Bobson", "Deen", "Adam", "Michel", 
                    "Isabella", "Joe", "Kate", "Lily", "Ivy", "Rose", "Mia", "April", "May", 
                    "June", "Summer", "August", "Subaru", "Rem", "Emilia", "Rudeus", "Itachi", "Ryan", 
-                   "Aaron", "Thanos", "Ching", "Shichells", "Mandoes", "Joe"]
+                   "Aaron", "Thanos", "Ching", "Shichellssichells", "Mandoes", "Joe"]
     last_names = ["Ali", "Maraj", "Maharaj", "Singh", "Maharajsingh", "King", "Queen", "Sanchez", 
                   "Mohammed", "Amoroso-Centeno", "White", "Black", "Smith", "Dickinson", "Harris", 
                   "Alwahree", "Wednesday", "Martini", "Gosling", "Chong", "Kent", "Rodriguez", 
