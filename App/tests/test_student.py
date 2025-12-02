@@ -3,7 +3,7 @@ import unittest
 from App.main import create_app
 from App.database import db
 from App.controllers.student_controller import register_student, delete_student, create_hours_request, fetch_accolades, get_hours
-from App.models import Student
+from App.models import Student, Staff, ActivityHistory
 from App.controllers.leaderboard_controller import generate_leaderboard
 
 @pytest.fixture(autouse=True)
@@ -85,6 +85,35 @@ class StudentIntegrationTests(unittest.TestCase):
         assert req is not None
         assert req.hours == 4.0
         assert req.status == 'Pending'
+
+    #tests the make_request method of Student model
+    def test_create_hours_request(self):
+        newstudent = Student.create_student("Zoro", "green@gmail.com", "strongpass")
+        newstaff = Staff("Luffy", "red@gmail.com", "dumbpass")
+        db.session.add(newstaff)
+        db.session.commit()
+
+        newrequest = newstudent.make_request("community service", newstaff.staff_id, 5.0, "2024-12-01")
+        
+        self.assertEqual(newrequest.student_id, newstudent.student_id)
+        self.assertEqual(newrequest.staff_id, newstaff.staff_id)
+        self.assertEqual(newrequest.service, "community service")
+        self.assertEqual(newrequest.hours, 5.0)
+        self.assertEqual(newrequest.status, "Pending")  
+        self.assertIsNotNone(newrequest.activity_id)  
+        
+        activity = ActivityHistory.query.get(newrequest.activity_id)
+        self.assertIsNotNone(activity, "ActivityHistory should exist for this request")
+        self.assertEqual(activity.student_id, newstudent.student_id)
+        
+        self.assertIn(newrequest, activity.requests)
+        
+        self.assertEqual(newstudent.activity_history.id, activity.id)
+        self.assertIn(newrequest, newstudent.activity_history.requests)
+
+        self.assertIn(newrequest, newstaff.requests)
+        
+
 
     def test_fetch_requests(self):
         from datetime import datetime, timezone
