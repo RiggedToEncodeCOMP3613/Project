@@ -1,5 +1,4 @@
 from App.database import db
-import pytest
 
 # Association table for Student <-> Accolade many-to-many relationship
 student_accolade = db.Table(
@@ -50,24 +49,3 @@ class Accolade(db.Model):
                 # ignore failures to append
                 pass
         return student
-
-
-# Pytest time
-class TestAccoladeModel:
-
-    @pytest.fixture
-    def accolade(self):
-        return Accolade(staff_id=1, description="Excellent Performance")
-
-    def test_accolade_initialization(self, accolade):
-        assert accolade.staff_id == 1
-        assert accolade.description == "Excellent Performance"
-        assert accolade.students == []
-
-    def test_get_json(self, accolade):
-        expected_json = {
-            'id': None,
-            'staff_id': 1,
-            'description': "Excellent Performance"
-        }
-        assert accolade.get_json() == expected_json

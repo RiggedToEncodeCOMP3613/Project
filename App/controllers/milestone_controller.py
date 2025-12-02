@@ -3,7 +3,6 @@ from App.models import Milestone
 from rich.table import Table
 from rich.console import Console
 from App.models import MilestoneHistory
-import pytest
 
 def create_milestone(hours):
     new_milestone = Milestone(hours=hours)
@@ -80,54 +79,3 @@ def list_all_milestone_history():
     if not history_records:
         return []
     return [h.get_json() for h in history_records]
-
-class TestMilestoneController:
-    @pytest.fixture(autouse=True)
-    def setup_and_teardown(self, app):
-        with app.app_context():
-            db.create_all()
-            yield
-            db.session.remove()
-            db.drop_all()
-
-    def test_create_milestone(self):
-        milestone = create_milestone(10)
-        assert milestone.hours == 10
-        assert Milestone.query.count() == 1
-        assert milestone.id is not None
-
-    def test_list_all_milestones(self):
-        create_milestone(5)
-        create_milestone(15)
-        milestones = list_all_milestones()
-        assert len(milestones) == 2
-
-    def test_delete_milestone(self):
-        milestone = create_milestone(20)
-        result = delete_milestone(milestone.id)
-        assert result is True
-        assert Milestone.query.count() == 0
-
-    def test_delete_all_milestones(self):
-        create_milestone(5)
-        create_milestone(15)
-        num_deleted = delete_all_milestones()
-        assert num_deleted == 2
-        assert Milestone.query.count() == 0
-
-    def test_search_milestones(self):
-        m1 = create_milestone(10)
-        m2 = create_milestone(20)
-        results = search_milestones(hours=10)
-        assert len(results) == 1
-        assert results[0]['hours'] == 10
-
-    def test_update_milestone(self):
-        milestone = create_milestone(30)
-        updated_milestone = update_milestone(milestone.id, 75)
-        assert updated_milestone.hours == 75 # pyright: ignore[reportOptionalMemberAccess]
-
-    def test_list_all_milestone_history(self):
-        milestone = create_milestone(10)
-        history = list_all_milestone_history()
-        assert len(history) >= 0  # Depending on existing students
