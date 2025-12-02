@@ -1,32 +1,15 @@
-import os, tempfile, pytest, logging, unittest
-from werkzeug.security import check_password_hash, generate_password_hash
+import logging
+import unittest
+
+import pytest
+
 from datetime import datetime, timezone
 
 from App.main import create_app
 from App.database import db, create_db
-from App.models import User, Student, RequestHistory, Staff, ActivityHistory, LoggedHoursHistory, AccoladeHistory, MilestoneHistory
-from App.controllers import (
-    create_user,
-    get_all_users_json,
-    login,
-    get_user,
-    get_user_by_username,
-    update_user
-)
-from App.controllers.student_controller import (
-    register_student,
-    create_hours_request,
-    fetch_requests,
-    get_hours,
-    fetch_accolades
-)
-from App.controllers.leaderboard_controller import generate_leaderboard
-from App.controllers.staff_controller import (
-    register_staff,
-    fetch_all_requests,
-    process_request_approval,
-    process_request_denial
-)
+from App.models import Student, RequestHistory, Staff, ActivityHistory, LoggedHoursHistory, AccoladeHistory, MilestoneHistory
+from App.controllers.student_controller import register_student
+from App.controllers.staff_controller import register_staff
 from App.controllers.request_controller import create_request
 from App.controllers.loggedHoursHistory_controller import create_logged_hours
 from App.controllers.accolade_controller import create_accolade, assign_accolade_to_student
@@ -205,11 +188,7 @@ class ActivityHistoryIntegrationTests(unittest.TestCase):
         LOGGER.info("ActivityHistory accolade tracking test passed successfully!")
 
     def test_activity_history_milestone_tracking(self):
-        """
-        Test: test_activity_history_milestone_tracking()
-        Dependencies: register_student(), create_milestone(), create_logged_hours()
-        Description: Student achieves milestone, verify ActivityHistory captures it
-        """
+
         # Register a student
         student = register_student("test_student_milestone", "test_milestone@example.com", "testpass")
         assert student is not None
