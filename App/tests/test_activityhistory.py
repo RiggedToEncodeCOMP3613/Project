@@ -42,7 +42,7 @@ def empty_db():
     yield app.test_client()
     db.drop_all()
 
-class ActivityHistoryRequestTrackingTests(unittest.TestCase):
+class ActivityHistoryIntegrationTests(unittest.TestCase):
 
     def test_activity_history_request_tracking(self):
   
