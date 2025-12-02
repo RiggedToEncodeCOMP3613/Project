@@ -21,6 +21,92 @@ def empty_db():
     yield app.test_client()
     db.drop_all()
 
+
+class LoggedHoursUnitTests(unittest.TestCase):
+
+    def test_init_loggedhours(self):
+        from App.models import LoggedHoursHistory
+        Testlogged = LoggedHoursHistory(student_id=1, staff_id=2, service="volunteer", hours=20, before=0.0, after=20.0, date_completed="2025-01-01")
+        self.assertEqual(Testlogged.student_id, 1)
+        self.assertEqual(Testlogged.staff_id, 2)
+        self.assertEqual(Testlogged.hours, 20)
+
+    def test_repr_loggedhours(self):
+        from App.models import LoggedHoursHistory
+        Testlogged = LoggedHoursHistory(student_id=1, staff_id=2, service="volunteer", hours=20, before=0.0, after=20.0, date_completed="2025-01-01")
+        rep = repr(Testlogged)
+        # Check all parts of the string representation
+        self.assertIn("LoggedHoursHistory ID:", rep)
+        self.assertIn("Student ID:", rep)
+        self.assertIn("Staff ID:", rep)
+        self.assertIn("Hours:", rep)
+        self.assertIn("1", rep)
+        self.assertIn("2", rep)
+        self.assertIn("20", rep)
+
+    def test_create_logged_hours(self):
+        # Create a student for testing
+        from App.models import Student
+        student = Student("Test Student", email="test@student.com", password="password")
+        db.session.add(student)
+        db.session.commit()
+        student_id = student.student_id
+
+        # Create logged hours
+        from App.controllers.loggedHoursHistory_controller import create_logged_hours
+        logged_hour = create_logged_hours(student_id=student_id, staff_id=1, hours=5, service="Tutoring", date_completed="2024-01-01")
+
+        self.assertIsNotNone(logged_hour)
+        self.assertEqual(logged_hour.student_id, student_id)
+        self.assertEqual(logged_hour.hours, 5.0)
+        self.assertEqual(logged_hour.service, "Tutoring")
+        self.assertEqual(logged_hour.date_completed.strftime("%Y-%m-%d"), "2024-01-01")
+
+    def test_delete_logged_hours(self):
+        # Create a student
+        from App.models import Student
+        student = Student("Test Student", email="test@student.com", password="password")
+        db.session.add(student)
+        db.session.commit()
+        student_id = student.student_id
+
+        # Create a logged hours entry to delete
+        from App.controllers.loggedHoursHistory_controller import create_logged_hours, delete_logged_hours
+        logged_hour = create_logged_hours(student_id=student_id, staff_id=1, hours=5, service="Tutoring", date_completed="2024-01-01")
+        log_id = logged_hour.id
+
+        # Delete the logged hours entry
+        result = delete_logged_hours(log_id)
+        self.assertTrue(result)
+
+        # Verify deletion
+        deleted_log = LoggedHoursHistory.query.get(log_id)
+        self.assertIsNone(deleted_log)
+
+    def test_delete_all_logged_hours(self):
+        # Create students
+        from App.models import Student
+        student1 = Student("Test Student1", email="test1@student.com", password="password")
+        db.session.add(student1)
+        db.session.commit()
+        student2 = Student("Test Student2", email="test2@student.com", password="password")
+        db.session.add(student2)
+        db.session.commit()
+
+        # Create multiple logged hours entries
+        from App.controllers.loggedHoursHistory_controller import create_logged_hours, delete_all_logged_hours
+        create_logged_hours(student_id=student1.student_id, staff_id=1, hours=5, service="Tutoring", date_completed="2024-01-01")
+        create_logged_hours(student_id=student2.student_id, staff_id=1, hours=3, service="Counseling", date_completed="2024-01-02")
+
+        # Delete all logged hours entries
+        num_deleted = delete_all_logged_hours()
+        self.assertEqual(num_deleted, 2)
+
+        # Verify deletion
+        remaining_logs = LoggedHoursHistory.query.all()
+        self.assertEqual(len(remaining_logs), 0)
+
+
 class LoggedHoursIntegrationTests(unittest.TestCase):
 
     def test_logged_hours_student_total_update(self):
