@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from App.main import create_app
 from App.database import db, create_db
-from App.models import User, Student, RequestHistory, Staff, ActivityHistory, LoggedHoursHistory, AccoladeHistory
+from App.models import User, Student, RequestHistory, Staff, ActivityHistory, LoggedHoursHistory, AccoladeHistory, MilestoneHistory
 from App.controllers import (
     create_user,
     get_all_users_json,
@@ -30,6 +30,7 @@ from App.controllers.staff_controller import (
 from App.controllers.request_controller import create_request
 from App.controllers.loggedHoursHistory_controller import create_logged_hours
 from App.controllers.accolade_controller import create_accolade, assign_accolade_to_student
+from App.controllers.milestone_controller import create_milestone
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,16 +45,16 @@ def empty_db():
 class ActivityHistoryRequestTrackingTests(unittest.TestCase):
 
     def test_activity_history_request_tracking(self):
-   
+  
         # Register a student
-        student = register_student("test_student", "test@example.com", "testpass")
+        student = register_student("test_student_request", "test_request@example.com", "testpass")
         assert student is not None
-        assert student.username == "test_student"
+        assert student.username == "test_student_request"
 
         # Register a staff member
-        staff = register_staff("test_staff", "staff@example.com", "staffpass")
+        staff = register_staff("test_staff_request", "staff_request@example.com", "staffpass")
         assert staff is not None
-        assert staff.username == "test_staff"
+        assert staff.username == "test_staff_request"
 
         # Create a request using the student and staff
         current_date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
@@ -202,3 +203,71 @@ class ActivityHistoryRequestTrackingTests(unittest.TestCase):
         assert activity_history.accolades[0].id == history_record.id
 
         LOGGER.info("ActivityHistory accolade tracking test passed successfully!")
+
+    def test_activity_history_milestone_tracking(self):
+        """
+        Test: test_activity_history_milestone_tracking()
+        Dependencies: register_student(), create_milestone(), create_logged_hours()
+        Description: Student achieves milestone, verify ActivityHistory captures it
+        """
+        # Register a student
+        student = register_student("test_student_milestone", "test_milestone@example.com", "testpass")
+        assert student is not None
+        assert student.username == "test_student_milestone"
+
+        # Create a milestone with 10 hours requirement
+        milestone = create_milestone(10)
+        assert milestone is not None
+        assert milestone.hours == 10
+
+        # Create logged hours to make student reach the milestone
+        current_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        logged_hours = create_logged_hours(
+            student_id=student.student_id,
+            staff_id=None,  # No staff needed for this test
+            hours=10.0,
+            service="volunteer",
+            date_completed=current_date
+        )
+
+        # Verify logged hours was created successfully
+        assert logged_hours is not None
+        assert logged_hours.student_id == student.student_id
+        assert logged_hours.hours == 10.0
+
+        # Update student's total hours to trigger milestone calculation
+        student.calculate_total_hours()
+
+        # Verify student has reached the milestone
+        assert student.total_hours >= milestone.hours
+
+        # Check if milestone history was created
+        milestone_history = MilestoneHistory.query.filter_by(
+            milestone_id=milestone.id,
+            student_id=student.student_id
+        ).first()
+
+        assert milestone_history is not None
+        assert milestone_history.milestone_id == milestone.id
+        assert milestone_history.student_id == student.student_id
+        assert milestone_history.hours == milestone.hours
+
+        # Verify ActivityHistory was created and linked
+        assert milestone_history.activity_id is not None
+
+        # Fetch the ActivityHistory from the database
+        activity_history = ActivityHistory.query.get(milestone_history.activity_id)
+        assert activity_history is not None
+        assert activity_history.student_id == student.student_id
+
+        # Verify the milestone history is properly linked to the activity history
+        assert milestone_history in activity_history.milestones
+
+        # Verify the activity history is properly linked to the student
+        assert activity_history in student.activity_history
+
+        # Verify the activity history contains the milestone history entry
+        assert len(activity_history.milestones) == 1
+        assert activity_history.milestones[0].id == milestone_history.id
+
+        LOGGER.info("ActivityHistory milestone tracking test passed successfully!")
