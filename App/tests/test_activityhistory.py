@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from App.main import create_app
 from App.database import db, create_db
-from App.models import User, Student, RequestHistory, Staff, ActivityHistory
+from App.models import User, Student, RequestHistory, Staff, ActivityHistory, LoggedHoursHistory
 from App.controllers import (
     create_user,
     get_all_users_json,
@@ -28,6 +28,7 @@ from App.controllers.staff_controller import (
     process_request_denial
 )
 from App.controllers.request_controller import create_request
+from App.controllers.loggedHoursHistory_controller import create_logged_hours
 
 LOGGER = logging.getLogger(__name__)
 
@@ -94,3 +95,56 @@ class ActivityHistoryRequestTrackingTests(unittest.TestCase):
         assert activity_history.requests[0].id == request.id
 
         LOGGER.info("ActivityHistory request tracking test passed successfully!")
+
+    def test_activity_history_logged_hours_tracking(self):
+        """
+        Test: test_activity_history_logged_hours_tracking()
+        Dependencies: register_student(), register_staff(), create_logged_hours()
+        Description: Log hours, verify ActivityHistory tracks the entry
+        """
+        # Register a student
+        student = register_student("test_student_hours", "test_hours@example.com", "testpass")
+        assert student is not None
+        assert student.username == "test_student_hours"
+
+        # Register a staff member
+        staff = register_staff("test_staff_hours", "staff_hours@example.com", "staffpass")
+        assert staff is not None
+        assert staff.username == "test_staff_hours"
+
+        # Create logged hours using the student and staff
+        current_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        logged_hours = create_logged_hours(
+            student_id=student.student_id,
+            staff_id=staff.staff_id,
+            hours=3.5,
+            service="community_service",
+            date_completed=current_date
+        )
+
+        # Verify logged hours was created successfully
+        assert logged_hours is not None
+        assert logged_hours.student_id == student.student_id
+        assert logged_hours.staff_id == staff.staff_id
+        assert logged_hours.hours == 3.5
+        assert logged_hours.service == "community_service"
+
+        # Verify ActivityHistory was created and linked
+        assert logged_hours.activity_id is not None
+
+        # Fetch the ActivityHistory from the database
+        activity_history = ActivityHistory.query.get(logged_hours.activity_id)
+        assert activity_history is not None
+        assert activity_history.student_id == student.student_id
+
+        # Verify the logged hours is properly linked to the activity history
+        assert logged_hours in activity_history.loggedhours
+
+        # Verify the activity history is properly linked to the student
+        assert activity_history in student.activity_history
+
+        # Verify the activity history contains the logged hours entry
+        assert len(activity_history.loggedhours) == 1
+        assert activity_history.loggedhours[0].id == logged_hours.id
+
+        LOGGER.info("ActivityHistory logged hours tracking test passed successfully!")
