@@ -19,7 +19,7 @@ except Exception:
     create_accolade = None
     assign_accolade_to_student = None
 
-from App.models import Student, RequestHistory, LoggedHoursHistory, ActivityHistory, MilestoneHistory, Milestone, Accolade, AccoladeHistory
+from App.models import Student, Staff, RequestHistory, LoggedHoursHistory, ActivityHistory, MilestoneHistory, Milestone, Accolade, AccoladeHistory
 
 @pytest.fixture(autouse=True)
 def app_context():
@@ -204,3 +204,70 @@ class StudentIntegrationTests(unittest.TestCase):
         accolades = fetch_accolades(student.student_id)
         assert isinstance(accolades, list)
         assert any((getattr(a, 'description', None) == 'Shining Star') or ('Shining' in str(a)) for a in accolades)
+
+    def test_request_relationships(self):
+        #first must create the request
+
+        newstudent = Student.create_student("Zoro", "green@gmail.com", "strongpass")
+        newstaff = Staff("Luffy", "red@gmail.com", "dumbpass")
+        db.session.add(newstaff)
+        db.session.commit()
+
+        newrequest = newstudent.make_request("community service", newstaff.staff_id, 5.0, "2024-12-01")
+        
+        self.assertEqual(newrequest.student_id, newstudent.student_id)
+        self.assertEqual(newrequest.staff_id, newstaff.staff_id)
+        self.assertEqual(newrequest.service, "community service")
+        self.assertEqual(newrequest.hours, 5.0)
+        self.assertEqual(newrequest.status, "Pending")  
+        self.assertIsNotNone(newrequest.activity_id)  
+        
+        #now to check to see if the new request is linked properly to all the relevant relationships
+        activity = ActivityHistory.query.get(newrequest.activity_id)
+        self.assertIsNotNone(activity, "ActivityHistory should exist for this request")
+        self.assertEqual(activity.student_id, newstudent.student_id)
+        
+        self.assertIn(newrequest, activity.requests)
+        
+        self.assertEqual(newstudent.activity_history.id, activity.id)
+        self.assertIn(newrequest, newstudent.activity_history.requests)
+
+        self.assertIn(newrequest, newstaff.requests)
+
+    def test_request_hours_confirmation(self):
+        #to see if the request is properly created and not null and attributes correct
+        student = Student.create_student("amara", "amara@example.com", "pass")
+        req = student.make_request("volunteer", 1, 4.0, datetime.now(timezone.utc))
+        assert req is not None
+        assert req.student_id == student.student_id
+        assert req.service == "volunteer"
+        assert req.staff_id == 1
+        assert req.hours == 4.0
+        assert req.date_completed is not None
+        assert req.status == 'Pending'
+        assert req.activity_id is not None
+        
+        
+    def test_fetch_all_requests(self):
+        #test to see if all requests are committed and can be fetched
+        student = Student.create_student("Luca", "luca@example.com", "lucapass")
+        
+        r1 = student.make_request("volunteer", 1, 1.0, datetime.now(timezone.utc))
+        r2 = student.make_request("volunteer", 1, 2.5, datetime.now(timezone.utc))
+
+        reqs = RequestHistory.query.filter_by(student_id=student.student_id).all()
+        assert len(reqs) >= 2
+
+        #now checking to see if the requests have the correct attributes
+        hours = [r.hours for r in reqs]
+        assert 1.0 in hours and 2.5 in hours
+
+        for r in reqs:
+            assert r.student_id == student.student_id
+            assert r.service == "volunteer"
+            assert r.staff_id == 1
+            assert r.date_completed is not None
+            assert r.status == 'Pending'
+            assert r.activity_id is not None
+
+    
