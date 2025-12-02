@@ -1,5 +1,6 @@
 from werkzeug.security import check_password_hash, generate_password_hash
 from App.database import db
+import pytest
 
 class User(db.Model):
     __tablename__ = "users"
@@ -35,9 +36,17 @@ class User(db.Model):
         """Check hashed password."""
         return check_password_hash(self.password, password)
     
-
-
-
+class testUser:
+    @pytest.fixture
+    def user(self):
+        return User(username="testuser", email="testuser@example.com", password="password", role="user")
+    def test_check_password(self, user):
+        user.set_password("newpassword")
+        assert user.check_password("newpassword") is True
+        assert user.check_password("wrongpassword") is False
+    def test_hashed_password(self, user):
+        user.set_password("something")
+        assert user.password != "something"
 
 
 # from werkzeug.security import check_password_hash, generate_password_hash
