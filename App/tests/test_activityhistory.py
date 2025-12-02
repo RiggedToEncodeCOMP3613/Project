@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from App.main import create_app
 from App.database import db, create_db
-from App.models import User, Student, RequestHistory, Staff, ActivityHistory, LoggedHoursHistory
+from App.models import User, Student, RequestHistory, Staff, ActivityHistory, LoggedHoursHistory, AccoladeHistory
 from App.controllers import (
     create_user,
     get_all_users_json,
@@ -29,6 +29,7 @@ from App.controllers.staff_controller import (
 )
 from App.controllers.request_controller import create_request
 from App.controllers.loggedHoursHistory_controller import create_logged_hours
+from App.controllers.accolade_controller import create_accolade, assign_accolade_to_student
 
 LOGGER = logging.getLogger(__name__)
 
@@ -43,11 +44,7 @@ def empty_db():
 class ActivityHistoryRequestTrackingTests(unittest.TestCase):
 
     def test_activity_history_request_tracking(self):
-        """
-        Test: test_activity_history_request_tracking()
-        Dependencies: register_student(), create_request()
-        Description: Create request, verify ActivityHistory created and linked
-        """
+   
         # Register a student
         student = register_student("test_student", "test@example.com", "testpass")
         assert student is not None
@@ -97,11 +94,7 @@ class ActivityHistoryRequestTrackingTests(unittest.TestCase):
         LOGGER.info("ActivityHistory request tracking test passed successfully!")
 
     def test_activity_history_logged_hours_tracking(self):
-        """
-        Test: test_activity_history_logged_hours_tracking()
-        Dependencies: register_student(), register_staff(), create_logged_hours()
-        Description: Log hours, verify ActivityHistory tracks the entry
-        """
+    
         # Register a student
         student = register_student("test_student_hours", "test_hours@example.com", "testpass")
         assert student is not None
@@ -148,3 +141,64 @@ class ActivityHistoryRequestTrackingTests(unittest.TestCase):
         assert activity_history.loggedhours[0].id == logged_hours.id
 
         LOGGER.info("ActivityHistory logged hours tracking test passed successfully!")
+
+    def test_activity_history_accolade_tracking(self):
+  
+        # Register a student
+        student = register_student("test_student_accolade", "test_accolade@example.com", "testpass")
+        assert student is not None
+        assert student.username == "test_student_accolade"
+
+        # Register a staff member
+        staff = register_staff("test_staff_accolade", "staff_accolade@example.com", "staffpass")
+        assert staff is not None
+        assert staff.username == "test_staff_accolade"
+
+        # Create an accolade using the staff member
+        accolade, message = create_accolade(staff.staff_id, "Test Accolade for Achievement")
+        assert accolade is not None
+        assert message is None
+        assert accolade.staff_id == staff.staff_id
+        assert accolade.description == "Test Accolade for Achievement"
+
+        # Assign the accolade to the student
+        result, error = assign_accolade_to_student(
+            accolade_id=accolade.id,
+            student_id=student.student_id,
+            staff_id=staff.staff_id
+        )
+
+        # Verify the assignment was successful
+        assert result is not None
+        assert error is None
+        assert 'accolade' in result
+        assert 'student' in result
+        assert 'history' in result
+
+        # Extract the history record from the result
+        history_record = result['history']
+        assert history_record is not None
+        assert history_record.accolade_id == accolade.id
+        assert history_record.student_id == student.student_id
+        assert history_record.staff_id == staff.staff_id
+        assert history_record.description == accolade.description
+
+        # Verify ActivityHistory was created and linked
+        assert history_record.activity_id is not None
+
+        # Fetch the ActivityHistory from the database
+        activity_history = ActivityHistory.query.get(history_record.activity_id)
+        assert activity_history is not None
+        assert activity_history.student_id == student.student_id
+
+        # Verify the accolade history is properly linked to the activity history
+        assert history_record in activity_history.accolades
+
+        # Verify the activity history is properly linked to the student
+        assert activity_history in student.activity_history
+
+        # Verify the activity history contains the accolade history entry
+        assert len(activity_history.accolades) == 1
+        assert activity_history.accolades[0].id == history_record.id
+
+        LOGGER.info("ActivityHistory accolade tracking test passed successfully!")
