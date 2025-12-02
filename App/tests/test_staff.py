@@ -181,3 +181,36 @@ class StaffIntegrationTests(unittest.TestCase):
 
         hist_record = AccoladeHistory.query.filter_by(student_id=student.student_id, accolade_id=accolade_id).first()
         assert hist_record is not None
+
+    def test_hours_approval(self):
+        staff = register_staff("carmichael", "carm@example.com", "staffpass")
+        student = Student.create_student("niara", "niara@example.com", "studpass")
+        activity = ActivityHistory(student_id=student.student_id)
+        db.session.add(activity)
+        db.session.flush()
+        req = RequestHistory(student_id=student.student_id, staff_id=staff.staff_id, service="volunteer", hours=2.0, date_completed=datetime.now(timezone.utc))
+        req.activity_id = activity.id
+        db.session.add(req)
+        db.session.commit()
+
+        result = process_request_approval(staff.staff_id, req.id)
+        
+        logged = result.get('logged_hours')
+        assert logged is not None
+        assert logged.hours == 2.0
+        assert result['request'].status == 'Approved'
+
+    def test_hours_denial(self):
+        staff = register_staff("maritza", "maritza@example.com", "staffpass")
+        student = Student.create_student("jabari", "jabari@example.com", "studpass")
+        activity = ActivityHistory(student_id=student.student_id)
+        db.session.add(activity)
+        db.session.flush()
+        req = RequestHistory(student_id=student.student_id, staff_id=staff.staff_id, service="volunteer", hours=1.0, date_completed=datetime.now(timezone.utc))
+        req.activity_id = activity.id
+        db.session.add(req)
+        db.session.commit()
+
+        result = process_request_denial(staff.staff_id, req.id)
+        assert result['denial_successful'] is True
+        assert result['request'].status == 'Denied'
