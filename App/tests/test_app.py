@@ -20,9 +20,8 @@ from App.controllers.student_controller import (
     register_student,
     create_hours_request,
     fetch_requests,
-    get_approved_hours,
-    fetch_accolades,
-    generate_leaderboard
+    get_hours,
+    fetch_accolades
 )
 from App.controllers.staff_controller import (
     register_staff,
