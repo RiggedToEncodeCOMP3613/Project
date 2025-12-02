@@ -27,6 +27,48 @@ def app_context():
 
 class RequestUnitTests:
 
+    def test_create_request(self):
+        student = register_student("testuser", "test@example.com", "testpass")
+        staff = Staff("staffuser", "staff@example.com", "staffpass")
+        db.session.add(staff)
+        db.session.commit()
+        req, message = create_request(student.student_id, "Beach Cleanup", staff.staff_id, 3.0, "2024-01-15")
+        
+        assert req is not None
+        assert message == "Request created successfully."
+        assert req.staff_id == staff.staff_id
+        assert req.student_id == student.student_id
+        assert req.service == "Beach Cleanup"
+        assert req.hours == 3.0
+        assert req.date_completed is not None
+        assert req.status == 'Pending'
+        assert req.activity_id is not None
+
+    def test_process_request_approval(self):
+        student = register_student("testuser", "test@example.com", "testpass")
+        staff = Staff("staffuser", "staff@example.com", "staffpass")
+        db.session.add(staff)
+        db.session.commit()
+        
+        request, _ = create_request(student.student_id, "volunteer", staff.staff_id, 5.0, "2023-10-01")
+        result = process_request_approval(staff.staff_id, request.id)
+        assert result['request'].status == 'Approved'
+        assert result['student_name'] == "testuser"
+        assert result['staff_name'] == "staffuser"
+        assert 'logged_hours' in result
+
+    def test_process_request_denial(self):
+        student = register_student("testuser2", "test2@example.com", "testpass")
+        staff = Staff("staffuser2", "staff2@example.com", "staffpass")
+        db.session.add(staff)
+        db.session.commit()
+        request, _ = create_request(student.student_id, "volunteer", staff.staff_id, 5.0, "2023-10-01")
+        result = process_request_denial(staff.staff_id, request.id)
+        assert result['request'].status == 'Denied'
+        assert result['student_name'] == "testuser2"
+        assert result['staff_name'] == "staffuser2"
+        assert result['denial_successful'] is True
+
     def test_delete_request_entry(self):
 
         req = RequestHistory(
