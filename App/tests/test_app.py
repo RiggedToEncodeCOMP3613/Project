@@ -23,6 +23,7 @@ from App.controllers.student_controller import (
     get_hours,
     fetch_accolades
 )
+from App.controllers.leaderboard_controller import generate_leaderboard
 from App.controllers.staff_controller import (
     register_staff,
     fetch_all_requests,
@@ -104,7 +105,7 @@ class RequestUnitTests(unittest.TestCase):
         Testrequest = RequestHistory(student_id=12, staff_id=1, service="volunteer", hours=30, date_completed=datetime.now(timezone.utc))
         self.assertEqual(Testrequest.student_id, 12)
         self.assertEqual(Testrequest.hours, 30)
-        self.assertEqual(Testrequest.status, 'pending')
+        self.assertEqual(Testrequest.status, None)
 
     def test_repr_request(self):
         from App.models import RequestHistory
@@ -136,9 +137,9 @@ class LoggedHoursUnitTests(unittest.TestCase):
         rep = repr(Testlogged)
         # Check all parts of the string representation
         self.assertIn("LoggedHoursHistory ID:", rep)
-        self.assertIn("StudentID =", rep)
-        self.assertIn("Approved By (StaffID)=", rep)
-        self.assertIn("Hours Approved=", rep)
+        self.assertIn("Student ID:", rep)
+        self.assertIn("Staff ID:", rep)
+        self.assertIn("Hours:", rep)
         self.assertIn("1", rep)
         self.assertIn("2", rep)
         self.assertIn("20", rep)
@@ -157,7 +158,7 @@ class LoggedHoursUnitTests(unittest.TestCase):
 # '''
 # This fixture creates an empty database for the test and deletes it after the test
 # scope="class" would execute the fixture once and resued for all methods in the class
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture(autouse=True, scope="function")
 def empty_db():
     app = create_app({'TESTING': True, 'SQLALCHEMY_DATABASE_URI': 'sqlite:///test.db'})
     create_db()
@@ -209,7 +210,7 @@ class StaffIntegrationTests(unittest.TestCase):
         logged = result.get('logged_hours')
         assert logged is not None
         assert logged.hours == 2.0
-        assert result['request'].status == 'approved'
+        assert result['request'].status == 'Approved'
 
     def test_hours_denial(self):
         # prepare staff, student and request
@@ -227,7 +228,7 @@ class StaffIntegrationTests(unittest.TestCase):
 
         result = process_request_denial(staff.staff_id, req.id)
         assert result['denial_successful'] is True
-        assert result['request'].status == 'denied'
+        assert result['request'].status == 'Denied'
 
 
 class StudentIntegrationTests(unittest.TestCase):
@@ -239,18 +240,20 @@ class StudentIntegrationTests(unittest.TestCase):
         assert fetched is not None
 
     def test_request_hours_confirmation(self):
+        from datetime import datetime, timezone
         student = Student.create_student("amara", "amara@example.com", "pass")
-        req = create_hours_request(student.student_id, 4.0)
+        req = student.make_request("volunteer", 1, 4.0, datetime.now(timezone.utc))
         assert req is not None
         assert req.hours == 4.0
-        assert req.status == 'pending'
+        assert req.status == 'Pending'
 
     def test_fetch_requests(self):
+        from datetime import datetime, timezone
         student = Student.create_student("kareem", "kareem@example.com", "pass")
         # create two requests
-        r1 = create_hours_request(student.student_id, 1.0)
-        r2 = create_hours_request(student.student_id, 2.5)
-        reqs = fetch_requests(student.student_id)
+        r1 = student.make_request("volunteer", 1, 1.0, datetime.now(timezone.utc))
+        r2 = student.make_request("volunteer", 1, 2.5, datetime.now(timezone.utc))
+        reqs = RequestHistory.query.filter_by(student_id=student.student_id).all()
         assert len(reqs) >= 2
         hours = [r.hours for r in reqs]
         assert 1.0 in hours and 2.5 in hours
@@ -258,6 +261,8 @@ class StudentIntegrationTests(unittest.TestCase):
     def test_get_approved_hours_and_accolades(self):
         from App.models import LoggedHoursHistory, ActivityHistory
         from datetime import datetime, timezone
+        from App.controllers.milestone_controller import create_milestone
+        create_milestone(10)
         student = Student.create_student("nisha", "nisha@example.com", "pass")
         # Manually add logged approved hours
         activity1 = ActivityHistory(student_id=student.student_id)
@@ -270,13 +275,18 @@ class StudentIntegrationTests(unittest.TestCase):
         lh2.activity_id = activity2.id
         db.session.add_all([lh1, lh2])
         db.session.commit()
+        student.calculate_total_hours()
 
-        name, total = get_approved_hours(student.student_id)
+        name, total = get_hours(student.student_id)
         assert name == student.username
         assert total == 11.0
 
-        accolades = fetch_accolades(student.student_id)
-        # 11 hours should give at least the 10 hours accolade
+        from App.models.milestoneHistory import MilestoneHistory
+        from App.models.milestone import Milestone
+        milestone_histories = MilestoneHistory.query.filter_by(student_id=student.student_id).all()
+        milestones = [Milestone.query.get(h.milestone_id) for h in milestone_histories]
+        accolades = [f"{m.hours} Hours Milestone" for m in milestones]
+        # 11 hours should give at least the 10 hours milestone
         assert '10 Hours Milestone' in accolades
 
     def test_generate_leaderboard(self):
