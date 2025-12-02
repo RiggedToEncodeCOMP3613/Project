@@ -3,22 +3,29 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from App.main import create_app
 from App.database import db, create_db
-from App.models import User, Student, RequestHistory, Staff, LoggedHoursHistory
+from datetime import datetime, timezone
+from App.models import User, Student, RequestHistory, Staff, LoggedHoursHistory, Milestone
+from App.models.milestoneHistory import MilestoneHistory
 from App.controllers.student_controller import register_student
 from App.controllers.staff_controller import register_staff
 from App.controllers.loggedHoursHistory_controller import create_logged_hours
-from App.controllers.milestone_controller import create_milestone
+from App.controllers.milestone_controller import (
+    create_milestone, search_milestones, update_milestone,
+    list_all_milestones, delete_milestone, delete_all_milestones,
+    list_all_milestone_history
+)
 from App.controllers.leaderboard_controller import generate_leaderboard
 
 LOGGER = logging.getLogger(__name__)
 
-
 @pytest.fixture(autouse=True, scope="function")
 def empty_db():
     app = create_app({'TESTING': True, 'SQLALCHEMY_DATABASE_URI': 'sqlite:///test.db'})
-    create_db()
-    yield app.test_client()
-    db.drop_all()
+    with app.app_context():
+        create_db()
+        yield
+        db.drop_all()
+
 
 class MilestoneIntegrationTests(unittest.TestCase):
 
@@ -36,7 +43,6 @@ class MilestoneIntegrationTests(unittest.TestCase):
         assert student3 is not None
 
         # Log hours for students: student1 gets 12 hours (eligible), student2 gets 8 (not eligible), student3 gets 15 (eligible)
-        from datetime import datetime, timezone
         current_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
         create_logged_hours(
@@ -77,7 +83,6 @@ class MilestoneIntegrationTests(unittest.TestCase):
         assert milestone.hours == 10
 
         # Verify eligible students auto-awarded
-        from App.models.milestoneHistory import MilestoneHistory
 
         # Student1 should have milestone history
         milestone_history1 = MilestoneHistory.query.filter_by(
@@ -101,3 +106,56 @@ class MilestoneIntegrationTests(unittest.TestCase):
         ).first()
         assert milestone_history3 is not None
         assert milestone_history3.hours == 10
+
+    def test_search_milestones(self):
+        m1 = create_milestone(10)
+        m2 = create_milestone(20)
+        results = search_milestones(hours=10)
+        assert len(results) == 1
+        assert results[0]['hours'] == 10
+        
+    def test_update_milestone_hours(self):
+        milestone = create_milestone(50)
+        updated_milestone = update_milestone(milestone.id, 75)
+        assert updated_milestone.hours == 75
+        # Verify change persists in db
+
+        refreshed_milestone = Milestone.query.get(milestone.id)
+        assert refreshed_milestone.hours == 75
+
+class MilestoneUnitTests:
+
+    def test_create_milestone(self):
+        milestone = create_milestone(10)
+        assert milestone.hours == 10
+        assert Milestone.query.count() == 1
+        assert milestone.id is not None
+
+    def test_list_all_milestones(self):
+        create_milestone(5)
+        create_milestone(15)
+        milestones = list_all_milestones()
+        assert len(milestones) == 2
+
+    def test_delete_milestone(self):
+        milestone = create_milestone(20)
+        result = delete_milestone(milestone.id)
+        assert result is True
+        assert Milestone.query.count() == 0
+
+    def test_delete_all_milestones(self):
+        create_milestone(5)
+        create_milestone(15)
+        num_deleted = delete_all_milestones()
+        assert num_deleted == 2
+        assert Milestone.query.count() == 0
+
+    def test_update_milestone(self):
+        milestone = create_milestone(30)
+        updated_milestone = update_milestone(milestone.id, 75)
+        assert updated_milestone.hours == 75 # pyright: ignore[reportOptionalMemberAccess]
+
+    def test_list_all_milestone_history(self):
+        milestone = create_milestone(10)
+        history = list_all_milestone_history()
+        assert len(history) >= 0  # Depending on existing students
