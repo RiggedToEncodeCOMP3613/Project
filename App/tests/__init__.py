@@ -1,1 +1,1 @@
-from .test_app import *
+# removed imports to avoid test discovery issues with pytest

@@ -1,7 +1,8 @@
+import unittest
 from App.models import LoggedHoursHistory, ActivityHistory
 from App.database import db
 from App.models import Student
-
+import pytest
 
 # CLI COMMAND FUNCTIONS
 
@@ -132,3 +133,56 @@ def search_logged_hours_by_date_range(start_date, end_date):
         LoggedHoursHistory.date_completed >= start_date,
         LoggedHoursHistory.date_completed <= end_date
     ).all()
+
+class TestLoggedHoursHistoryController(unittest.TestCase):
+    @pytest.fixture(autouse=True)
+    def setup_and_teardown(self, app, db):
+        # Setup before each test
+        with app.app_context():
+            db.create_all()
+            yield
+            # Teardown after each test
+            db.session.remove()
+            db.drop_all()
+    
+    def test_create_logged_hours(self):
+        # Create a student for testing
+        student = Student("Test Student", email="test@student.com", password="password")
+        db.session.add(student)
+        db.session.commit()
+        student_id = student.student_id
+
+        # Create logged hours
+        logged_hour = create_logged_hours(student_id=student_id, staff_id=1, hours=5, service="Tutoring", date_completed="2024-01-01")
+        
+        self.assertIsNotNone(logged_hour)
+        self.assertEqual(logged_hour.student_id, student_id)
+        self.assertEqual(logged_hour.hours, 5.0)
+        self.assertEqual(logged_hour.service, "Tutoring")
+        self.assertEqual(logged_hour.date_completed.strftime("%Y-%m-%d"), "2024-01-01")
+            
+    def test_delete_logged_hours(self):
+        # Create a logged hours entry to delete
+        logged_hour = create_logged_hours(student_id=1, staff_id=1, hours=5, service="Tutoring", date_completed="2024-01-01")
+        log_id = logged_hour.id
+
+        # Delete the logged hours entry
+        result = delete_logged_hours(log_id)
+        self.assertTrue(result)
+
+        # Verify deletion
+        deleted_log = LoggedHoursHistory.query.get(log_id)
+        self.assertIsNone(deleted_log)
+        
+    def test_delete_all_logged_hours(self):
+        # Create multiple logged hours entries
+        create_logged_hours(student_id=1, staff_id=1, hours=5, service="Tutoring", date_completed="2024-01-01")
+        create_logged_hours(student_id=2, staff_id=1, hours=3, service="Counseling", date_completed="2024-01-02")
+
+        # Delete all logged hours entries
+        num_deleted = delete_all_logged_hours()
+        self.assertEqual(num_deleted, 2)
+
+        # Verify deletion
+        remaining_logs = LoggedHoursHistory.query.all()
+        self.assertEqual(len(remaining_logs), 0)

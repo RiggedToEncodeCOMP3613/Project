@@ -1,6 +1,6 @@
 from App.database import db
 from App.models import Staff, Student, Accolade, AccoladeHistory, ActivityHistory
-
+import pytest
 
 # COMMAND FUNCTIONS
 
@@ -283,3 +283,93 @@ def remove_accolade_from_student(accolade_id, student_id, delete_history=False):
 
 
 # Removed unused `listAllAccolades`; use `search_accolades` or direct queries instead.
+
+class TestAccoladeController:
+
+    @pytest.fixture
+    def setup_staff(self, db_session):
+        staff = Staff(username="Test Staff", email="teststaff@example.com", password="password")
+        db_session.add(staff)
+        db_session.commit()
+        return staff
+
+    def test_create_accolade(self, db_session, setup_staff):
+        accolade, error = create_accolade(setup_staff.staff_id, "Outstanding Achievement")
+        assert error is None
+        assert accolade is not None
+        assert accolade.description == "Outstanding Achievement"
+        assert accolade.staff_id == setup_staff.staff_id
+
+    def test_search_accolades(self, db_session, setup_staff):
+        accolade, _ = create_accolade(setup_staff.staff_id, "Community Service")
+        accolades, error = search_accolades(description="Community")
+        assert error is None
+        assert len(accolades) == 1
+        assert accolades[0].id == accolade.id
+        
+    def test_delete_accolade(self, db_session, setup_staff):
+        accolade, _ = create_accolade(setup_staff.staff_id, "Sports Excellence") #Assume this works
+        success, result = delete_accolade(accolade.id) # type: ignore
+        assert success is True
+        assert 'description' in result
+        accolades, _ = search_accolades(accolade_id=accolade.id) # type: ignore
+        assert len(accolades) == 0     # type: ignore
+        #The type: ignore comments are to suppress mypy errors in the test code. This is fine for testing.
+        
+    def test_drop_accolade_table(self, db_session, setup_staff):
+        create_accolade(setup_staff.staff_id, "Leadership Award")
+        create_accolade(setup_staff.staff_id, "Academic Excellence")
+        result, error = drop_accolade_table()
+        assert error is None
+        assert result['accolades_deleted'] == 2 # type: ignore
+        accolades, _ = search_accolades()
+        assert len(accolades) == 0 # type: ignore
+        
+    def test_update_accolade_staff_id(self, db_session, setup_staff):
+        accolade, _ = create_accolade(setup_staff.staff_id, "Innovation Award")
+        new_staff = Staff(username="New Staff", email="newstaff@example.com", password="password")
+        db_session.add(new_staff)
+        db_session.commit()
+        update_accolade(accolade.id, staff_id=new_staff.staff_id) # type: ignore
+        updated_accolade = Accolade.query.get(accolade.id) # type: ignore
+        assert updated_accolade.staff_id == new_staff.staff_id # pyright: ignore[reportOptionalMemberAccess]
+        
+    def test_update_accolade_description(self, db_session, setup_staff):
+        accolade, _ = create_accolade(setup_staff.staff_id, "Team Player Award")
+        update_accolade(accolade.id, description="Best Team Player") # type: ignore
+        updated_accolade = Accolade.query.get(accolade.id) # type: ignore
+        assert updated_accolade.description == "Best Team Player" # pyright: ignore[reportOptionalMemberAccess]
+        
+    def test_assign_accolade_to_student(self, db_session, setup_staff):
+        accolade, _ = create_accolade(setup_staff.staff_id, "Volunteer Award")
+        student = Student(username="johndoe", email="john.doe@example.com", password="password")
+        db_session.add(student)
+        db_session.commit()
+        result, error = assign_accolade_to_student(accolade.id, student.student_id, setup_staff.staff_id) # type: ignore
+        assert error is None
+        assert result['accolade'].id == accolade.id # type: ignore
+        assert result['student'].student_id == student.student_id # type: ignore
+        accolade_history = AccoladeHistory.query.filter_by(accolade_id=accolade.id, student_id=student.student_id).first() # type: ignore
+        assert accolade_history is not None
+        accolade = Accolade.query.get(accolade.id) # type: ignore
+        assert student in accolade.students # type: ignore
+        assert len(accolade.students) == 1 # type: ignore
+        assert student.check_accolades() == [accolade] # type: ignore
+        #TODO This might be wrong
+        
+        def test_remove_accolade_from_student(self, db_session, setup_staff):
+            accolade, _ = create_accolade(setup_staff.staff_id, "Civic Duty Award")
+            student = Student(username="janesmith", email="jane.smith@example.com", password="password")
+            db_session.add(student)
+            db_session.commit()
+            assign_accolade_to_student(accolade.id, student.student_id, setup_staff.staff_id) # type: ignore
+            result, error = remove_accolade_from_student(accolade.id, student.student_id, delete_history=True) # type: ignore
+            assert error is None
+            assert result['accolade'].id == accolade.id # type: ignore
+            assert result['student'].student_id == student.student_id # type: ignore
+            accolade = Accolade.query.get(accolade.id) # type: ignore
+            assert student not in accolade.students # type: ignore
+            assert len(accolade.students) == 0 # type: ignore
+            accolade_history = AccoladeHistory.query.filter_by(accolade_id=accolade.id, student_id=student.student_id).first() # type: ignore
+            assert accolade_history is None
+        #TODO This might be wrong
