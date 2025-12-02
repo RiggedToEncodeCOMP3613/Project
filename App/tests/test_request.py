@@ -71,4 +71,32 @@ class RequestIntegrationTests(unittest.TestCase):
         assert fetched_request.hours == 5.0
         assert fetched_request.status == 'Pending'
 
-    
+    def test_delete_request_with_activity(self):
+        # Create a student and staff
+        student = Student.create_student("deletestudent", "delete@example.com", "deletepass")
+        staff = Staff("deletestaff", "deletestaff@example.com", "deletestaffpass")
+        db.session.add(staff)
+        db.session.commit()
+
+        # Create a request (which also creates an ActivityHistory)
+        request, message = create_request(student.student_id, "volunteer", staff.staff_id, 4.0, "2023-10-03")
+        assert request is not None
+        activity_id = request.activity_id
+        assert activity_id is not None
+
+        # Verify activity exists
+        activity = ActivityHistory.query.get(activity_id)
+        assert activity is not None
+
+        # Delete the request
+        success, delete_message = delete_request_entry(request.id)
+        assert success is True
+        assert "deleted successfully" in delete_message
+
+        # Verify request is deleted
+        deleted_request = RequestHistory.query.get(request.id)
+        assert deleted_request is None
+
+        # Verify activity is also deleted
+        deleted_activity = ActivityHistory.query.get(activity_id)
+        assert deleted_activity is None
