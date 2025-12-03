@@ -445,3 +445,80 @@ p {
 .modal .modal-footer .btn.red:hover {
     background-color: #d32f2f !important;
 }
+
+/* Student Stats Page Styling */
+.milestone-progress-bar {
+    background-color: var(--card-panel-bg) !important;
+    height: 16px !important;
+    border: 2px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+}
+
+.milestone-progress-fill {
+    background-color: var(--text-color) !important;
+    height: 100% !important;
+    transition: width 0.3s ease !important;
+}
+
+.milestone-progress-text {
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-top: 8px !important;
+    color: var(--secondary-text) !important;
+}
+
+.milestone-stats-card {
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    padding: 16px !important;
+    background-color: var(--card-panel-bg) !important;
+    border: 2px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.milestone-stats-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+.milestone-stats-icon {
+    width: 32px !important;
+    height: 32px !important;
+    border: 2px solid var(--border-color) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 4px !important;
+    background-color: var(--bg-color) !important;
+    transition: background-color 0.3s ease !important;
+}
+
+.milestone-stats-icon.achieved {
+    background-color: #4caf50 !important;
+    border-color: #4caf50 !important;
+}
+
+.milestone-stats-icon.achieved i {
+    color: white !important;
+    font-size: 20px !important;
+}
+
+.milestone-stats-title {
+    flex: 1 !important;
+    font-weight: 500 !important;
+}
+
+.milestone-stats-title.achieved {
+    color: var(--text-color) !important;
+}
+
+.milestone-stats-title.pending {
+    color: var(--secondary-text) !important;
+}
+
+.milestone-stats-hours {
+    color: var(--secondary-text) !important;
+}

@@ -119,11 +119,17 @@ def student_stats_accolades():
         return redirect('/login')
 
     total_hours = student.total_hours
-    all_milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    next_milestone = next((m for m in all_milestones if m > total_hours), None)
+    
+    # Fetch actual milestones from database
+    from App.models import Milestone
+    milestones = Milestone.query.order_by(Milestone.hours).all()
+    milestone_hours = [m.hours for m in milestones]
+    
+    # Find next milestone
+    next_milestone = next((m for m in milestone_hours if m > total_hours), None)
     accolades = student.check_accolades()
 
-    return render_template('student/all_stats.html', student=student, total_hours=total_hours, next_milestone=next_milestone, accolades=accolades)
+    return render_template('student/all_stats.html', student=student, total_hours=total_hours, next_milestone=next_milestone, accolades=accolades, milestones=milestones)
 
 @student_views.route('/student/stats/pending', methods=['GET'])
 @jwt_required()
@@ -467,9 +473,19 @@ def view_stats():
         flash('Student profile not found')
         return redirect('/login')
 
+    total_hours = student.total_hours
+    
+    # Fetch actual milestones from database
+    from App.models import Milestone
+    milestones = Milestone.query.order_by(Milestone.hours).all()
+    milestone_hours = [m.hours for m in milestones]
+    
+    # Find next milestone
+    next_milestone = next((m for m in milestone_hours if m > total_hours), None)
+    accolades = student.check_accolades()
     pending_requests = RequestHistory.query.filter_by(student_id=user.student_id, status='Pending').count()
 
-    return render_template('student/all_stats.html', student=student, pending_requests=pending_requests)
+    return render_template('student/all_stats.html', student=student, total_hours=total_hours, next_milestone=next_milestone, accolades=accolades, milestones=milestones, pending_requests=pending_requests)
 
 @student_views.route('/view_pending_requests', methods=['GET'])
 @jwt_required()
