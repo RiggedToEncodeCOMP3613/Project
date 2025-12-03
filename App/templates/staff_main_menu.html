@@ -1,0 +1,126 @@
+{% extends "layout.html" %}
+{% block title %}Staff Main Menu - Service Hours Tracker{% endblock %}
+{% block page %}Staff Dashboard{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1000px;">
+  <div class="card">
+    <div class="card-content">
+      <!-- Header Section -->
+      <div class="row" style="border-bottom: 2px solid #424242; padding-bottom: 16px; margin-bottom: 24px;">
+        <div class="col s8">
+          <h4 style="color: #424242; margin: 0;">Welcome, {{ staff.username }}</h4>
+          <p style="color: #9e9e9e; margin: 0;">Staff Dashboard</p>
+        </div>
+        <div class="col s4 right-align">
+          <a href="/logout" class="btn waves-effect waves-light logout-btn" style="background-color: transparent !important; border: 2px solid var(--border-color);">
+            <i class="material-icons left">exit_to_app</i>
+            Logout
+          </a>
+        </div>
+      </div>
+
+      <!-- Menu Grid -->
+      <div class="row">
+        <!-- View Pending Requests -->
+        <div class="col s6">
+          <a href="/staff/pending-requests" class="center-align menu-card" style="border: 4px solid var(--border-color); padding: 32px; margin-bottom: 16px; text-decoration: none; display: block; transition: background-color 0.3s, box-shadow 0.3s; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <div style="width: 80px; height: 80px; border: 2px solid var(--border-color); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px; position: relative;">
+              <i class="material-icons" style="font-size: 40px;">assignment_turned_in</i>
+              <div style="position: absolute; top: -8px; right: -8px; width: 32px; height: 32px; background-color: #ef5350; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; border-radius: 50%; color: white; font-weight: bold;">{{ pending_requests }}</div>
+            </div>
+            <h5 style="color: var(--text-color); margin: 0;">View Pending Requests</h5>
+            <p style="color: var(--secondary-text); margin: 8px 0 0;">Review student submissions</p>
+          </a>
+        </div>
+
+        <!-- Log Hours -->
+        <div class="col s6">
+          <a href="/staff/log-hours" class="center-align menu-card" style="border: 4px solid var(--border-color); padding: 32px; margin-bottom: 16px; text-decoration: none; display: block; transition: background-color 0.3s, box-shadow 0.3s; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <div style="width: 80px; height: 80px; border: 2px solid var(--border-color); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+              <i class="material-icons" style="font-size: 40px;">access_time</i>
+            </div>
+            <h5 style="color: var(--text-color); margin: 0;">Log Hours</h5>
+            <p style="color: var(--secondary-text); margin: 8px 0 0;">Manually add student hours</p>
+          </a>
+        </div>
+
+        <!-- Milestones -->
+        <div class="col s6">
+          <a href="/staff/milestones" class="center-align menu-card" style="border: 4px solid var(--border-color); padding: 32px; margin-bottom: 16px; text-decoration: none; display: block; transition: background-color 0.3s, box-shadow 0.3s; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <div style="width: 80px; height: 80px; border: 2px solid var(--border-color); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+              <i class="material-icons" style="font-size: 40px;">flag</i>
+            </div>
+            <h5 style="color: var(--text-color); margin: 0;">Milestones</h5>
+            <p style="color: var(--secondary-text); margin: 8px 0 0;">Manage milestones</p>
+          </a>
+        </div>
+
+        <!-- Accolades -->
+        <div class="col s6">
+          <a href="/staff/accolades" class="center-align menu-card" style="border: 4px solid var(--border-color); padding: 32px; margin-bottom: 16px; text-decoration: none; display: block; transition: background-color 0.3s, box-shadow 0.3s; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <div style="width: 80px; height: 80px; border: 2px solid var(--border-color); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+              <i class="material-icons" style="font-size: 40px;">emoji_events</i>
+            </div>
+            <h5 style="color: var(--text-color); margin: 0;">Accolades</h5>
+            <p style="color: var(--secondary-text); margin: 8px 0 0;">Manage & award accolades</p>
+          </a>
+        </div>
+
+        <!-- Profile -->
+        <div class="col s6">
+          <a href="/staff/profile" class="center-align menu-card" style="border: 4px solid var(--border-color); padding: 32px; margin-bottom: 16px; text-decoration: none; display: block; transition: background-color 0.3s, box-shadow 0.3s; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <div style="width: 80px; height: 80px; border: 2px solid var(--border-color); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+              <i class="material-icons" style="font-size: 40px;">person</i>
+            </div>
+            <h5 style="color: var(--text-color); margin: 0;">Profile</h5>
+            <p style="color: var(--secondary-text); margin: 8px 0 0;">Manage your account</p>
+          </a>
+        </div>
+
+        <!-- Student Leaderboard -->
+        <div class="col s6">
+          <a href="/staff/leaderboard" class="center-align menu-card" style="border: 4px solid var(--border-color); padding: 32px; margin-bottom: 16px; text-decoration: none; display: block; transition: background-color 0.3s, box-shadow 0.3s; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <div style="width: 80px; height: 80px; border: 2px solid var(--border-color); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+              <i class="material-icons" style="font-size: 40px;">leaderboard</i>
+            </div>
+            <h5 style="color: var(--text-color); margin: 0;">Student Leaderboard</h5>
+            <p style="color: var(--secondary-text); margin: 8px 0 0;">View student rankings</p>
+          </a>
+        </div>
+      </div>
+
+      <!-- System Overview -->
+      <div class="card-panel" style="border: 2px solid var(--border-color); margin-top: 32px;">
+        <h5 style="color: #424242; margin-bottom: 16px;">System Overview</h5>
+        <div class="row">
+          <div class="col s3 center-align">
+            <div class="stat-card" style="padding: 16px; border-radius: 4px;">
+              <div style="font-size: 24px; font-weight: bold; color: var(--text-color);">{{ total_students }}</div>
+              <div style="color: var(--secondary-text);">Active Students</div>
+            </div>
+          </div>
+          <div class="col s3 center-align">
+            <div class="stat-card" style="padding: 16px; border-radius: 4px; background-color: rgba(255, 152, 0, 0.1); border: 2px solid #ff9800;">
+              <div style="font-size: 24px; font-weight: bold; color: var(--text-color);">{{ pending_requests }}</div>
+              <div style="color: var(--secondary-text);">Pending Requests</div>
+            </div>
+          </div>
+          <div class="col s3 center-align">
+            <div class="stat-card" style="padding: 16px; border-radius: 4px;">
+              <div style="font-size: 24px; font-weight: bold; color: var(--text-color);">{{ total_logged_hours }}</div>
+              <div style="color: var(--secondary-text);">Total Logged Hours</div>
+            </div>
+          </div>
+          <div class="col s3 center-align">
+            <div class="stat-card" style="padding: 16px; border-radius: 4px;">
+              <div style="font-size: 24px; font-weight: bold; color: var(--text-color);">{{ total_accolades }}</div>
+              <div style="color: var(--secondary-text);">Active Accolades</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
