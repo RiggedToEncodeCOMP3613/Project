@@ -100,7 +100,34 @@ def student_stats():
     if user.role != 'student':
         flash('Access forbidden: Not a student')
         return redirect('/login')
-    return render_template('message.html', title="View Stats", message="View Stats page - Coming Soon!")
+    return render_template('student/view_stats_menu.html')
+
+@student_views.route('/student/stats/accolades', methods=['GET'])
+@jwt_required()
+def student_stats_accolades():
+    user = jwt_current_user
+    if user.role != 'student':
+        flash('Access forbidden: Not a student')
+        return redirect('/login')
+    return render_template('message.html', title="Accolades & Milestones", message="Accolades & Milestones page - Coming Soon!")
+
+@student_views.route('/student/stats/pending', methods=['GET'])
+@jwt_required()
+def student_stats_pending():
+    user = jwt_current_user
+    if user.role != 'student':
+        flash('Access forbidden: Not a student')
+        return redirect('/login')
+    return render_template('student/pending_requests.html')
+
+@student_views.route('/student/stats/history', methods=['GET'])
+@jwt_required()
+def student_stats_history():
+    user = jwt_current_user
+    if user.role != 'student':
+        flash('Access forbidden: Not a student')
+        return redirect('/login')
+    return render_template('student/request_history.html')
 
 @student_views.route('/student/profile', methods=['GET'])
 @jwt_required()
