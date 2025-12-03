@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, jsonify, request, send_from_directory, flash, redirect, url_for
 from flask_jwt_extended import jwt_required, current_user as jwt_current_user
-from App.models import Student, RequestHistory
+from App.models import Student, RequestHistory, User
+from App.database import db
 from.index import index_views
 from App.controllers.student_controller import get_all_students_json,fetch_accolades,create_hours_request
 
@@ -73,6 +74,49 @@ def student_profile():
                           total_hours=total_hours,
                           milestones_count=milestones_count,
                           accolades_count=accolades_count)
+
+@student_views.route('/student/change-username', methods=['GET', 'POST'])
+@jwt_required()
+def student_change_username():
+    user = jwt_current_user
+    if user.role != 'student':
+        flash('Access forbidden: Not a student')
+        return redirect('/login')
+
+    student = Student.query.get(user.student_id)
+    if not student:
+        flash('Student profile not found')
+        return redirect('/login')
+
+    if request.method == 'POST':
+        new_username = request.form.get('new_username')
+        password = request.form.get('password')
+
+        if not new_username or not password:
+            flash('All fields are required')
+            return redirect(request.url)
+
+        if not user.check_password(password):
+            flash('Incorrect password')
+            return redirect(request.url)
+
+        if len(new_username) < 3 or len(new_username) > 20:
+            flash('Username must be 3-20 characters long')
+            return redirect(request.url)
+
+        # Check if username already exists
+        existing = User.query.filter_by(username=new_username).first()
+        if existing:
+            flash('Username already taken')
+            return redirect(request.url)
+
+        # Update username
+        user.username = new_username
+        db.session.commit()
+        flash('Username changed successfully')
+        return redirect('/student/profile')
+
+    return render_template('student_change_username.html', student=student)
 
 @student_views.route('/student/leaderboard', methods=['GET'])
 @jwt_required()
