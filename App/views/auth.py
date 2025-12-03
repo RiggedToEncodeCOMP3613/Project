@@ -32,9 +32,10 @@ def identify_page():
 def login_action():
     data = request.form
     username_or_email = data['username']
+    selected_role = data.get('role')
     token = login(username_or_email, data['password'])
     if not token:
-        flash('Bad username or password given')
+        flash('Invalid Username/Email or Password')
         return redirect('/login')
 
     # Get user to determine redirect based on role
@@ -42,6 +43,12 @@ def login_action():
         user = User.query.filter_by(email=username_or_email).first()
     else:
         user = User.query.filter_by(username=username_or_email).first()
+
+    # Check if selected role matches user's role
+    if user.role != selected_role:
+        flash('Invalid Username/Email or Password')
+        return redirect('/login')
+
     if user.role == 'student':
         response = redirect('/student/main')
     elif user.role == 'staff':
@@ -73,7 +80,7 @@ def user_login_api():
   data = request.json
   token = login(data['username'], data['password'])
   if not token:
-    return jsonify(message='bad username or password given'), 401
+    return jsonify(message='Invalid Username/Email or Password'), 401
   response = jsonify(access_token=token)
   set_access_cookies(response, token)
   return response
