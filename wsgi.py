@@ -950,13 +950,25 @@ def search_accolade_command(accolade_id, staff_id, description, student_id):
             print("No accolades found matching the criteria.")
             return
 
+        # If only student_id is provided, display just the descriptions in a table
+        if student_id is not None and accolade_id is None and staff_id is None and description is None:
+            console = Console()
+            table = Table(title=f"Accolades for Student {student_id}")
+            table.add_column("Description", style="magenta")
+
+            for accolade in accolades:
+                table.add_row(accolade.description)
+
+            console.print(table)
+            return
+
         console = Console()
         table = Table(title="Accolade Search Results")
         table.add_column("ID", style="cyan", no_wrap=True)
         table.add_column("Description", style="magenta")
         table.add_column("Staff ID", style="green")
         table.add_column("Students Assigned", style="yellow")
-        
+
         for accolade in accolades:
             num_students = len(accolade.students) if hasattr(accolade, 'students') else 0
             table.add_row(
@@ -965,7 +977,7 @@ def search_accolade_command(accolade_id, staff_id, description, student_id):
                 str(accolade.staff_id),
                 str(num_students)
             )
-        
+
         console.print(table)
 
     except Exception as e:
@@ -1696,9 +1708,9 @@ test = AppGroup('test', help='Testing commands')
 @click.argument("type", default="all")
 def user_tests_command(type):
     if type == "unit":
-        sys.exit(pytest.main(["-k", "UserUnitTests or StudentUnitTests or StaffUnitTests or RequestUnitTests or LoggedHoursUnitTests"]))
+        sys.exit(pytest.main(["-k", "UserUnitTests or StudentUnitTests or StaffUnitTests or RequestUnitTests or LoggedHoursUnitTests or AccoladeUnitTests or MilestoneUnitTests"]))
     elif type == "int":
-        sys.exit(pytest.main(["-k", "UserIntegrationTests or StudentIntegrationTests or StaffIntegrationTests "]))
+        sys.exit(pytest.main(["-k", "UserIntegrationTests or StudentIntegrationTests or StaffIntegrationTests or AccoladeIntegrationTests or ActivityHistoryIntegrationTests or MilestoneIntegrationTests"]))
     else:
         sys.exit(pytest.main(["-k", "App"]))
 
