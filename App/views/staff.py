@@ -552,7 +552,7 @@ def log_hours_view():
     
 @staff_views.route("/profile")
 def profile_screen():
-    return render_template("staff/profilescreen.html", current_user=jwt_current_user)
+    return render_template("staff/profile.html", current_user=jwt_current_user)
     
 
 @staff_views.route('/staff/change_username', methods=['GET', 'POST'])
@@ -643,5 +643,5 @@ def staff_profile_view():
     if user.role != 'staff':
         flash('Access forbidden: Not a staff member', 'error')
         return redirect(url_for('index_views.index'))
-    return render_template('staff/profilescreen.html', current_user=user)
+    return render_template('staff/profile.html', current_user=user)
 
