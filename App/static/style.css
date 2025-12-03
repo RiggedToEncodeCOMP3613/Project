@@ -222,3 +222,226 @@ p {
     transform: translateY(-4px);
     box-shadow: 0 6px 16px rgba(0,0,0,0.15);
 }
+
+/* Milestones Table Styling */
+.milestones-table {
+    background-color: var(--card-bg) !important;
+    border: 2px solid var(--border-color) !important;
+}
+
+.milestones-header {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+}
+
+.milestones-header th {
+    padding: 16px !important;
+    text-align: left !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.milestones-header th:last-child {
+    text-align: center !important;
+}
+
+.milestone-row-even {
+    background-color: var(--card-panel-bg) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.milestone-row-odd {
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.milestone-row-even td,
+.milestone-row-odd td {
+    padding: 16px !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+.milestone-edit-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    border: 2px solid var(--border-color) !important;
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    text-decoration: none !important;
+    margin-right: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+}
+
+.milestone-edit-btn:hover {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+}
+
+.milestone-delete-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    border: 2px solid #ef5350 !important;
+    background-color: #ef5350 !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+}
+
+.milestone-delete-btn:hover {
+    background-color: #d32f2f !important;
+    border-color: #d32f2f !important;
+}
+
+.milestone-info-panel {
+    border: 2px solid var(--border-color) !important;
+    background-color: var(--card-panel-bg) !important;
+}
+
+.milestone-info-panel h5 {
+    color: var(--text-color) !important;
+}
+
+.milestone-info-panel p {
+    color: var(--secondary-text) !important;
+}
+
+/* Edit Milestone Form Styling */
+.form-label {
+    display: block !important;
+    color: var(--text-color) !important;
+    font-weight: 500 !important;
+    margin-bottom: 8px !important;
+}
+
+.form-input {
+    width: 100% !important;
+    padding: 12px !important;
+    border: 2px solid var(--border-color) !important;
+    box-sizing: border-box !important;
+    font-size: 16px !important;
+    color: var(--text-color) !important;
+    background-color: var(--card-bg) !important;
+    border-radius: 4px !important;
+    transition: border-color 0.3s ease !important;
+}
+
+.form-input:focus {
+    border-color: var(--text-color) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(66, 66, 66, 0.1) !important;
+}
+
+.form-help-text {
+    color: var(--secondary-text) !important;
+    margin: 8px 0 0 !important;
+    font-size: 14px !important;
+}
+
+/* Button Styling */
+.btn-primary {
+    flex: 1 !important;
+    padding: 12px 24px !important;
+    background-color: var(--btn-bg) !important;
+    color: var(--btn-text) !important;
+    border: none !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    transition: background-color 0.3s ease !important;
+    border-radius: 4px !important;
+    text-decoration: none !important;
+    text-align: center !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+}
+
+.btn-secondary {
+    flex: 1 !important;
+    padding: 12px 24px !important;
+    background-color: transparent !important;
+    color: var(--text-color) !important;
+    border: 2px solid var(--border-color) !important;
+    text-decoration: none !important;
+    text-align: center !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+    border-radius: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.btn-secondary:hover {
+    background-color: var(--border-color) !important;
+    color: var(--bg-color) !important;
+}
+
+/* Flash Message Styling */
+.flash-message-error {
+    background-color: #ffebee !important;
+    border-left: 4px solid #ef5350 !important;
+    color: #c62828 !important;
+}
+
+.flash-message-success {
+    background-color: #e8f5e9 !important;
+    border-left: 4px solid #4caf50 !important;
+    color: #2e7d32 !important;
+}
+
+/* Materialize Modal Theme Support */
+.modal {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+}
+
+.modal .modal-content {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+}
+
+.modal .modal-content h4 {
+    color: var(--text-color) !important;
+}
+
+.modal .modal-content p {
+    color: var(--text-color) !important;
+}
+
+.modal .modal-footer {
+    background-color: var(--card-panel-bg) !important;
+}
+
+.modal .modal-footer .btn-flat {
+    color: var(--text-color) !important;
+}
+
+.modal .modal-footer .btn-flat:hover {
+    background-color: var(--border-color) !important;
+    color: var(--bg-color) !important;
+}
+
+.modal .modal-footer .btn.red {
+    background-color: #ef5350 !important;
+    color: #ffffff !important;
+}
+
+.modal .modal-footer .btn.red:hover {
+    background-color: #d32f2f !important;
+}
