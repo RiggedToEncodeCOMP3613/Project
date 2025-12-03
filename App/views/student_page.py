@@ -26,7 +26,7 @@ def view_menu():
     milestones_count = len(student.check_for_milestones())
     accolades_count = len(student.check_accolades())
 
-    return render_template('studentMenu.html',
+    return render_template('student_menu.html',
                          student=student,
                          total_hours=total_hours,
                          pending_requests=pending_requests,
@@ -36,7 +36,7 @@ def view_menu():
 @student_page_views.route('/make_request', methods=['GET', 'POST'])
 def make_request():
     if request.method == 'GET':
-        return render_template('studentMakeRequest.html')
+        return render_template('student_make_request.html')
     
     if request.method == 'POST':
         try:
@@ -78,7 +78,7 @@ def make_request():
 @student_page_views.route('/view_stats_menu', methods=['GET'])
 def view_stats_menu():
     if request.method == 'GET':
-        return render_template('studentStatsMenu.html')     
+        return render_template('student_stats_menu.html')     
        
 @student_page_views.route('/view_stats', methods=['GET'])
 @jwt_required()
@@ -95,7 +95,7 @@ def view_stats():
 
     pending_requests = RequestHistory.query.filter_by(student_id=user.student_id, status='Pending').count()
 
-    return render_template('studentStatsMenu.html', student=student, pending_requests=pending_requests)
+    return render_template('student_stats_menu.html', student=student, pending_requests=pending_requests)
 
 @student_page_views.route('/view_pending_requests', methods=['GET'])
 def view_pending_requests():
@@ -103,7 +103,7 @@ def view_pending_requests():
     pending_requests = RequestHistory.query.filter(RequestHistory.status == 'Pending').all()
     len_requests = len(pending_requests) if pending_requests else 0
     
-    return render_template('studentPendingRequests.html', requests=pending_requests, len=len_requests)
+    return render_template('student_pending_requests.html', requests=pending_requests, len=len_requests)
 
 @student_page_views.route('/view_requests_history', methods=['GET'])
 def view_requests_history():
@@ -111,4 +111,4 @@ def view_requests_history():
     requests = RequestHistory.query.filter(RequestHistory.status == 'Approved' or RequestHistory.status == 'Denied').all()
     len_requests = len(requests) if requests else 0
     
-    return render_template('studentRequestHistory.html', requests=requests, len=len_requests)
+    return render_template('student_request_history.html', requests=requests, len=len_requests)
