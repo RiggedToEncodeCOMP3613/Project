@@ -1,6 +1,6 @@
 import { Screen } from '../App';
 import { WireframeContainer } from './WireframeContainer';
-import { FileText, BarChart3, User, LogOut } from 'lucide-react';
+import { FileText, BarChart3, User, LogOut, Trophy } from 'lucide-react';
 
 interface StudentMainMenuProps {
   onNavigate: (screen: Screen) => void;
@@ -61,6 +61,19 @@ export function StudentMainMenu({ onNavigate }: StudentMainMenuProps) {
             <div className="text-center">
               <h4 className="text-gray-800">Profile</h4>
               <p className="text-gray-600">Manage your account</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => onNavigate('leaderboard')}
+            className="border-4 border-gray-800 p-8 hover:bg-gray-50 flex flex-col items-center gap-4"
+          >
+            <div className="w-20 h-20 border-2 border-gray-800 flex items-center justify-center">
+              <Trophy className="w-10 h-10" />
+            </div>
+            <div className="text-center">
+              <h4 className="text-gray-800">Leaderboard</h4>
+              <p className="text-gray-600">View student rankings</p>
             </div>
           </button>
         </div>
