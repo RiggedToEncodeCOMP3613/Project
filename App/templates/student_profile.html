@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+{% block title %}Student Profile - Service Hours Tracker{% endblock %}
+{% block page %}Student Profile{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+  <div class="card">
+    <div class="card-content">
+      <!-- Back Button -->
+      <div style="margin-bottom: 24px;">
+        <a href="/student/main" class="btn waves-effect waves-light" style="background-color: transparent !important; color: var(--text-color) !important; border: 2px solid var(--border-color);">
+          <i class="material-icons left">arrow_back</i>
+          Back to Main Menu
+        </a>
+      </div>
+
+      <!-- Profile Header -->
+      <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 2px solid var(--border-color);">
+        <div style="width: 96px; height: 96px; border: 4px solid var(--border-color); display: flex; align-items: center; justify-content: center;">
+          <i class="material-icons" style="font-size: 48px; color: var(--secondary-text);">person</i>
+        </div>
+        <div>
+          <h3 style="color: var(--text-color); margin: 0;">{{ student.username }}</h3>
+          <p style="color: var(--secondary-text); margin: 8px 0;">{{ student.email }}</p>
+          <p style="color: var(--secondary-text); margin: 0;">Student ID: {{ student.student_id }}</p>
+        </div>
+      </div>
+
+      <!-- Account Settings -->
+      <div style="margin-bottom: 32px;">
+        <h4 style="color: var(--text-color); margin-bottom: 16px;">Account Settings</h4>
+        <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+
+          <a href="/student/change-username" class="profile-option" style="border: 2px solid var(--border-color); padding: 16px; text-decoration: none; display: flex; align-items: center; justify-content: space-between; transition: background-color 0.3s;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div style="width: 48px; height: 48px; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center;">
+                <i class="material-icons" style="font-size: 24px;">person</i>
+              </div>
+              <div>
+                <div style="color: var(--text-color); font-weight: bold;">Change Username</div>
+                <div style="color: var(--secondary-text);">Change your display name</div>
+              </div>
+            </div>
+            <i class="material-icons" style="color: var(--secondary-text);">chevron_right</i>
+          </a>
+
+          <a href="/student/change-email" class="profile-option" style="border: 2px solid var(--border-color); padding: 16px; text-decoration: none; display: flex; align-items: center; justify-content: space-between; transition: background-color 0.3s;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div style="width: 48px; height: 48px; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center;">
+                <i class="material-icons" style="font-size: 24px;">email</i>
+              </div>
+              <div>
+                <div style="color: var(--text-color); font-weight: bold;">Change Email</div>
+                <div style="color: var(--secondary-text);">Change your email address</div>
+              </div>
+            </div>
+            <i class="material-icons" style="color: var(--secondary-text);">chevron_right</i>
+          </a>
+
+          <a href="/student/change-password" class="profile-option" style="border: 2px solid var(--border-color); padding: 16px; text-decoration: none; display: flex; align-items: center; justify-content: space-between; transition: background-color 0.3s;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div style="width: 48px; height: 48px; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center;">
+                <i class="material-icons" style="font-size: 24px;">lock</i>
+              </div>
+              <div>
+                <div style="color: var(--text-color); font-weight: bold;">Change Password</div>
+                <div style="color: var(--secondary-text);">Change your password</div>
+              </div>
+            </div>
+            <i class="material-icons" style="color: var(--secondary-text);">chevron_right</i>
+          </a>
+
+        </div>
+      </div>
+
+      <!-- Additional Information -->
+      <div>
+        <h4 style="color: var(--text-color); margin-bottom: 16px;">Additional Information</h4>
+        <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+
+          <div class="stat-card" style="padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--secondary-text);">Total Hours</span>
+            <span style="color: var(--text-color); font-weight: bold;">{{ total_hours }} hours</span>
+          </div>
+
+          <div class="stat-card" style="padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--secondary-text);">Milestones Earned</span>
+            <span style="color: var(--text-color); font-weight: bold;">{{ milestones_count }}</span>
+          </div>
+
+          <div class="stat-card" style="padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--secondary-text);">Accolades Earned</span>
+            <span style="color: var(--text-color); font-weight: bold;">{{ accolades_count }}</span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

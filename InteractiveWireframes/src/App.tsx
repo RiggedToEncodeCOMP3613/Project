@@ -18,9 +18,10 @@ import { CreateMilestone } from './components/StaffMilestonesCreate';
 import { AccoladesScreen } from './components/StaffAccolades';
 import { CreateAccolade } from './components/StaffAccoladesCreate';
 import { AwardAccolade } from './components/StaffAccoladesAward';
+import { Leaderboard } from './components/Leaderboard';
 import { Navigation } from './components/Navigation';
 
-export type Screen = 
+export type Screen =
   | 'login'
   | 'student-main'
   | 'make-request'
@@ -28,6 +29,7 @@ export type Screen =
   | 'view-stats-accolades'
   | 'view-stats-pending'
   | 'view-stats-history'
+  | 'leaderboard'
   | 'student-profile'
   | 'update-username'
   | 'update-email'
@@ -64,6 +66,8 @@ export default function App() {
         return <ViewStatsPending onNavigate={setCurrentScreen} />;
       case 'view-stats-history':
         return <ViewStatsHistory onNavigate={setCurrentScreen} />;
+      case 'leaderboard':
+        return <Leaderboard onNavigate={setCurrentScreen} />;
       case 'student-profile':
         return <StudentProfile onNavigate={setCurrentScreen} />;
       case 'update-username':
