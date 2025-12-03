@@ -694,6 +694,15 @@ p {
     overflow-y: auto !important;
 }
 
+.student-cards-container-3col {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px !important;
+    padding: 16px !important;
+    max-height: 500px !important;
+    overflow-y: auto !important;
+}
+
 .student-card {
     border: 1px solid var(--border-color) !important;
     background-color: var(--card-panel-bg) !important;
@@ -737,6 +746,14 @@ p {
     font-size: 12px !important;
     font-weight: 500 !important;
     text-align: center !important;
+}
+
+.student-extra-info {
+    color: var(--secondary-text) !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    text-align: center !important;
+    margin-top: 4px !important;
 }
 
 .student-card-footer {

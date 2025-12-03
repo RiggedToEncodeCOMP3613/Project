@@ -50,36 +50,32 @@
             />
           </div>
 
-          <!-- Student Selection Table -->
-          <div class="student-selection-table">
-            <div class="student-table-header">
-              <div>Student Name</div>
-              <div>Student ID</div>
-              <div>Total Hours</div>
-              <div>Current Accolades</div>
-              <div style="text-align: center;">Select</div>
+          <!-- Student Selection Grid -->
+          <div class="student-selection-grid" id="award-student-grid">
+            <div class="student-search-header">
+              <div>Student List - Click to Select</div>
             </div>
             
-            {% for student in students %}
-            <div class="student-row {% if loop.index % 2 == 0 %}student-row-even{% else %}student-row-odd{% endif %}" 
-                 data-student-name="{{ student.username.lower() }}" 
-                 data-student-id="{{ student.student_id }}"
-                 data-student-accolades="{{ student.accolades | join('|') }}">
-              <div class="student-name">{{ student.username }}</div>
-              <div class="student-id">{{ student.student_id }}</div>
-              <div class="student-hours">{{ student.total_hours | default(0) }} hrs</div>
-              <div class="student-accolades">{{ student.accolade_count | default(0) }}</div>
-              <div class="student-select-cell">
-                <button 
-                  type="button"
-                  class="student-select-btn"
-                  onclick="selectStudent('{{ student.student_id }}', '{{ student.username }}', '{{ student.total_hours | default(0) }}', '{{ student.accolades | join('|') }}')"
-                >
-                  Select
-                </button>
+            <div class="student-cards-container-3col">
+              {% for student in students %}
+              <div class="student-card" 
+                   data-student-name="{{ student.username.lower() }}" 
+                   data-student-id="{{ student.student_id }}"
+                   data-student-accolades="{{ student.accolades | join('|') }}"
+                   onclick="selectStudent('{{ student.student_id }}', '{{ student.username }}', '{{ student.total_hours | default(0) }}', '{{ student.accolades | join('|') }}')">
+                <div class="student-card-header">
+                  <div class="student-name">{{ student.username }}</div>
+                </div>
+                <div class="student-card-body">
+                  <div class="student-id">ID: {{ student.student_id }}</div>
+                  <div class="student-extra-info">{{ student.total_hours | default(0) }} hrs • {{ student.accolade_count | default(0) }} accolades</div>
+                </div>
+                <div class="student-card-footer">
+                  <span class="select-indicator">Click to Select</span>
+                </div>
               </div>
+              {% endfor %}
             </div>
-            {% endfor %}
           </div>
         </div>
 
@@ -159,23 +155,23 @@
       <script>
         function filterStudents() {
           const searchTerm = document.getElementById('student-search').value.toLowerCase();
-          const rows = document.querySelectorAll('.student-row');
+          const cards = document.querySelectorAll('.student-card');
           
           if (searchTerm.length >= 1) {
-            rows.forEach(row => {
-              const studentId = row.getAttribute('data-student-id').toLowerCase();
-              const name = row.getAttribute('data-student-name').toLowerCase();
+            cards.forEach(card => {
+              const studentId = card.getAttribute('data-student-id').toLowerCase();
+              const name = card.getAttribute('data-student-name').toLowerCase();
               
               if (studentId.includes(searchTerm) || name.includes(searchTerm)) {
-                row.classList.remove('hidden');
+                card.classList.remove('hidden');
               } else {
-                row.classList.add('hidden');
+                card.classList.add('hidden');
               }
             });
           } else {
-            // Show all students when search is cleared or less than 2 characters
-            rows.forEach(row => {
-              row.classList.remove('hidden');
+            // Show all students when search is cleared or less than 1 character
+            cards.forEach(card => {
+              card.classList.remove('hidden');
             });
           }
         }
