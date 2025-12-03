@@ -51,13 +51,17 @@ body {
 }
 
 .input-field input[type=text],
-.input-field input[type=password] {
+.input-field input[type=password],
+.input-field input[type=date],
+.input-field input[type=number] {
     border-bottom: 1px solid var(--border-color) !important;
     color: var(--text-color) !important;
 }
 
 .input-field input[type=text]:focus,
-.input-field input[type=password]:focus {
+.input-field input[type=password]:focus,
+.input-field input[type=date]:focus,
+.input-field input[type=number]:focus {
     border-bottom: 2px solid var(--text-color) !important;
     box-shadow: 0 1px 0 0 var(--text-color) !important;
 }
@@ -69,6 +73,14 @@ body {
 .btn {
     background-color: var(--btn-bg) !important;
     color: var(--btn-text) !important;
+}
+
+/* Transparent outline buttons */
+.btn[style*="background-color: transparent"],
+.btn[style*="background-color: transparent !important"] {
+    background-color: transparent !important;
+    color: var(--text-color) !important;
+    border: 2px solid var(--border-color) !important;
 }
 
 h4, h5 {
