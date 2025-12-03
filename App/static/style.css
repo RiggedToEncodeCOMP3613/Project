@@ -1,3 +1,132 @@
 html {
     padding: 0;
 }
+
+/* Theme Variables */
+:root {
+    --bg-color: #ffffff;
+    --text-color: #424242;
+    --card-bg: #ffffff;
+    --border-color: #424242;
+    --secondary-text: #9e9e9e;
+    --btn-bg: #424242;
+    --btn-text: #ffffff;
+    --card-panel-bg: #f5f5f5;
+}
+
+.dark-theme {
+    --bg-color: #121212;
+    --text-color: #ffffff;
+    --card-bg: #1e1e1e;
+    --border-color: #ffffff;
+    --secondary-text: #cccccc;
+    --btn-bg: #ffffff;
+    --btn-text: #121212;
+    --card-panel-bg: #2e2e2e;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.card {
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+.card .card-content {
+    color: var(--text-color) !important;
+}
+
+.input-field label {
+    color: var(--secondary-text) !important;
+}
+
+.input-field input[type=text]:focus + label,
+.input-field input[type=password]:focus + label {
+    color: var(--text-color) !important;
+}
+
+.input-field input[type=text],
+.input-field input[type=password] {
+    border-bottom: 1px solid var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+.input-field input[type=text]:focus,
+.input-field input[type=password]:focus {
+    border-bottom: 2px solid var(--text-color) !important;
+    box-shadow: 0 1px 0 0 var(--text-color) !important;
+}
+
+.card-panel {
+    background-color: var(--card-panel-bg) !important;
+}
+
+.btn {
+    background-color: var(--btn-bg) !important;
+    color: var(--btn-text) !important;
+}
+
+h4, h5 {
+    color: var(--text-color) !important;
+}
+
+p {
+    color: var(--secondary-text) !important;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: var(--btn-bg);
+    color: var(--btn-text);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    transition: all 0.3s;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+.theme-toggle i {
+    font-size: 24px;
+}
+
+/* Menu Card Hover Effect */
+.menu-card:hover {
+    background-color: rgba(255, 255, 0, 0.1) !important;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15) !important;
+    transform: translateY(-4px);
+}
+
+/* Stat Card */
+.stat-card {
+    background-color: var(--card-panel-bg);
+    border: 2px solid var(--border-color);
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+/* Logout Button */
+.logout-btn {
+    color: var(--text-color) !important;
+}
