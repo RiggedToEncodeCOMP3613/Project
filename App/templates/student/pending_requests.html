@@ -35,7 +35,7 @@
           <thead>
             <tr style="background-color: var(--card-panel-bg);">
               <th style="padding: 12px; text-align: left; color: var(--text-color);">Service</th>
-              <th style="padding: 12px; text-align: left; color: var(--text-color);">Date</th>
+              <th style="padding: 12px; text-align: left; color: var(--text-color);">Submitted</th>
               <th style="padding: 12px; text-align: left; color: var(--text-color);">Hours</th>
               <th style="padding: 12px; text-align: left; color: var(--text-color);">Status</th>
               <th style="padding: 12px; text-align: left; color: var(--text-color);">Supervisor</th>
@@ -45,7 +45,7 @@
             {% for request in requests %}
             <tr style="background-color: var(--bg-color);">
               <td style="padding: 12px; color: var(--text-color); border-bottom: 1px solid var(--border-color);">{{ request.service }}</td>
-              <td style="padding: 12px; color: var(--text-color); border-bottom: 1px solid var(--border-color);">{{ request.date_completed }}</td>
+              <td style="padding: 12px; color: var(--text-color); border-bottom: 1px solid var(--border-color);">{{ request.timestamp }}</td>
               <td style="padding: 12px; color: var(--text-color); border-bottom: 1px solid var(--border-color);">{{ request.hours }}</td>
               <td style="padding: 12px; border-bottom: 1px solid var(--border-color);">
                 <span style="background-color: rgba(255, 255, 0, 0.1); color: var(--text-color); padding: 4px 8px; border-radius: 4px; font-size: 12px;">{{ request.status }}</span>

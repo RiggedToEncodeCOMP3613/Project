@@ -5,7 +5,7 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import  FileStorage
 
-from App.database import init_db
+from App.database import init_db, create_db
 from App.config import load_config
 
 
@@ -31,11 +31,12 @@ def create_app(overrides={}):
     configure_uploads(app, photos)
     add_views(app)
     init_db(app)
+    app.app_context().push()
+    create_db()  # Create tables if they don't exist
     jwt = setup_jwt(app)
     setup_admin(app)
     @jwt.invalid_token_loader
     @jwt.unauthorized_loader
     def custom_unauthorized_response(error):
         return render_template('401.html', error=error), 401
-    app.app_context().push()
     return app
