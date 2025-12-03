@@ -1,0 +1,154 @@
+{% extends "layout.html" %}
+{% block title %}Pending Requests - Service Hours Tracker{% endblock %}
+{% block page %}Pending Requests{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1000px;">
+  <div class="card">
+    <div class="card-content">
+      <!-- Header Section -->
+      <div class="row" style="border-bottom: 2px solid #424242; padding-bottom: 16px; margin-bottom: 24px;">
+        <div class="col s8">
+          <h4 style="color: #424242; margin: 0;">Pending Requests</h4>
+          <p style="color: #9e9e9e; margin: 0;">Review and manage student hour submissions</p>
+        </div>
+        <div class="col s4 right-align">
+          <a href="/staff/main" class="btn waves-effect waves-light" style="background-color: transparent !important; border: 2px solid var(--border-color); color: var(--text-color);">
+            <i class="material-icons left">arrow_back</i>
+            Back to Menu
+          </a>
+        </div>
+      </div>
+
+      <!-- Stats Summary -->
+      <div class="row" style="margin-bottom: 24px;">
+        <div class="col s12">
+          <div class="card-panel" style="border: 2px solid var(--border-color); background-color: rgba(255, 152, 0, 0.05);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <i class="material-icons" style="color: #ff9800;">schedule</i>
+              <div>
+                <h5 style="color: var(--text-color); margin: 0;">{{ requests|length }} Pending Request{{ '' if requests|length == 1 else 's' }}</h5>
+                <p style="color: var(--secondary-text); margin: 0;">Awaiting your review and approval</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Requests List -->
+      {% if requests %}
+      <div style="padding: 0;">
+        <h5 style="color: var(--text-color); margin-bottom: 16px;">Pending Requests</h5>
+        {% for item in requests %}
+        <div class="card-panel" style="border: 2px solid var(--border-color); margin-bottom: 16px; padding: 20px;">
+          <div class="row" style="margin-bottom: 0;">
+            <div class="col s8">
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <i class="material-icons" style="color: var(--text-color);">person</i>
+                <h6 style="color: var(--text-color); margin: 0; font-weight: bold;">{{ item.student.username }}</h6>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <i class="material-icons" style="color: var(--text-color);">work</i>
+                <p style="color: var(--text-color); margin: 0;">{{ item.request.service }}</p>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <i class="material-icons" style="color: var(--text-color);">access_time</i>
+                <p style="color: var(--text-color); margin: 0;">{{ item.request.hours }} hours</p>
+                <span style="margin-left: 16px; color: var(--secondary-text);">on {{ item.request.date_completed }}</span>
+              </div>
+            </div>
+            <div class="col s4 right-align">
+              <div style="margin-bottom: 12px;">
+                <span style="background-color: rgba(255, 152, 0, 0.1); color: #ff9800; padding: 4px 8px; border-radius: 4px; font-size: 12px; text-transform: uppercase; font-weight: bold;">{{ item.request.status }}</span>
+              </div>
+              <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button onclick="approveRequest({{ item.request.id }})" class="btn waves-effect waves-light" style="background-color: #4caf50 !important;">
+                  <i class="material-icons left">check</i>
+                  Approve
+                </button>
+                <button onclick="denyRequest({{ item.request.id }})" class="btn waves-effect waves-light" style="background-color: #f44336 !important;">
+                  <i class="material-icons left">close</i>
+                  Deny
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <!-- No Requests State -->
+      <div style="text-align: center; color: var(--secondary-text); padding: 48px 16px;">
+        <i class="material-icons" style="font-size: 64px; color: var(--secondary-text); margin-bottom: 16px;">check_circle</i>
+        <h5 style="color: var(--text-color);">All Caught Up!</h5>
+        <p>No pending requests at this time. Students will appear here when they submit hours for approval.</p>
+      </div>
+      {% endif %}
+
+      <!-- Instructions -->
+      <div class="card-panel" style="border: 2px solid var(--border-color); margin-top: 32px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+          <i class="material-icons" style="color: var(--text-color);">info</i>
+          <h5 style="color: var(--text-color); margin: 0;">How to Handle Requests</h5>
+        </div>
+        <div style="color: var(--secondary-text);">
+          <p style="margin: 8px 0;"><strong>Approve:</strong> If the student's service hours are legitimate and accurate</p>
+          <p style="margin: 8px 0;"><strong>Deny:</strong> If there are issues with the submission (incorrect hours, service details, etc.)</p>
+          <p style="margin: 8px 0;">Approved requests will automatically update the student's total hours and check for milestone achievements.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript for request actions -->
+<script>
+function approveRequest(requestId) {
+  if (confirm('Are you sure you want to approve this request?')) {
+    fetch('/api/accept_request', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ request_id: requestId })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.message === 'Request accepted') {
+        location.reload();
+      } else {
+        alert('Error: ' + data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred while processing the request.');
+    });
+  }
+}
+
+function denyRequest(requestId) {
+  if (confirm('Are you sure you want to deny this request?')) {
+    fetch('/api/deny_request', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ request_id: requestId })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.message === 'Request denied') {
+        location.reload();
+      } else {
+        alert('Error: ' + data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred while processing the request.');
+    });
+  }
+}
+</script>
+{% endblock %}
