@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, jsonify, request, send_from_directory, flash, redirect, url_for
+import traceback
 from flask_jwt_extended import jwt_required, current_user as jwt_current_user
 from App.models import Student, RequestHistory, LoggedHoursHistory, Staff
 from App.controllers.leaderboard_controller import generate_leaderboard
@@ -501,7 +502,8 @@ def accept_request_action():
         result = approve_command.execute(request_id=data['request_id'])
         return jsonify(message='Request accepted'), 200
     except Exception as e:
-        return jsonify(message=f'Error approving request: {str(e)}'), 500
+        print(traceback.format_exc())  # Log full stack trace on the server
+        return jsonify(message='An internal error has occurred.'), 500
 
 @staff_views.route('/api/deny_request', methods=['PUT'])
 @jwt_required()
@@ -531,7 +533,8 @@ def deny_request_action():
         result = deny_command.execute(request_id=data['request_id'])
         return jsonify(message='Request denied'), 200
     except Exception as e:
-        return jsonify(message=f'Error denying request: {str(e)}'), 500
+        print(traceback.format_exc())  # Log full stack trace on the server
+        return jsonify(message='An internal error has occurred.'), 500
 
 @staff_views.route('/api/delete_request', methods=['DELETE'])
 @jwt_required()
