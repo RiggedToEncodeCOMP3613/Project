@@ -36,6 +36,47 @@ def staff_main_menu():
                          total_logged_hours=total_logged_hours,
                          total_accolades=total_accolades)
 
+@staff_views.route('/staff/milestones', methods=['GET'])
+@jwt_required()
+def staff_milestones():
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+
+    from App.models import Milestone, MilestoneHistory
+    milestones = Milestone.query.order_by(Milestone.hours).all()
+    
+    # Count students who achieved each milestone
+    for milestone in milestones:
+        milestone.student_count = MilestoneHistory.query.filter_by(milestone_id=milestone.id).count()
+
+    return render_template('staff_milestones.html', milestones=milestones)
+
+@staff_views.route('/staff/delete-milestone/<int:milestone_id>', methods=['POST'])
+@jwt_required()
+def delete_milestone(milestone_id):
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+
+    from App.controllers.milestone_controller import delete_milestone as delete_milestone_controller
+    from App.models import Milestone
+    
+    milestone = Milestone.query.get(milestone_id)
+    if not milestone:
+        flash('Milestone not found', 'error')
+        return redirect('/staff/milestones')
+    
+    try:
+        delete_milestone_controller(milestone_id, delete_history=True)
+        flash(f'Milestone ({milestone.hours} hours) deleted successfully', 'success')
+    except Exception as e:
+        flash(f'Error deleting milestone: {str(e)}', 'error')
+    
+    return redirect('/staff/milestones')
+
 @staff_views.route('/staff/leaderboard', methods=['GET'])
 @jwt_required()
 def staff_leaderboard():
