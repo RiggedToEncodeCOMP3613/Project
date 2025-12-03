@@ -135,6 +135,11 @@ class Staff(User):
         db.session.add(activity)
         db.session.flush()  # Flush to get the activity ID without committing
         
+        # Add student to accolade's students relationship
+        student = Student.query.get(student_id)
+        if student and student not in accolade.students:
+            accolade.students.append(student)
+        
         # Create AccoladeHistory entry
         accolade_history = AccoladeHistory(
             accolade_id=accolade_id,

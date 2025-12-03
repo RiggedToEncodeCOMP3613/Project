@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+{% block title %}Request History - Service Hours Tracker{% endblock %}
+{% block page %}Request History{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1200px;">
+  <div class="card">
+    <div class="card-content">
+      <!-- Back Button -->
+      <div style="margin-bottom: 24px;">
+        <a href="/student/stats" class="btn waves-effect waves-light" style="background-color: transparent !important; color: var(--text-color) !important; border: 2px solid var(--border-color);">
+          <i class="material-icons left">arrow_back</i>
+          Back to Stats Menu
+        </a>
+      </div>
+
+      <h4 style="color: var(--text-color); margin-bottom: 24px;">Request History</h4>
+
+      <style>
+        .request-row:hover {
+          background-color: rgba(255, 255, 0, 0.1) !important;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+          transition: all 0.2s ease;
+        }
+      </style>
+
+      <!-- Search and Filter -->
+      <div class="row" style="margin-bottom: 24px;">
+        <div class="col s12" style="margin-bottom: 12px;">
+          <input type="text" id="searchInput" placeholder="Search by activity name..." style="border: 2px solid var(--border-color); padding: 6px 12px; width: calc(100% - 16px); border-radius: 4px; background-color: var(--bg-color); color: var(--text-color); font-size: 14px;">
+        </div>
+        <div class="col s12">
+          <select id="statusFilter" style="border: 2px solid var(--border-color); padding: 6px 12px; width: calc(100% - 16px); border-radius: 4px; background-color: var(--bg-color); color: var(--text-color); font-size: 14px;">
+            <option value="">All</option>
+            <option value="Approved">Approved</option>
+            <option value="Denied">Denied</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Requests Table -->
+      <div style="border: 4px solid var(--border-color); border-radius: 8px; overflow: hidden;">
+        <table class="requests-table" style="width: 100%; border-collapse: collapse;">
+          <thead style="background-color: var(--card-panel-bg);">
+            <tr>
+              <th style="padding: 16px; text-align: left; color: var(--text-color); font-weight: 600; border-bottom: 2px solid var(--border-color);">Service</th>
+              <th style="padding: 16px; text-align: left; color: var(--text-color); font-weight: 600; border-bottom: 2px solid var(--border-color);">Date</th>
+              <th style="padding: 16px; text-align: left; color: var(--text-color); font-weight: 600; border-bottom: 2px solid var(--border-color);">Completed Hours</th>
+              <th style="padding: 16px; text-align: left; color: var(--text-color); font-weight: 600; border-bottom: 2px solid var(--border-color);">Status</th>
+              <th style="padding: 16px; text-align: left; color: var(--text-color); font-weight: 600; border-bottom: 2px solid var(--border-color);">Supervisor ID</th>
+              <th style="padding: 16px; text-align: left; color: var(--text-color); font-weight: 600; border-bottom: 2px solid var(--border-color);">Date Responded</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if requests %}
+              {% for request in requests %}
+              <tr class="request-row" style="background-color: var(--bg-color); border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 16px; color: var(--text-color);">{{ request.service }}</td>
+                <td style="padding: 16px; color: var(--text-color);">{{ request.date_completed }}</td>
+                <td style="padding: 16px; color: var(--text-color);">{{ request.hours }}</td>
+                <td style="padding: 16px;"><span class="status-badge" style="background-color: {% if request.status == 'Approved' %}#4caf50{% elif request.status == 'Denied' %}#f44336{% else %}#ff9800{% endif %}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">{{ request.status }}</span></td>
+                <td style="padding: 16px; color: var(--text-color);">{{ request.staff_id }}</td>
+                <td style="padding: 16px; color: var(--text-color);">{{ request.date_responded }}</td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr style="background-color: var(--bg-color);">
+                <td colspan="6" style="text-align: center; padding: 32px; color: var(--secondary-text);">No requests found.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const searchInput = document.getElementById('searchInput');
+const statusFilter = document.getElementById('statusFilter');
+const table = document.querySelector('.requests-table tbody');
+const rows = table.getElementsByTagName('tr');
+
+function filterTable() {
+  const searchText = searchInput.value.toLowerCase();
+  const statusValue = statusFilter.value;
+
+  for (let i = 0; i < rows.length; i++) {
+    const cells = rows[i].getElementsByTagName('td');
+    if (cells.length === 0) continue; // skip "No requests" row
+
+    const serviceText = cells[0].textContent.toLowerCase();
+    const statusText = cells[3].textContent;
+
+    const matchesSearch = serviceText.includes(searchText);
+    const matchesStatus = statusValue === "" || statusText === statusValue;
+
+    if (matchesSearch && matchesStatus) {
+      rows[i].style.display = "";
+    } else {
+      rows[i].style.display = "none";
+    }
+  }
+}
+
+// Event listeners
+searchInput.addEventListener('input', filterTable);
+statusFilter.addEventListener('change', filterTable);
+</script>
+{% endblock %}

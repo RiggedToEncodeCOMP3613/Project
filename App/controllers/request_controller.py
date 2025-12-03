@@ -27,7 +27,7 @@ def create_request(student_id, service, staff_id, hours, date_completed):
         return None, f"Error creating request: {str(e)}"
 
 
-def search_requests(student_id=None, service=None, date=None):
+def search_requests(student_id=None, service=None, date=None, staff_id=None, status=None):
     from datetime import datetime, timedelta
 
     try:
@@ -38,6 +38,21 @@ def search_requests(student_id=None, service=None, date=None):
             if not student:
                 return None, f"Student with ID {student_id} not found."
             query = query.filter_by(student_id=student_id)
+
+        # Filter by staff_id
+        if staff_id is not None:
+            staff = Staff.query.get(staff_id)
+            if not staff:
+                return None, f"Staff with ID {staff_id} not found."
+            query = query.filter_by(staff_id=staff_id)
+
+        # Filter by status (case-insensitive)
+        if status is not None:
+            valid_statuses = ["pending", "approved", "denied"]
+            status_lower = status.lower()
+            if status_lower not in valid_statuses:
+                return None, f"Invalid status '{status}'. Must be one of: Pending, Approved, Denied."
+            query = query.filter(RequestHistory.status.ilike(status_lower))
 
         # Filter by service (partial match, case-insensitive)
         if service is not None:

@@ -23,11 +23,11 @@
           <div style="color: var(--text-color); font-size: 48px; font-weight: bold;">{{ total_hours }}</div>
           <div style="color: var(--secondary-text); padding-bottom: 8px;">hours completed</div>
         </div>
-        {% if next_milestone %}
-        <div style="background-color: var(--card-panel-bg); height: 16px; border: 2px solid var(--border-color); border-radius: 8px; overflow: hidden;">
-          <div style="background-color: var(--text-color); height: 100%; width: {{ (total_hours / next_milestone * 100)|round }}%;"></div>
+        {% if next_milestone and milestones %}
+        <div class="milestone-progress-bar">
+          <div class="milestone-progress-fill" data-progress="{{ (total_hours / next_milestone * 100)|round }}"></div>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-top: 8px; color: var(--secondary-text);">
+        <div class="milestone-progress-text">
           <span>0 hours</span>
           <span>Next Milestone: {{ next_milestone }} hours</span>
         </div>
@@ -41,23 +41,26 @@
           <h5 style="color: var(--text-color); margin: 0;">Milestones</h5>
         </div>
         <div style="display: flex; flex-direction: column; gap: 12px;">
-          {% set all_milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100] %}
-          {% for m_hours in all_milestones %}
-          {% set achieved = total_hours >= m_hours %}
-          <div class="milestone-card" style="display: flex; align-items: center; gap: 16px; padding: 16px; background-color: var(--card-panel-bg); border: 2px solid var(--border-color); border-radius: 8px;">
-            <div style="width: 32px; height: 32px; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; border-radius: 4px; background-color: {% if achieved %}#4caf50{% else %}var(--bg-color){% endif %};">
-              {% if achieved %}
-              <i class="material-icons" style="color: white; font-size: 20px;">check</i>
-              {% endif %}
-            </div>
-            <div style="flex: 1;">
-              <div style="color: {% if achieved %}var(--text-color){% else %}var(--secondary-text){% endif %}; font-weight: 500;">
-                {{ m_hours }} Hours Milestone
+          {% if milestones %}
+            {% for milestone in milestones %}
+            {% set achieved = total_hours >= milestone.hours %}
+            <div class="milestone-stats-card" data-achieved="{{ achieved|lower }}">
+              <div class="milestone-stats-icon {% if achieved %}achieved{% endif %}">
+                {% if achieved %}
+                <i class="material-icons">check</i>
+                {% endif %}
               </div>
+              <div class="milestone-stats-title {% if achieved %}achieved{% else %}pending{% endif %}">
+                {{ milestone.hours }} Hours Milestone
+              </div>
+              <div class="milestone-stats-hours">{{ milestone.hours }} hrs</div>
             </div>
-            <div style="color: var(--secondary-text);">{{ m_hours }} hrs</div>
-          </div>
-          {% endfor %}
+            {% endfor %}
+          {% else %}
+            <div style="text-align: center; color: var(--secondary-text); padding: 32px;">
+              No milestones configured yet. Contact your coordinator to set up milestones!
+            </div>
+          {% endif %}
         </div>
       </div>
 
@@ -68,14 +71,16 @@
           <h5 style="color: var(--text-color); margin: 0;">Accolades Earned</h5>
         </div>
         {% if accolades %}
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+        <div class="accolade-grid">
           {% for accolade in accolades %}
-          <div class="accolade-card" style="border: 2px solid var(--border-color); padding: 16px; background-color: rgba(255, 255, 0, 0.1); border-radius: 8px; text-align: center;">
-            <div style="width: 100%; height: 80px; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; border-radius: 4px;">
-              <i class="material-icons" style="font-size: 32px; color: var(--text-color);">emoji_events</i>
+          <div class="accolade-option" style="cursor: default; min-height: 100px;">
+            <div class="accolade-icon">
+              <i class="material-icons">emoji_events</i>
             </div>
-            <div style="color: var(--text-color); font-weight: 500; margin-bottom: 4px;">{{ accolade.description.split(': ', 1)[1] if ':' in accolade.description else accolade.description }}</div>
-            <div style="color: var(--secondary-text); font-size: 12px;">Awarded</div>
+            <div class="accolade-description">
+              {{ accolade.description.split(': ', 1)[1] if ':' in accolade.description else accolade.description }}
+              <div style="color: var(--secondary-text); font-size: 12px; margin-top: 4px;">Awarded</div>
+            </div>
           </div>
           {% endfor %}
         </div>
@@ -89,4 +94,15 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set progress bar width
+    const progressFill = document.querySelector('.milestone-progress-fill');
+    if (progressFill) {
+        const progress = progressFill.getAttribute('data-progress');
+        progressFill.style.width = progress + '%';
+    }
+});
+</script>
 {% endblock %}

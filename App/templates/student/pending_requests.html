@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+{% block title %}View Pending Requests - Service Hours Tracker{% endblock %}
+{% block page %}View Pending Requests{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+  <div class="card">
+    <div class="card-content">
+      <!-- Back Button -->
+      <div style="margin-bottom: 24px;">
+        <a href="/student/stats" class="btn waves-effect waves-light" style="background-color: transparent !important; color: var(--text-color) !important; border: 2px solid var(--border-color);">
+          <i class="material-icons left">arrow_back</i>
+          Back to Stats Menu
+        </a>
+      </div>
+
+      <h4 style="color: var(--text-color); margin-bottom: 24px;">Pending Requests</h4>
+
+      <!-- Requests Table -->
+      <div style="padding: 0;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+          <i class="material-icons" style="color: var(--text-color);">schedule</i>
+          <h5 style="color: var(--text-color); margin: 0;">Your Pending Requests</h5>
+        </div>
+        {% if requests %}
+        <table style="width: 100%; border: 2px solid var(--border-color); border-radius: 8px; overflow: hidden;">
+          <style>
+            tbody tr:hover {
+              background-color: rgba(255, 255, 0, 0.1) !important;
+              transform: translateY(-2px);
+              box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+              transition: all 0.2s ease;
+            }
+          </style>
+          <thead>
+            <tr style="background-color: var(--card-panel-bg);">
+              <th style="padding: 12px; text-align: left; color: var(--text-color);">Service</th>
+              <th style="padding: 12px; text-align: left; color: var(--text-color);">Date</th>
+              <th style="padding: 12px; text-align: left; color: var(--text-color);">Hours</th>
+              <th style="padding: 12px; text-align: left; color: var(--text-color);">Status</th>
+              <th style="padding: 12px; text-align: left; color: var(--text-color);">Supervisor</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for request in requests %}
+            <tr style="background-color: var(--bg-color);">
+              <td style="padding: 12px; color: var(--text-color); border-bottom: 1px solid var(--border-color);">{{ request.service }}</td>
+              <td style="padding: 12px; color: var(--text-color); border-bottom: 1px solid var(--border-color);">{{ request.date_completed }}</td>
+              <td style="padding: 12px; color: var(--text-color); border-bottom: 1px solid var(--border-color);">{{ request.hours }}</td>
+              <td style="padding: 12px; border-bottom: 1px solid var(--border-color);">
+                <span style="background-color: rgba(255, 255, 0, 0.1); color: var(--text-color); padding: 4px 8px; border-radius: 4px; font-size: 12px;">{{ request.status }}</span>
+              </td>
+              <td style="padding: 12px; color: var(--text-color); border-bottom: 1px solid var(--border-color);">{{ request.staff_id }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div style="text-align: center; color: var(--secondary-text); padding: 32px;">
+          No pending requests at this time.
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Note -->
+      <div style="border: 4px solid var(--border-color); padding: 24px; margin-top: 32px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+          <i class="material-icons" style="color: var(--text-color);">info</i>
+          <h5 style="color: var(--text-color); margin: 0;">Important Note</h5>
+        </div>
+        <p style="color: var(--secondary-text); margin: 0;">Pending requests typically take 1-7 business days to be reviewed by a supervisor.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,272 @@
+{% extends "layout.html" %}
+{% block title %}Award Accolade - Service Hours Tracker{% endblock %}
+{% block page %}Award Accolade{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1200px;">
+  <div class="card">
+    <div class="card-content">
+      <!-- Back Button -->
+      <div style="margin-bottom: 24px;">
+        <a href="/staff/accolades" class="btn waves-effect waves-light" style="background-color: transparent !important; color: var(--text-color) !important; border: 2px solid var(--border-color);">
+          <i class="material-icons left">arrow_back</i>
+          Back to Accolades
+        </a>
+      </div>
+
+      <!-- Title -->
+      <h4 style="color: var(--text-color); margin-bottom: 32px;">Award Accolade to Student</h4>
+
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="card-panel flash-message-{{ category }}" style="margin-bottom: 16px;">
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Award Accolade Form -->
+      <form method="POST" action="/staff/award-accolade">
+        <!-- Step 1: Select Student -->
+        <div class="award-step-section">
+          <h5 class="award-step-title">
+            <i class="material-icons" style="font-size: 20px; vertical-align: middle; margin-right: 8px;">person</i>
+            Step 1: Select Student
+          </h5>
+
+          <div style="margin-bottom: 16px;">
+            <label class="form-label">
+              Search Student
+            </label>
+            <input 
+              type="text" 
+              id="student-search" 
+              placeholder="Search by name or student ID..." 
+              class="form-input"
+              onkeyup="filterStudents()"
+            />
+          </div>
+
+          <!-- Student Selection Grid -->
+          <div class="student-selection-grid" id="award-student-grid">
+            <div class="student-search-header">
+              <div>Student List - Click to Select</div>
+            </div>
+            
+            <div class="student-cards-container-3col">
+              {% for student in students %}
+              <div class="student-card" 
+                   data-student-name="{{ student.username.lower() }}" 
+                   data-student-id="{{ student.student_id }}"
+                   data-student-accolades="{{ student.accolades | join('|') }}"
+                   onclick="selectStudent('{{ student.student_id }}', '{{ student.username }}', '{{ student.total_hours | default(0) }}', '{{ student.accolades | join('|') }}')">
+                <div class="student-card-header">
+                  <div class="student-name">{{ student.username }}</div>
+                </div>
+                <div class="student-card-body">
+                  <div class="student-id">ID: {{ student.student_id }}</div>
+                  <div class="student-extra-info">{{ student.total_hours | default(0) }} hrs • {{ student.accolade_count | default(0) }} accolades</div>
+                </div>
+                <div class="student-card-footer">
+                  <span class="select-indicator">Click to Select</span>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Choose Accolade -->
+        <div class="award-step-section">
+          <h5 class="award-step-title">
+            <i class="material-icons" style="font-size: 20px; vertical-align: middle; margin-right: 8px;">card_giftcard</i>
+            Step 2: Choose Accolade
+          </h5>
+
+          <!-- Selected Student Info -->
+          <div id="selected-student-info-block" class="selected-student-info" style="display: none;">
+            <div style="margin-bottom: 12px;">
+              <strong class="selected-student-label">Selected Student: </strong>
+              <span id="selected-student-text" class="selected-student-text"></span>
+            </div>
+            <div id="selected-student-accolades" style="display: none;">
+              <strong class="current-accolades-label">Current Accolades:</strong>
+              <div id="accolades-list" class="current-accolades-list"></div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <label class="form-label">
+              Select Accolade to Award
+            </label>
+            
+            <!-- Accolade Selection Grid -->
+            <div class="accolade-grid">
+              {% for accolade in accolades %}
+              <label class="accolade-label">
+                <input 
+                  type="radio" 
+                  name="accolade_id" 
+                  value="{{ accolade.id }}"
+                  style="display: none;"
+                  onchange="selectAccolade(this)"
+                />
+                <div 
+                  class="accolade-option"
+                  data-accolade-id="{{ accolade.id }}"
+                >
+                  <div class="accolade-icon">
+                    <i class="material-icons">emoji_events</i>
+                  </div>
+                  <span class="accolade-description">{{ accolade.description }}</span>
+                </div>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="accolade-note">
+            <strong>Note:</strong> Students cannot be awarded duplicate accolades. If a student already has an accolade, you will not be able to award it again.
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="award-action-buttons">
+          <button 
+            type="submit" 
+            class="btn-primary"
+          >
+            <i class="material-icons" style="font-size: 20px;">emoji_events</i>
+            Award Accolade
+          </button>
+          <a 
+            href="/staff/accolades" 
+            class="btn-secondary"
+          >
+            Cancel
+          </a>
+        </div>
+      </form>
+
+      <!-- Search and Selection Script -->
+      <script>
+        // Initialize - show all accolades when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+          resetAccoladeFiltering();
+        });
+
+        function resetAccoladeFiltering() {
+          const accoladeOptions = document.querySelectorAll('.accolade-option');
+          accoladeOptions.forEach(option => {
+            const label = option.closest('.accolade-label');
+            label.style.display = 'block';
+          });
+        }
+
+        function filterStudents() {
+          const searchTerm = document.getElementById('student-search').value.toLowerCase();
+          const cards = document.querySelectorAll('.student-card');
+          
+          if (searchTerm.length >= 1) {
+            cards.forEach(card => {
+              const studentId = card.getAttribute('data-student-id').toLowerCase();
+              const name = card.getAttribute('data-student-name').toLowerCase();
+              
+              if (studentId.includes(searchTerm) || name.includes(searchTerm)) {
+                card.classList.remove('hidden');
+              } else {
+                card.classList.add('hidden');
+              }
+            });
+          } else {
+            // Show all students when search is cleared or less than 1 character
+            cards.forEach(card => {
+              card.classList.remove('hidden');
+            });
+          }
+        }
+
+        function selectStudent(studentId, studentName, totalHours, accoladesList) {
+          // Show selected student info
+          const display = document.getElementById('selected-student-info-block');
+          const textSpan = document.getElementById('selected-student-text');
+          const accoladesDiv = document.getElementById('selected-student-accolades');
+          const accoladesList_element = document.getElementById('accolades-list');
+          
+          textSpan.textContent = studentName + ' (ID: ' + studentId + ', ' + totalHours + ' hrs)';
+          display.style.display = 'block';
+          
+          // Store current accolades for filtering
+          let currentAccolades = [];
+          if (accoladesList && accoladesList.trim() !== '') {
+            currentAccolades = accoladesList.split('|').filter(a => a.trim() !== '');
+            if (currentAccolades.length > 0) {
+              accoladesDiv.style.display = 'block';
+              accoladesList_element.innerHTML = currentAccolades.map(accolade => 
+                `<span>${accolade}</span>`
+              ).join('');
+            } else {
+              accoladesDiv.style.display = 'none';
+            }
+          } else {
+            accoladesDiv.style.display = 'none';
+          }
+          
+          // Filter out duplicate accolades from Step 2
+          filterAvailableAccolades(currentAccolades);
+          
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = 'student_id';
+          input.value = studentId;
+          
+          const existing = document.querySelector('input[name="student_id"][type="hidden"]');
+          if (existing) existing.remove();
+          
+          document.querySelector('form').insertBefore(input, document.querySelector('form').firstChild);
+          
+          setTimeout(() => {
+            document.querySelector('div:has(> h5 > i.material-icons:nth-child(1))').scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+        }
+
+        function filterAvailableAccolades(currentAccolades) {
+          const accoladeOptions = document.querySelectorAll('.accolade-option');
+          
+          accoladeOptions.forEach(option => {
+            const accoladeDescription = option.querySelector('.accolade-description').textContent.trim();
+            const isDuplicate = currentAccolades.some(accolade => accolade.trim() === accoladeDescription);
+            
+            const label = option.closest('.accolade-label');
+            if (isDuplicate) {
+              label.style.display = 'none';
+              // Uncheck if previously selected
+              const radio = label.querySelector('input[type="radio"]');
+              if (radio.checked) {
+                radio.checked = false;
+                option.classList.remove('selected');
+              }
+            } else {
+              label.style.display = 'block';
+            }
+          });
+        }
+
+        function selectAccolade(radio) {
+          document.querySelectorAll('.accolade-option').forEach(option => {
+            option.classList.remove('selected');
+          });
+          
+          const selectedOption = radio.closest('label').querySelector('.accolade-option');
+          if (selectedOption) {
+            selectedOption.classList.add('selected');
+          }
+        }
+      </script>
+    </div>
+  </div>
+</div>
+{% endblock %}

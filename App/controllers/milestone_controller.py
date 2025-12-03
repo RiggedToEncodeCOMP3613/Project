@@ -27,6 +27,8 @@ def create_milestone(hours):
             )
             milestone_history.activity_id = activity.id
             db.session.add(milestone_history)
+            # Also add student to milestone's many-to-many relationship
+            new_milestone.students.append(student)
 
     db.session.commit()
     return new_milestone

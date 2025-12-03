@@ -51,13 +51,17 @@ body {
 }
 
 .input-field input[type=text],
-.input-field input[type=password] {
+.input-field input[type=password],
+.input-field input[type=date],
+.input-field input[type=number] {
     border-bottom: 1px solid var(--border-color) !important;
     color: var(--text-color) !important;
 }
 
 .input-field input[type=text]:focus,
-.input-field input[type=password]:focus {
+.input-field input[type=password]:focus,
+.input-field input[type=date]:focus,
+.input-field input[type=number]:focus {
     border-bottom: 2px solid var(--text-color) !important;
     box-shadow: 0 1px 0 0 var(--text-color) !important;
 }
@@ -69,6 +73,14 @@ body {
 .btn {
     background-color: var(--btn-bg) !important;
     color: var(--btn-text) !important;
+}
+
+/* Transparent outline buttons */
+.btn[style*="background-color: transparent"],
+.btn[style*="background-color: transparent !important"] {
+    background-color: transparent !important;
+    color: var(--text-color) !important;
+    border: 2px solid var(--border-color) !important;
 }
 
 h4, h5 {
@@ -142,9 +154,16 @@ p {
 
 /* Accolade Card Hover Effect */
 .accolade-card:hover {
-    background-color: rgba(128, 0, 128, 0.3) !important; /* deeper purple */
+    background-color: rgba(128, 0, 128, 0.4) !important; /* deeper purple for better visibility */
     transform: translateY(-4px);
     box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+/* Enhanced dark mode accolade hover effect */
+.dark-theme .accolade-card:hover {
+    background-color: rgba(128, 0, 128, 0.5) !important; /* even more vibrant purple in dark mode */
+    border-color: rgba(128, 0, 128, 0.7) !important;
+    box-shadow: 0 6px 16px rgba(128, 0, 128, 0.2) !important; /* purple-tinted shadow */
 }
 
 /* Stat Card */
@@ -188,10 +207,757 @@ p {
 .student-login-btn {
     background-color: #424242 !important;
     color: #ffffff !important;
+    border: 2px solid #424242 !important;
+    padding: 15px 20px !important;
+    height: auto !important;
 }
 
 .staff-login-btn {
     background-color: #ffffff !important;
     color: #424242 !important;
     border: 2px solid #424242 !important;
+    padding: 15px 20px !important;
+    height: auto !important;
+}
+
+/* Forgot Password Link */
+.forgot-password-link {
+    color: var(--text-color) !important;
+    transition: color 0.3s ease;
+}
+
+.forgot-password-link:hover {
+    color: var(--secondary-text) !important;
+}
+
+/* Student Row Hover Effect */
+.student-row {
+    padding: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--card-bg);
+    transition: all 0.3s ease;
+}
+
+.student-row:hover {
+    background-color: rgba(255, 255, 0, 0.1) !important;
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+/* Milestones Table Styling */
+.milestones-table {
+    background-color: var(--card-bg) !important;
+    border: 2px solid var(--border-color) !important;
+}
+
+.milestones-header {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+}
+
+.milestones-header th {
+    padding: 16px !important;
+    text-align: left !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.milestones-header th:last-child {
+    text-align: center !important;
+}
+
+.milestone-row-even {
+    background-color: var(--card-panel-bg) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.milestone-row-odd {
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.milestone-row-even td,
+.milestone-row-odd td {
+    padding: 16px !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+.milestone-edit-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    border: 2px solid var(--border-color) !important;
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    text-decoration: none !important;
+    margin-right: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+}
+
+.milestone-edit-btn:hover {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+}
+
+.milestone-delete-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    border: 2px solid #ef5350 !important;
+    background-color: #ef5350 !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+}
+
+.milestone-delete-btn:hover {
+    background-color: #d32f2f !important;
+    border-color: #d32f2f !important;
+}
+
+.milestone-info-panel {
+    border: 2px solid var(--border-color) !important;
+    background-color: var(--card-panel-bg) !important;
+}
+
+.milestone-info-panel h5 {
+    color: var(--text-color) !important;
+}
+
+.milestone-info-panel p {
+    color: var(--secondary-text) !important;
+}
+
+/* Edit Milestone Form Styling */
+.form-label {
+    display: block !important;
+    color: var(--text-color) !important;
+    font-weight: 500 !important;
+    margin-bottom: 8px !important;
+}
+
+.form-input {
+    width: 100% !important;
+    padding: 12px !important;
+    border: 2px solid var(--border-color) !important;
+    box-sizing: border-box !important;
+    font-size: 16px !important;
+    color: var(--text-color) !important;
+    background-color: var(--card-bg) !important;
+    border-radius: 4px !important;
+    transition: border-color 0.3s ease !important;
+}
+
+.form-input:focus {
+    border-color: var(--text-color) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(66, 66, 66, 0.1) !important;
+}
+
+.form-help-text {
+    color: var(--secondary-text) !important;
+    margin: 8px 0 0 !important;
+    font-size: 14px !important;
+}
+
+/* Button Styling */
+.btn-primary {
+    flex: 1 !important;
+    padding: 12px 24px !important;
+    background-color: var(--btn-bg) !important;
+    color: var(--btn-text) !important;
+    border: none !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    transition: background-color 0.3s ease !important;
+    border-radius: 4px !important;
+    text-decoration: none !important;
+    text-align: center !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+}
+
+.btn-secondary {
+    flex: 1 !important;
+    padding: 12px 24px !important;
+    background-color: transparent !important;
+    color: var(--text-color) !important;
+    border: 2px solid var(--border-color) !important;
+    text-decoration: none !important;
+    text-align: center !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+    border-radius: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.btn-secondary:hover {
+    background-color: var(--border-color) !important;
+    color: var(--bg-color) !important;
+}
+
+/* Flash Message Styling */
+.flash-message-error {
+    background-color: #ffebee !important;
+    border-left: 4px solid #ef5350 !important;
+    color: #c62828 !important;
+}
+
+.flash-message-success {
+    background-color: #e8f5e9 !important;
+    border-left: 4px solid #4caf50 !important;
+    color: #2e7d32 !important;
+}
+
+/* Materialize Modal Theme Support */
+.modal {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+}
+
+.modal .modal-content {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+}
+
+.modal .modal-content h4 {
+    color: var(--text-color) !important;
+}
+
+.modal .modal-content p {
+    color: var(--text-color) !important;
+}
+
+.modal .modal-footer {
+    background-color: var(--card-panel-bg) !important;
+}
+
+.modal .modal-footer .btn-flat {
+    color: var(--text-color) !important;
+}
+
+.modal .modal-footer .btn-flat:hover {
+    background-color: var(--border-color) !important;
+    color: var(--bg-color) !important;
+}
+
+.modal .modal-footer .btn.red {
+    background-color: #ef5350 !important;
+    color: #ffffff !important;
+}
+
+.modal .modal-footer .btn.red:hover {
+    background-color: #d32f2f !important;
+}
+
+/* Student Stats Page Styling */
+.milestone-progress-bar {
+    background-color: var(--card-panel-bg) !important;
+    height: 16px !important;
+    border: 2px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+}
+
+.milestone-progress-fill {
+    background-color: var(--text-color) !important;
+    height: 100% !important;
+    transition: width 0.3s ease !important;
+}
+
+.milestone-progress-text {
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-top: 8px !important;
+    color: var(--secondary-text) !important;
+}
+
+.milestone-stats-card {
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    padding: 16px !important;
+    background-color: var(--card-panel-bg) !important;
+    border: 2px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.milestone-stats-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+.milestone-stats-icon {
+    width: 32px !important;
+    height: 32px !important;
+    border: 2px solid var(--border-color) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 4px !important;
+    background-color: var(--bg-color) !important;
+    transition: background-color 0.3s ease !important;
+}
+
+.milestone-stats-icon.achieved {
+    background-color: #4caf50 !important;
+    border-color: #4caf50 !important;
+}
+
+.milestone-stats-icon.achieved i {
+    color: white !important;
+    font-size: 20px !important;
+}
+
+.milestone-stats-title {
+    flex: 1 !important;
+    font-weight: 500 !important;
+}
+
+.milestone-stats-title.achieved {
+    color: var(--text-color) !important;
+}
+
+.milestone-stats-title.pending {
+    color: var(--secondary-text) !important;
+}
+
+.milestone-stats-hours {
+    color: var(--secondary-text) !important;
+}
+
+/* Accolades Table Styling */
+.accolades-table {
+    background-color: var(--card-bg) !important;
+    border: 2px solid var(--border-color) !important;
+}
+
+.accolades-header {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+}
+
+.accolades-header th {
+    padding: 16px !important;
+    text-align: left !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.accolades-header th:last-child {
+    text-align: center !important;
+}
+
+.accolade-row-even {
+    background-color: var(--card-panel-bg) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.accolade-row-odd {
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.accolade-row-even td,
+.accolade-row-odd td {
+    padding: 16px !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+.accolade-edit-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    border: 2px solid var(--border-color) !important;
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    text-decoration: none !important;
+    margin-right: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+}
+
+.accolade-edit-btn:hover {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+}
+
+.accolade-delete-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    border: 2px solid #ef5350 !important;
+    background-color: #ef5350 !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+}
+
+.accolade-delete-btn:hover {
+    background-color: #d32f2f !important;
+    border-color: #d32f2f !important;
+}
+
+.accolade-info-panel {
+    border: 2px solid var(--border-color) !important;
+    background-color: var(--card-panel-bg) !important;
+}
+
+.accolade-info-panel h5 {
+    color: var(--text-color) !important;
+}
+
+.accolade-info-panel p {
+    color: var(--secondary-text) !important;
+}
+
+/* Award Accolade Template Styling */
+.award-step-section {
+    border: 2px solid var(--border-color) !important;
+    padding: 24px !important;
+    margin-bottom: 24px !important;
+    background-color: var(--card-bg) !important;
+}
+
+.award-step-title {
+    color: var(--text-color) !important;
+    margin-bottom: 16px !important;
+}
+
+.student-selection-table {
+    border: 2px solid var(--border-color) !important;
+    max-height: 400px !important;
+    overflow-y: auto !important;
+}
+
+.student-table-header {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+    display: grid !important;
+    grid-template-columns: 2fr 1fr 1fr 1fr 80px !important;
+    gap: 12px !important;
+    padding: 12px !important;
+    font-weight: 500 !important;
+    position: sticky !important;
+    top: 0 !important;
+    font-size: 14px !important;
+}
+
+.student-row {
+    display: grid !important;
+    grid-template-columns: 2fr 1fr 1fr 1fr 80px !important;
+    gap: 12px !important;
+    padding: 12px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    align-items: center !important;
+    transition: display 0.3s ease !important;
+}
+
+/* Specific styling for loghours template to push button far right */
+#loghours-student-table .student-table-header,
+#loghours-student-table .student-row {
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 80px !important;
+}
+
+/* Student Selection Grid Layout */
+.student-selection-grid {
+    border: 2px solid var(--border-color) !important;
+    background-color: var(--card-bg) !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+}
+
+.student-search-header {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+    padding: 16px !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    border-bottom: 2px solid var(--border-color) !important;
+}
+
+.student-cards-container {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 12px !important;
+    padding: 16px !important;
+    max-height: 500px !important;
+    overflow-y: auto !important;
+}
+
+.student-cards-container-3col {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px !important;
+    padding: 16px !important;
+    max-height: 500px !important;
+    overflow-y: auto !important;
+}
+
+.student-card {
+    border: 1px solid var(--border-color) !important;
+    background-color: var(--card-panel-bg) !important;
+    border-radius: 6px !important;
+    padding: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    min-height: 80px !important;
+}
+
+.student-card:hover {
+    background-color: rgba(255, 255, 0, 0.1) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    border-color: var(--text-color) !important;
+}
+
+.student-card-header {
+    margin-bottom: 8px !important;
+    text-align: center !important;
+}
+
+.student-name {
+    color: var(--text-color) !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+}
+
+.student-card-body {
+    margin-bottom: 8px !important;
+    text-align: center !important;
+}
+
+.student-id {
+    color: var(--secondary-text) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    text-align: center !important;
+}
+
+.student-extra-info {
+    color: var(--secondary-text) !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    text-align: center !important;
+    margin-top: 4px !important;
+}
+
+.student-card-footer {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.select-indicator {
+    color: var(--secondary-text) !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    padding: 3px 6px !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 10px !important;
+    background-color: var(--card-bg) !important;
+    transition: all 0.3s ease !important;
+    text-align: center !important;
+}
+
+.student-card:hover .select-indicator {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+    border-color: var(--text-color) !important;
+}
+
+/* Hidden state for search functionality */
+.student-card.hidden {
+    display: none !important;
+}
+
+.student-row-even {
+    background-color: var(--card-panel-bg) !important;
+}
+
+.student-row-odd {
+    background-color: var(--card-bg) !important;
+}
+
+.student-name {
+    color: var(--text-color) !important;
+    font-weight: 500 !important;
+}
+
+.student-id,
+.student-hours,
+.student-accolades {
+    color: var(--secondary-text) !important;
+    font-size: 14px !important;
+}
+
+.student-accolades {
+    text-align: center !important;
+}
+
+.student-select-cell {
+    text-align: center !important;
+}
+
+.student-select-btn {
+    padding: 6px 12px !important;
+    border: 2px solid var(--border-color) !important;
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    cursor: pointer !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    border-radius: 3px !important;
+    transition: all 0.2s !important;
+    min-width: 70px !important;
+}
+
+.student-select-btn:hover {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+}
+
+.selected-student-info {
+    margin-bottom: 20px !important;
+    padding: 16px !important;
+    background-color: var(--card-panel-bg) !important;
+    border: 2px solid #4caf50 !important;
+    border-radius: 4px !important;
+}
+
+.selected-student-label,
+.current-accolades-label {
+    color: #2e7d32 !important;
+}
+
+.selected-student-text {
+    color: #1b5e20 !important;
+    font-weight: 500 !important;
+}
+
+.current-accolades-label {
+    display: block !important;
+    margin-bottom: 8px !important;
+}
+
+.current-accolades-list {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+}
+
+.current-accolades-list span {
+    background-color: #c8e6c9 !important;
+    color: #1b5e20 !important;
+    padding: 6px 12px !important;
+    border-radius: 16px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.accolade-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+}
+
+.accolade-label {
+    cursor: pointer !important;
+}
+
+.accolade-option {
+    padding: 16px !important;
+    border: 2px solid var(--border-color) !important;
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+    font-weight: 500 !important;
+    transition: all 0.3s !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    min-height: 80px !important;
+}
+
+.accolade-option:hover {
+    background-color: rgba(128, 0, 128, 0.3) !important; /* purple hover effect */
+    border-color: rgba(128, 0, 128, 0.6) !important;
+}
+
+.accolade-option.selected {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+    border-color: var(--text-color) !important;
+}
+
+.accolade-icon {
+    background-color: #ffd54f !important;
+    padding: 12px !important;
+    border-radius: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+.accolade-icon i {
+    font-size: 32px !important;
+    line-height: 1 !important;
+    color: var(--text-color) !important;
+}
+
+.accolade-option.selected .accolade-icon {
+    background-color: var(--bg-color) !important;
+}
+
+.accolade-option.selected .accolade-icon i {
+    color: var(--text-color) !important;
+}
+
+.accolade-description {
+    flex: 1 !important;
+    line-height: 1.4 !important;
+    word-wrap: break-word !important;
+}
+
+.accolade-note {
+    padding: 12px !important;
+    background-color: var(--card-panel-bg) !important;
+    border-left: 4px solid #ffc107 !important;
+    color: var(--text-color) !important;
+}
+
+.award-action-buttons {
+    display: flex !important;
+    gap: 16px !important;
 }

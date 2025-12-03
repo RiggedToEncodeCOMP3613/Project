@@ -485,19 +485,21 @@ def create_request_command_options(student_id, service, staff_id, hours, date):
         print(f"An error occurred: {e}")
     print("\n")
     
-# Command to search requests by student_id, service, or date
-@request_cli.command("search", help="Search requests by student_id, service, or date_completed")
+# Command to search requests by student_id, service, date, staff_id, or status
+@request_cli.command("search", help="Search requests by student_id, service, date_completed, staff_id, or status")
 @click.option("--student_id", type=int, default=None, help="Student ID to filter requests")
 @click.option("--service", type=str, default=None, help="Service description to search for")
 @click.option("--date", type=str, default=None, help="Date completed (YYYY-MM-DD) to filter requests")
+@click.option("--staff_id", type=int, default=None, help="Staff ID to filter requests")
+@click.option("--status", type=click.Choice(["pending", "approved", "denied"], case_sensitive=False), default=None, help="Status to filter requests (pending, approved, denied)")
 @with_appcontext
-def search_request_command(student_id, service, date):
+def search_request_command(student_id, service, date, staff_id, status):
     try:
-        if student_id is None and service is None and date is None:
-            print("Error: At least one search criterion (--student_id, --service, or --date) must be provided.")
+        if student_id is None and service is None and date is None and staff_id is None and status is None:
+            print("Error: At least one search criterion (--student_id, --service, --date, --staff_id, or --status) must be provided.")
             return
         
-        requests, error = search_requests(student_id=student_id, service=service, date=date)
+        requests, error = search_requests(student_id=student_id, service=service, date=date, staff_id=staff_id, status=status)
         
         if error:
             print(f"Error: {error}")
@@ -514,17 +516,21 @@ def search_request_command(student_id, service, date):
         table.add_column("Service", style="green")
         table.add_column("Hours", style="yellow")
         table.add_column("Status", style="blue")
-        table.add_column("Date", style="white")
+        table.add_column("Staff ID", style="white")
+        table.add_column("Date", style="red")
         
         for req in requests:
             student = Student.query.get(req.student_id)
             student_name = student.username if student else "Unknown"
+            staff = Staff.query.get(req.staff_id)
+            staff_name = staff.username if staff else f"Staff {req.staff_id}"
             table.add_row(
                 str(req.id),
                 student_name,
                 req.service if hasattr(req, 'service') else "N/A",
                 str(req.hours),
                 req.status,
+                staff_name,
                 str(req.date_completed.date()) if hasattr(req, 'date_completed') else "N/A"
             )
         
@@ -950,13 +956,25 @@ def search_accolade_command(accolade_id, staff_id, description, student_id):
             print("No accolades found matching the criteria.")
             return
 
+        # If only student_id is provided, display just the descriptions in a table
+        if student_id is not None and accolade_id is None and staff_id is None and description is None:
+            console = Console()
+            table = Table(title=f"Accolades for Student {student_id}")
+            table.add_column("Description", style="magenta")
+
+            for accolade in accolades:
+                table.add_row(accolade.description)
+
+            console.print(table)
+            return
+
         console = Console()
         table = Table(title="Accolade Search Results")
         table.add_column("ID", style="cyan", no_wrap=True)
         table.add_column("Description", style="magenta")
         table.add_column("Staff ID", style="green")
         table.add_column("Students Assigned", style="yellow")
-        
+
         for accolade in accolades:
             num_students = len(accolade.students) if hasattr(accolade, 'students') else 0
             table.add_row(
@@ -965,7 +983,7 @@ def search_accolade_command(accolade_id, staff_id, description, student_id):
                 str(accolade.staff_id),
                 str(num_students)
             )
-        
+
         console.print(table)
 
     except Exception as e:
@@ -1696,9 +1714,9 @@ test = AppGroup('test', help='Testing commands')
 @click.argument("type", default="all")
 def user_tests_command(type):
     if type == "unit":
-        sys.exit(pytest.main(["-k", "UserUnitTests or StudentUnitTests or StaffUnitTests or RequestUnitTests or LoggedHoursUnitTests"]))
+        sys.exit(pytest.main(["-k", "UserUnitTests or StudentUnitTests or StaffUnitTests or RequestUnitTests or LoggedHoursUnitTests or AccoladeUnitTests or MilestoneUnitTests"]))
     elif type == "int":
-        sys.exit(pytest.main(["-k", "UserIntegrationTests or StudentIntegrationTests or StaffIntegrationTests "]))
+        sys.exit(pytest.main(["-k", "UserIntegrationTests or StudentIntegrationTests or StaffIntegrationTests or AccoladeIntegrationTests or ActivityHistoryIntegrationTests or MilestoneIntegrationTests"]))
     else:
         sys.exit(pytest.main(["-k", "App"]))
 

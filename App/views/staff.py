@@ -1,10 +1,16 @@
 from flask import Blueprint, render_template, jsonify, request, send_from_directory, flash, redirect, url_for
+import traceback
 from flask_jwt_extended import jwt_required, current_user as jwt_current_user
 from App.models import Student, RequestHistory, LoggedHoursHistory, Staff
 from App.controllers.leaderboard_controller import generate_leaderboard
 from.index import index_views
 from App.controllers.student_controller import get_all_students_json,fetch_accolades,create_hours_request
 from App.controllers.request_controller import process_request_approval, process_request_denial
+from App.models.commands.approveHoursCommand import ApproveHoursCommand
+from App.models.commands.denyHoursCommand import DenyHoursCommand
+from App.models.commands.logHoursCommand import LogHoursCommand
+from App.models.commands.awardAccoladeCommand import AwardAccoladeCommand
+from App.models.commands.createAccoladeCommand import CreateAccoladeCommand
 from App import db
 
 staff_views = Blueprint('staff_views', __name__, template_folder='../templates')
@@ -23,18 +29,46 @@ def staff_main_menu():
         return redirect('/login')
 
     # Get some stats
-    pending_requests = RequestHistory.query.filter_by(status='Pending').count()
+    pending_requests = RequestHistory.query.filter_by(status='Pending', staff_id=user.staff_id).count()
     total_students = Student.query.count()
-    total_logged_hours = LoggedHoursHistory.query.count()
-    from App.models import Accolade
-    total_accolades = Accolade.query.count()
+    total_logged_hours = LoggedHoursHistory.query.filter_by(staff_id=user.staff_id).count()
+    from App.models import Accolade, AccoladeHistory
+    total_accolades = AccoladeHistory.query.filter_by(staff_id=user.staff_id).count()
 
-    return render_template('staff_main_menu.html',
+    return render_template('staff/main_menu.html',
                          staff=staff,
                          pending_requests=pending_requests,
                          total_students=total_students,
                          total_logged_hours=total_logged_hours,
                          total_accolades=total_accolades)
+
+@staff_views.route('/staff/pending-requests', methods=['GET'])
+@jwt_required()
+def staff_pending_requests():
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+
+    # Get all pending requests for this staff member
+    pending_requests = RequestHistory.query.filter_by(status='Pending', staff_id=user.staff_id).all()
+    
+    # Get student information for each request
+    requests_with_students = []
+    for request in pending_requests:
+        student = Student.query.get(request.student_id)
+        requests_with_students.append({
+            'request': request,
+            'student': student
+        })
+
+    return render_template('staff/pending_requests.html', requests=requests_with_students)
+
+# Redirect from /staff/log-hours to /staff/loghours for backward compatibility
+@staff_views.route('/staff/log-hours', methods=['GET'])
+@jwt_required()
+def redirect_log_hours():
+    return redirect('/staff/loghours')
 
 @staff_views.route('/staff/milestones', methods=['GET'])
 @jwt_required()
@@ -51,7 +85,7 @@ def staff_milestones():
     for milestone in milestones:
         milestone.student_count = MilestoneHistory.query.filter_by(milestone_id=milestone.id).count()
 
-    return render_template('staff_milestones.html', milestones=milestones)
+    return render_template('staff/milestones.html', milestones=milestones)
 
 @staff_views.route('/staff/delete-milestone/<int:milestone_id>', methods=['POST'])
 @jwt_required()
@@ -85,7 +119,7 @@ def create_milestone_page():
         flash('Access forbidden: Not a staff member')
         return redirect('/login')
     
-    return render_template('staff_create_milestone.html')
+    return render_template('staff/create_milestone.html')
 
 @staff_views.route('/staff/create-milestone', methods=['POST'])
 @jwt_required()
@@ -141,7 +175,7 @@ def edit_milestone_page(milestone_id):
         flash('Milestone not found', 'error')
         return redirect('/staff/milestones')
     
-    return render_template('staff_edit_milestone.html', milestone=milestone)
+    return render_template('staff/edit_milestone.html', milestone=milestone)
 
 @staff_views.route('/staff/edit-milestone/<int:milestone_id>', methods=['POST'])
 @jwt_required()
@@ -203,7 +237,7 @@ def staff_accolades():
         accolade.total_count = AccoladeHistory.query.filter_by(accolade_id=accolade.id).count()
         accolade.personal_count = AccoladeHistory.query.filter_by(accolade_id=accolade.id, staff_id=user.staff_id).count()
 
-    return render_template('staff_accolades.html', accolades=accolades)
+    return render_template('staff/accolades.html', accolades=accolades)
 
 @staff_views.route('/staff/create-accolade', methods=['GET'])
 @jwt_required()
@@ -213,7 +247,7 @@ def create_accolade_page():
         flash('Access forbidden: Not a staff member')
         return redirect('/login')
     
-    return render_template('staff_create_accolade.html')
+    return render_template('staff/create_accolade.html')
 
 @staff_views.route('/staff/create-accolade', methods=['POST'])
 @jwt_required()
@@ -230,7 +264,6 @@ def create_accolade_submit():
         return redirect('/staff/create-accolade')
     
     try:
-        from App.controllers.accolade_controller import create_accolade as create_accolade_controller
         from App.models import Accolade
         
         # Check if accolade already exists
@@ -239,12 +272,23 @@ def create_accolade_submit():
             flash(f'Accolade "{description}" already exists', 'error')
             return redirect('/staff/create-accolade')
         
-        accolade, error = create_accolade_controller(user.staff_id, description)
-        if error:
-            flash(error, 'error')
+        # Get staff profile
+        staff = Staff.query.get(user.staff_id)
+        if not staff:
+            flash('Staff profile not found', 'error')
             return redirect('/staff/create-accolade')
         
-        flash(f'Accolade "{description}" created successfully', 'success')
+        # Use CreateAccoladeCommand
+        create_command = CreateAccoladeCommand(staff)
+        try:
+            accolade = create_command.execute(description=description)
+            if accolade:
+                flash(f'Accolade "{description}" created successfully', 'success')
+            else:
+                flash('Error creating accolade', 'error')
+        except Exception as e:
+            flash(f'Error creating accolade: {str(e)}', 'error')
+        
         return redirect('/staff/accolades')
     
     except Exception as e:
@@ -265,7 +309,7 @@ def edit_accolade_page(accolade_id):
         flash('Accolade not found', 'error')
         return redirect('/staff/accolades')
     
-    return render_template('staff_edit_accolade.html', accolade=accolade)
+    return render_template('staff/edit_accolade.html', accolade=accolade)
 
 @staff_views.route('/staff/edit-accolade/<int:accolade_id>', methods=['POST'])
 @jwt_required()
@@ -350,7 +394,7 @@ def award_accolade_page():
         student.accolade_count = len(student_accolades)
         student.accolades = [accolade.description for accolade in Accolade.query.join(AccoladeHistory).filter(AccoladeHistory.student_id == student.student_id).all()]
     
-    return render_template('staff_award_accolade.html', students=students, accolades=accolades)
+    return render_template('staff/award_accolade.html', students=students, accolades=accolades)
 
 @staff_views.route('/staff/award-accolade', methods=['POST'])
 @jwt_required()
@@ -372,7 +416,6 @@ def award_accolade_submit():
         accolade_id = int(accolade_id)
         
         from App.models import Student, Accolade, AccoladeHistory
-        from App.controllers.accolade_controller import assign_accolade_to_student
         
         student = Student.query.get(student_id)
         if not student:
@@ -393,8 +436,23 @@ def award_accolade_submit():
             flash(f'{student.username} already has the "{accolade.description}" accolade', 'error')
             return redirect('/staff/award-accolade')
         
-        assign_accolade_to_student(accolade_id, student_id, user.staff_id)
-        flash(f'Accolade "{accolade.description}" awarded to {student.username} successfully', 'success')
+        # Get staff profile
+        staff = Staff.query.get(user.staff_id)
+        if not staff:
+            flash('Staff profile not found', 'error')
+            return redirect('/staff/award-accolade')
+        
+        # Use AwardAccoladeCommand
+        award_command = AwardAccoladeCommand(staff)
+        try:
+            result = award_command.execute(student_id=str(student_id), accolade_id=str(accolade_id))
+            if result:
+                flash(f'Accolade "{accolade.description}" awarded to {student.username} successfully', 'success')
+            else:
+                flash('Error awarding accolade', 'error')
+        except Exception as e:
+            flash(f'Error awarding accolade: {str(e)}', 'error')
+        
         return redirect('/staff/accolades')
     
     except ValueError:
@@ -425,14 +483,27 @@ def accept_request_action():
     data = request.json
     if not data or 'request_id' not in data:
         return jsonify(message='Invalid request data'), 400
-    # Logic to accept the request goes here
+    
+    # Get staff profile
+    staff = Staff.query.get(user.staff_id)
+    if not staff:
+        return jsonify(message='Staff profile not found'), 404
+    
+    # Verify request exists and belongs to this staff member
     req = RequestHistory.query.get(data['request_id'])
     if not req:
         return jsonify(message='Request not found'), 404
+    if req.staff_id != user.staff_id:
+        return jsonify(message='Request does not belong to this staff member'), 403
     
-    process_request_approval(user.staff_id, data['request_id'])
-    
-    return jsonify(message='Request accepted'), 200
+    # Use ApproveHoursCommand
+    approve_command = ApproveHoursCommand(staff)
+    try:
+        result = approve_command.execute(request_id=data['request_id'])
+        return jsonify(message='Request accepted'), 200
+    except Exception as e:
+        print(traceback.format_exc())  # Log full stack trace on the server
+        return jsonify(message='An internal error has occurred.'), 500
 
 @staff_views.route('/api/deny_request', methods=['PUT'])
 @jwt_required()
@@ -442,94 +513,28 @@ def deny_request_action():
         return jsonify(message='Access forbidden: Not a staff member'), 403
     data = request.json
     if not data or 'request_id' not in data:
-        return jsonify(message='Invalid request data'), 400    
-    # Logic to deny the request goes here
-    req = RequestHistory.query.get(data['request_id'])
-    if not req:
-        return jsonify(message='Request not found'), 404    
-    process_request_denial(user.staff_id, data['request_id'])
-    return jsonify(message='Request denied'), 200
-
-@staff_views.route('/api/delete_request', methods=['DELETE'])
-@jwt_required()
-def delete_request_action():
-    user = jwt_current_user
-    if user.role != 'staff':
-        return jsonify(message='Access forbidden: Not a staff member'), 403
-    data = request.json
-    if not data or 'request_id' not in data:
         return jsonify(message='Invalid request data'), 400
-    # Logic to delete the request goes here
+    
+    # Get staff profile
+    staff = Staff.query.get(user.staff_id)
+    if not staff:
+        return jsonify(message='Staff profile not found'), 404
+    
+    # Verify request exists and belongs to this staff member
     req = RequestHistory.query.get(data['request_id'])
     if not req:
         return jsonify(message='Request not found'), 404
-    db.session.delete(req)
-    db.session.commit()
-    return jsonify(message='Request deleted'), 200
-
-@staff_views.route('/api/delete_logs', methods=['DELETE'])
-@jwt_required()
-def delete_logs_action():
-    user = jwt_current_user
-    if user.role != 'staff':
-        return jsonify(message='Access forbidden: Not a staff member'), 403
-    # Logic to delete logs goes here
-    data = request.json
-    if not data or 'log_id' not in data:
-        return jsonify(message='Invalid request data'), 400
-    log = LoggedHoursHistory.query.get(data['log_id'])
-    if not log:
-        return jsonify(message='Log not found'), 404
-    db.session.delete(log)
-    db.session.commit()
-    return jsonify(message='Logs deleted'), 200
-from flask import Blueprint, render_template, jsonify, request, send_from_directory, flash, redirect, url_for
-from flask_jwt_extended import jwt_required, current_user as jwt_current_user
-from pytz import utc
-from App.controllers.staff_controller import get_staff_by_name
-from App.models import Student, RequestHistory, LoggedHoursHistory
-from App.models.staff import Staff
-from.index import index_views
-from App.controllers.student_controller import get_all_students_json,fetch_accolades,create_hours_request
-from App.controllers.request_controller import process_request_approval, process_request_denial
-from App.controllers.loggedHoursHistory_controller import *
-from App import db
-
-staff_views = Blueprint('staff_views', __name__, template_folder='../templates')
-
-@staff_views.route('/api/accept_request', methods=['PUT'])
-@jwt_required()
-def accept_request_action():
-    user = jwt_current_user
-    if user.role != 'staff':
-        return jsonify(message='Access forbidden: Not a staff member'), 403
-    data = request.json
-    if not data or 'request_id' not in data:
-        return jsonify(message='Invalid request data'), 400
-    # Logic to accept the request goes here
-    req = RequestHistory.query.get(data['request_id'])
-    if not req:
-        return jsonify(message='Request not found'), 404
+    if req.staff_id != user.staff_id:
+        return jsonify(message='Request does not belong to this staff member'), 403
     
-    process_request_approval(user.staff_id, data['request_id'])
-    
-    return jsonify(message='Request accepted'), 200
-
-@staff_views.route('/api/deny_request', methods=['PUT'])
-@jwt_required()
-def deny_request_action():
-    user = jwt_current_user
-    if user.role != 'staff':
-        return jsonify(message='Access forbidden: Not a staff member'), 403
-    data = request.json
-    if not data or 'request_id' not in data:
-        return jsonify(message='Invalid request data'), 400    
-    # Logic to deny the request goes here
-    req = RequestHistory.query.get(data['request_id'])
-    if not req:
-        return jsonify(message='Request not found'), 404    
-    process_request_denial(user.staff_id, data['request_id'])
-    return jsonify(message='Request denied'), 200
+    # Use DenyHoursCommand
+    deny_command = DenyHoursCommand(staff)
+    try:
+        result = deny_command.execute(request_id=data['request_id'])
+        return jsonify(message='Request denied'), 200
+    except Exception as e:
+        print(traceback.format_exc())  # Log full stack trace on the server
+        return jsonify(message='An internal error has occurred.'), 500
 
 @staff_views.route('/api/delete_request', methods=['DELETE'])
 @jwt_required()
@@ -572,9 +577,19 @@ def log_hours_view():
     if user.role != 'staff':
         flash('Access forbidden: Not a staff member', 'error')
         return redirect(url_for('index_views.index'))
+    
+    # Get staff profile
+    staff = Staff.query.get(user.staff_id)
+    if not staff:
+        flash('Staff profile not found', 'error')
+        return redirect(url_for('index_views.index'))
+    
     if request.method == 'POST':
         student_id = request.form.get('student_id')
         hours = request.form.get('hours')
+        service = request.form.get('service', '')
+        date_completed = request.form.get('date_completed', '')
+        
         if not student_id or not hours:
             flash('Student ID and hours are required', 'error')
             return redirect(url_for('staff_views.log_hours_view'))
@@ -583,18 +598,33 @@ def log_hours_view():
         except ValueError:
             flash('Invalid hours value', 'error')
             return redirect(url_for('staff_views.log_hours_view'))
+        
         student = Student.query.get(student_id)
         if not student:
             flash('Student not found', 'error')
             return redirect(url_for('staff_views.log_hours_view'))
-        # Log the hours for the student
-        create_logged_hours(student_id, user.staff_id, hours, service=request.form.get('service'), date_completed=utc.localize(datetime.utcnow()))
-        flash('Hours logged successfully', 'success')
+        
+        # Use LogHoursCommand
+        log_command = LogHoursCommand(staff)
+        try:
+            result = log_command.execute(service=service, student_id=student_id, hours=hours, date_completed=date_completed)
+            if result:
+                flash('Hours logged successfully', 'success')
+            else:
+                flash('Error logging hours', 'error')
+        except Exception as e:
+            flash(f'Error logging hours: {str(e)}', 'error')
+        
         return redirect(url_for('staff_views.log_hours_view'))
+    
+    # GET request - render the log hours page
+    # Get all students for the dropdown
+    students = Student.query.all()
+    return render_template('staff/loghours.html', students=students)
     
 @staff_views.route("/profile")
 def profile_screen():
-    return render_template("staff/profilescreen.html", current_user=jwt_current_user)
+    return render_template("staff/profile.html", current_user=jwt_current_user)
     
 
 @staff_views.route('/staff/change_username', methods=['GET', 'POST'])
@@ -685,114 +715,5 @@ def staff_profile_view():
     if user.role != 'staff':
         flash('Access forbidden: Not a staff member', 'error')
         return redirect(url_for('index_views.index'))
-    return render_template('staff/profilescreen.html', current_user=user)
-from flask import Blueprint, render_template, jsonify, request, send_from_directory, flash, redirect, url_for
-from flask_jwt_extended import jwt_required, current_user as jwt_current_user
-from App.models import Student, RequestHistory, LoggedHoursHistory, Staff
-from App.controllers.leaderboard_controller import generate_leaderboard
-from.index import index_views
-from App.controllers.student_controller import get_all_students_json,fetch_accolades,create_hours_request
-from App.controllers.request_controller import process_request_approval, process_request_denial
-from App import db
+    return render_template('staff/profile.html', current_user=user)
 
-staff_views = Blueprint('staff_views', __name__, template_folder='../templates')
-
-@staff_views.route('/staff/main', methods=['GET'])
-@jwt_required()
-def staff_main_menu():
-    user = jwt_current_user
-    if user.role != 'staff':
-        flash('Access forbidden: Not a staff member')
-        return redirect('/login')
-
-    staff = Staff.query.get(user.staff_id)
-    if not staff:
-        flash('Staff profile not found')
-        return redirect('/login')
-
-    # Get some stats
-    pending_requests = RequestHistory.query.filter_by(status='Pending').count()
-    total_students = Student.query.count()
-    total_logged_hours = LoggedHoursHistory.query.count()
-
-    return render_template('message.html', title="Staff Main Menu", message="Staff Main Menu - Coming Soon!")
-
-@staff_views.route('/staff/leaderboard', methods=['GET'])
-@jwt_required()
-def staff_leaderboard():
-    user = jwt_current_user
-    if user.role != 'staff':
-        flash('Access forbidden: Not a staff member')
-        return redirect('/login')
-
-    leaderboard = generate_leaderboard()
-
-    return render_template('leaderboard.html', leaderboard=leaderboard, user_role=user.role)
-
-@staff_views.route('/api/accept_request', methods=['PUT'])
-@jwt_required()
-def accept_request_action():
-    user = jwt_current_user
-    if user.role != 'staff':
-        return jsonify(message='Access forbidden: Not a staff member'), 403
-    data = request.json
-    if not data or 'request_id' not in data:
-        return jsonify(message='Invalid request data'), 400
-    # Logic to accept the request goes here
-    req = RequestHistory.query.get(data['request_id'])
-    if not req:
-        return jsonify(message='Request not found'), 404
-    
-    process_request_approval(user.staff_id, data['request_id'])
-    
-    return jsonify(message='Request accepted'), 200
-
-@staff_views.route('/api/deny_request', methods=['PUT'])
-@jwt_required()
-def deny_request_action():
-    user = jwt_current_user
-    if user.role != 'staff':
-        return jsonify(message='Access forbidden: Not a staff member'), 403
-    data = request.json
-    if not data or 'request_id' not in data:
-        return jsonify(message='Invalid request data'), 400    
-    # Logic to deny the request goes here
-    req = RequestHistory.query.get(data['request_id'])
-    if not req:
-        return jsonify(message='Request not found'), 404    
-    process_request_denial(user.staff_id, data['request_id'])
-    return jsonify(message='Request denied'), 200
-
-@staff_views.route('/api/delete_request', methods=['DELETE'])
-@jwt_required()
-def delete_request_action():
-    user = jwt_current_user
-    if user.role != 'staff':
-        return jsonify(message='Access forbidden: Not a staff member'), 403
-    data = request.json
-    if not data or 'request_id' not in data:
-        return jsonify(message='Invalid request data'), 400
-    # Logic to delete the request goes here
-    req = RequestHistory.query.get(data['request_id'])
-    if not req:
-        return jsonify(message='Request not found'), 404
-    db.session.delete(req)
-    db.session.commit()
-    return jsonify(message='Request deleted'), 200
-
-@staff_views.route('/api/delete_logs', methods=['DELETE'])
-@jwt_required()
-def delete_logs_action():
-    user = jwt_current_user
-    if user.role != 'staff':
-        return jsonify(message='Access forbidden: Not a staff member'), 403
-    # Logic to delete logs goes here
-    data = request.json
-    if not data or 'log_id' not in data:
-        return jsonify(message='Invalid request data'), 400
-    log = LoggedHoursHistory.query.get(data['log_id'])
-    if not log:
-        return jsonify(message='Log not found'), 404
-    db.session.delete(log)
-    db.session.commit()
-    return jsonify(message='Logs deleted'), 200
