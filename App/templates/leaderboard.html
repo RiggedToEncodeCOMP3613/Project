@@ -23,11 +23,11 @@
 
       <!-- Leaderboard -->
       <div style="border: 4px solid var(--border-color); padding: 24px;">
-        <h3 style="color: var(--text-color); margin-bottom: 24px; text-align: center;">Top Students by Total Hours</h3>
+        <h3 style="color: var(--text-color); margin-bottom: 24px; text-align: center;">Student Leaderboards</h3>
 
         <div style="display: flex; flex-direction: column; gap: 12px;">
           {% for entry in leaderboard %}
-          <div style="display: flex; align-items: center; gap: 16px; padding: 16px; background-color: var(--card-panel-bg); border: 2px solid var(--border-color);">
+          <div class="leaderboard-card rank-{{ loop.index }}" style="display: flex; align-items: center; gap: 16px; padding: 16px; background-color: var(--card-panel-bg); border-radius: 8px;">
             <!-- Rank -->
             <div style="display: flex; align-items: center; justify-content: center; width: 48px;">
               {% if entry.student_id == 0 %}
