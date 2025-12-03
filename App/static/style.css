@@ -207,12 +207,27 @@ p {
 .student-login-btn {
     background-color: #424242 !important;
     color: #ffffff !important;
+    border: 2px solid #424242 !important;
+    padding: 15px 20px !important;
+    height: auto !important;
 }
 
 .staff-login-btn {
     background-color: #ffffff !important;
     color: #424242 !important;
     border: 2px solid #424242 !important;
+    padding: 15px 20px !important;
+    height: auto !important;
+}
+
+/* Forgot Password Link */
+.forgot-password-link {
+    color: var(--text-color) !important;
+    transition: color 0.3s ease;
+}
+
+.forgot-password-link:hover {
+    color: var(--secondary-text) !important;
 }
 
 /* Student Row Hover Effect */
