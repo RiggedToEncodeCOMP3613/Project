@@ -121,6 +121,32 @@ p {
     box-shadow: 0 6px 16px rgba(0,0,0,0.15);
 }
 
+/* Stats Menu Card Hover Effect */
+.stats-menu-card:hover {
+    background-color: rgba(255, 255, 0, 0.1) !important;
+}
+
+/* Stats Card Hover Effect */
+.stats-card:hover {
+    background-color: rgba(255, 255, 0, 0.1) !important;
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+/* Milestone Card Hover Effect */
+.milestone-card:hover {
+    background-color: rgba(255, 255, 0, 0.1) !important;
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+/* Accolade Card Hover Effect */
+.accolade-card:hover {
+    background-color: rgba(128, 0, 128, 0.3) !important; /* deeper purple */
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
 /* Stat Card */
 .stat-card {
     background-color: var(--card-panel-bg);
