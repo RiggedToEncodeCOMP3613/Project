@@ -31,13 +31,17 @@ def identify_page():
 @auth_views.route('/login', methods=['POST'])
 def login_action():
     data = request.form
-    token = login(data['username'], data['password'])
+    username_or_email = data['username']
+    token = login(username_or_email, data['password'])
     if not token:
         flash('Bad username or password given')
         return redirect('/login')
 
     # Get user to determine redirect based on role
-    user = User.query.filter_by(username=data['username']).first()
+    if "@" in username_or_email:
+        user = User.query.filter_by(email=username_or_email).first()
+    else:
+        user = User.query.filter_by(username=username_or_email).first()
     if user.role == 'student':
         response = redirect('/student/main')
     elif user.role == 'staff':
