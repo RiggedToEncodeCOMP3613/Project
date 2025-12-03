@@ -144,7 +144,10 @@ def student_stats_history():
     if user.role != 'student':
         flash('Access forbidden: Not a student')
         return redirect('/login')
-    return render_template('student/request_history.html')
+
+    requests = RequestHistory.query.filter(RequestHistory.student_id == user.student_id, RequestHistory.status != 'Pending').all()
+
+    return render_template('student/request_history.html', requests=requests)
 
 @student_views.route('/student/profile', methods=['GET'])
 @jwt_required()
