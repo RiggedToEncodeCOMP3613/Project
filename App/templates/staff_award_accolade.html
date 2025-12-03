@@ -1,0 +1,251 @@
+{% extends "layout.html" %}
+{% block title %}Award Accolade - Service Hours Tracker{% endblock %}
+{% block page %}Award Accolade{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1200px;">
+  <div class="card">
+    <div class="card-content">
+      <!-- Header with Back Button -->
+      <div style="margin-bottom: 24px;">
+        <a href="/staff/accolades" style="color: #9e9e9e; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+          <i class="material-icons" style="font-size: 18px;">arrow_back</i>
+          Back to Accolades
+        </a>
+      </div>
+
+      <!-- Title -->
+      <h4 style="color: #424242; margin-bottom: 32px;">Award Accolade to Student</h4>
+
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="card-panel" style="background-color: {% if category == 'error' %}#ffebee{% else %}#e8f5e9{% endif %}; border-left: 4px solid {% if category == 'error' %}#ef5350{% else %}#4caf50{% endif %}; margin-bottom: 16px;">
+              <span style="color: {% if category == 'error' %}#c62828{% else %}#2e7d32{% endif %};">{{ message }}</span>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Award Accolade Form -->
+      <form method="POST" action="/staff/award-accolade">
+        <!-- Step 1: Select Student -->
+        <div style="border: 2px solid #424242; padding: 24px; margin-bottom: 24px;">
+          <h5 style="color: #424242; margin-bottom: 16px;">
+            <i class="material-icons" style="font-size: 20px; vertical-align: middle; margin-right: 8px;">person</i>
+            Step 1: Select Student
+          </h5>
+
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; color: #424242; font-weight: 500; margin-bottom: 8px;">
+              Search Student
+            </label>
+            <input 
+              type="text" 
+              id="student-search" 
+              placeholder="Search by name or student ID..." 
+              style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; box-sizing: border-box; font-size: 16px; color: #424242; margin-bottom: 12px;"
+              onkeyup="filterStudents()"
+            />
+          </div>
+
+          <!-- Student Selection Table -->
+          <div style="border: 2px solid #424242; max-height: 400px; overflow-y: auto;">
+            <div style="background-color: #424242; color: #ffffff; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 80px; gap: 12px; padding: 12px; font-weight: 500; position: sticky; top: 0; font-size: 14px;">
+              <div>Student Name</div>
+              <div>Student ID</div>
+              <div>Total Hours</div>
+              <div>Current Accolades</div>
+              <div style="text-align: center;">Select</div>
+            </div>
+            
+            {% for student in students %}
+            <div class="student-row" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 80px; gap: 12px; padding: 12px; border-bottom: 1px solid #e0e0e0; background-color: {% if loop.index % 2 == 0 %}#f5f5f5{% else %}#ffffff{% endif %}; align-items: center;" 
+                 data-student-name="{{ student.username.lower() }}" 
+                 data-student-id="{{ student.student_id }}"
+                 data-student-accolades="{{ student.accolades | join('|') }}">
+              <div style="color: var(--text-color); font-weight: 500;">{{ student.username }}</div>
+              <div style="color: #9e9e9e; font-size: 14px;">{{ student.student_id }}</div>
+              <div style="color: #9e9e9e; font-size: 14px;">{{ student.total_hours | default(0) }} hrs</div>
+              <div style="color: #9e9e9e; font-size: 14px; text-align: center;">{{ student.accolade_count | default(0) }}</div>
+              <div style="text-align: center;">
+                <button 
+                  type="button"
+                  class="student-select-btn"
+                  onclick="selectStudent('{{ student.student_id }}', '{{ student.username }}', '{{ student.total_hours | default(0) }}', '{{ student.accolades | join('|') }}')"
+                  style="padding: 6px 12px; border: 2px solid #424242; background-color: #ffffff; color: #424242; cursor: pointer; font-size: 13px; font-weight: 500; border-radius: 3px; transition: all 0.2s; min-width: 70px;"
+                  onmouseover="this.style.backgroundColor='#424242'; this.style.color='#ffffff';"
+                  onmouseout="this.style.backgroundColor='#ffffff'; this.style.color='#424242';"
+                >
+                  Select
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Step 2: Choose Accolade -->
+        <div style="border: 2px solid #424242; padding: 24px; margin-bottom: 24px; background-color: #f9f9f9;">
+          <h5 style="color: #424242; margin-bottom: 16px;">
+            <i class="material-icons" style="font-size: 20px; vertical-align: middle; margin-right: 8px;">card_giftcard</i>
+            Step 2: Choose Accolade
+          </h5>
+
+          <!-- Selected Student Info -->
+          <div id="selected-student-info-block" style="margin-bottom: 20px; padding: 16px; background-color: #e8f5e9; border: 2px solid #4caf50; border-radius: 4px; display: none;">
+            <div style="margin-bottom: 12px;">
+              <strong style="color: #2e7d32;">Selected Student: </strong>
+              <span id="selected-student-text" style="color: #1b5e20; font-weight: 500;"></span>
+            </div>
+            <div id="selected-student-accolades" style="display: none;">
+              <strong style="color: #2e7d32; display: block; margin-bottom: 8px;">Current Accolades:</strong>
+              <div id="accolades-list" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; color: #424242; font-weight: 500; margin-bottom: 12px;">
+              Select Accolade to Award
+            </label>
+            
+            <!-- Accolade Selection Grid -->
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+              {% for accolade in accolades %}
+              <label style="cursor: pointer;">
+                <input 
+                  type="radio" 
+                  name="accolade_id" 
+                  value="{{ accolade.id }}"
+                  style="display: none;"
+                  onchange="selectAccolade(this)"
+                />
+                <div 
+                  class="accolade-option"
+                  data-accolade-id="{{ accolade.id }}"
+                  style="padding: 16px; border: 2px solid #424242; background-color: #ffffff; color: #424242; font-weight: 500; transition: all 0.3s; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 16px; min-height: 80px;"
+                  onmouseover="if (!this.classList.contains('selected')) { this.style.backgroundColor='#f5f5f5'; }"
+                  onmouseout="if (!this.classList.contains('selected')) { this.style.backgroundColor='#ffffff'; }"
+                >
+                  <div style="background-color: #ffd54f; padding: 12px; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="material-icons" style="font-size: 32px; line-height: 1; color: #424242;">emoji_events</i>
+                  </div>
+                  <span style="flex: 1; line-height: 1.4; word-wrap: break-word;">{{ accolade.description }}</span>
+                </div>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div style="padding: 12px; background-color: #fff3cd; border-left: 4px solid #ffc107; color: #856404;">
+            <strong>Note:</strong> Students cannot be awarded duplicate accolades. If a student already has an accolade, you will not be able to award it again.
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 16px;">
+          <button 
+            type="submit" 
+            style="flex: 1; padding: 12px 24px; background-color: #424242; color: #ffffff; border: none; cursor: pointer; font-size: 16px; font-weight: 500; transition: background-color 0.3s; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 8px;"
+            onmouseover="this.style.backgroundColor='#212121'"
+            onmouseout="this.style.backgroundColor='#424242'"
+          >
+            <i class="material-icons" style="font-size: 20px;">emoji_events</i>
+            Award Accolade
+          </button>
+          <a 
+            href="/staff/accolades" 
+            style="flex: 1; padding: 12px 24px; background-color: #ffffff; color: #424242; border: 2px solid #424242; text-decoration: none; text-align: center; cursor: pointer; font-size: 16px; font-weight: 500; transition: all 0.3s; border-radius: 4px; display: flex; align-items: center; justify-content: center;"
+            onmouseover="this.style.backgroundColor='#f5f5f5'"
+            onmouseout="this.style.backgroundColor='#ffffff'"
+          >
+            Cancel
+          </a>
+        </div>
+      </form>
+
+      <!-- Search and Selection Script -->
+      <script>
+        function filterStudents() {
+          const searchInput = document.getElementById('student-search').value.toLowerCase();
+          const rows = document.querySelectorAll('.student-row');
+          
+          rows.forEach(row => {
+            const name = row.getAttribute('data-student-name');
+            const id = row.getAttribute('data-student-id');
+            
+            if (name.includes(searchInput) || id.includes(searchInput)) {
+              row.style.display = 'grid';
+            } else {
+              row.style.display = 'none';
+            }
+          });
+        }
+
+        function selectStudent(studentId, studentName, totalHours, accoladesList) {
+          // Hide all student rows background highlighting
+          document.querySelectorAll('.student-row').forEach(row => {
+            row.style.backgroundColor = row.getAttribute('data-original-bg') || (row.getAttribute('data-student-id') % 2 == 0 ? '#f5f5f5' : '#ffffff');
+          });
+          
+          // Show selected student info
+          const display = document.getElementById('selected-student-info-block');
+          const textSpan = document.getElementById('selected-student-text');
+          const accoladesDiv = document.getElementById('selected-student-accolades');
+          const accoladesList_element = document.getElementById('accolades-list');
+          
+          textSpan.textContent = studentName + ' (ID: ' + studentId + ', ' + totalHours + ' hrs)';
+          display.style.display = 'block';
+          
+          // Display accolades if student has any
+          if (accoladesList && accoladesList.trim() !== '') {
+            const accolades = accoladesList.split('|').filter(a => a.trim() !== '');
+            if (accolades.length > 0) {
+              accoladesDiv.style.display = 'block';
+              accoladesList_element.innerHTML = accolades.map(accolade => 
+                `<span style="background-color: #c8e6c9; color: #1b5e20; padding: 6px 12px; border-radius: 16px; font-size: 13px; font-weight: 500;">${accolade}</span>`
+              ).join('');
+            } else {
+              accoladesDiv.style.display = 'none';
+            }
+          } else {
+            accoladesDiv.style.display = 'none';
+          }
+          
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = 'student_id';
+          input.value = studentId;
+          
+          const existing = document.querySelector('input[name="student_id"][type="hidden"]');
+          if (existing) existing.remove();
+          
+          document.querySelector('form').insertBefore(input, document.querySelector('form').firstChild);
+          
+          setTimeout(() => {
+            document.querySelector('div:has(> h5 > i.material-icons:nth-child(1))').scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+        }
+
+        function selectAccolade(radio) {
+          document.querySelectorAll('.accolade-option').forEach(option => {
+            option.classList.remove('selected');
+            option.style.backgroundColor = '#ffffff';
+            option.style.borderColor = '#424242';
+            option.style.color = '#424242';
+          });
+          
+          const selectedOption = radio.closest('label').querySelector('.accolade-option');
+          if (selectedOption) {
+            selectedOption.classList.add('selected');
+            selectedOption.style.backgroundColor = '#424242';
+            selectedOption.style.borderColor = '#424242';
+            selectedOption.style.color = '#ffffff';
+          }
+        }
+      </script>
+    </div>
+  </div>
+</div>
+{% endblock %}

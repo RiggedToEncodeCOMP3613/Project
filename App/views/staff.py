@@ -332,6 +332,78 @@ def delete_accolade(accolade_id):
     
     return redirect('/staff/accolades')
 
+@staff_views.route('/staff/award-accolade', methods=['GET'])
+@jwt_required()
+def award_accolade_page():
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+    
+    from App.models import Student, Accolade, AccoladeHistory
+    students = Student.query.all()
+    accolades = Accolade.query.all()
+    
+    # Add accolade count and accolade list to each student
+    for student in students:
+        student_accolades = AccoladeHistory.query.filter_by(student_id=student.student_id).all()
+        student.accolade_count = len(student_accolades)
+        student.accolades = [accolade.description for accolade in Accolade.query.join(AccoladeHistory).filter(AccoladeHistory.student_id == student.student_id).all()]
+    
+    return render_template('staff_award_accolade.html', students=students, accolades=accolades)
+
+@staff_views.route('/staff/award-accolade', methods=['POST'])
+@jwt_required()
+def award_accolade_submit():
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+    
+    student_id = request.form.get('student_id')
+    accolade_id = request.form.get('accolade_id')
+    
+    if not student_id or not accolade_id:
+        flash('Please select both a student and an accolade', 'error')
+        return redirect('/staff/award-accolade')
+    
+    try:
+        student_id = int(student_id)
+        accolade_id = int(accolade_id)
+        
+        from App.models import Student, Accolade, AccoladeHistory
+        from App.controllers.accolade_controller import assign_accolade_to_student
+        
+        student = Student.query.get(student_id)
+        if not student:
+            flash('Student not found', 'error')
+            return redirect('/staff/award-accolade')
+        
+        accolade = Accolade.query.get(accolade_id)
+        if not accolade:
+            flash('Accolade not found', 'error')
+            return redirect('/staff/award-accolade')
+        
+        # Check if student already has this accolade
+        existing = AccoladeHistory.query.filter_by(
+            accolade_id=accolade_id,
+            student_id=student_id
+        ).first()
+        if existing:
+            flash(f'{student.username} already has the "{accolade.description}" accolade', 'error')
+            return redirect('/staff/award-accolade')
+        
+        assign_accolade_to_student(accolade_id, student_id, user.staff_id)
+        flash(f'Accolade "{accolade.description}" awarded to {student.username} successfully', 'success')
+        return redirect('/staff/accolades')
+    
+    except ValueError:
+        flash('Invalid student or accolade selection', 'error')
+        return redirect('/staff/award-accolade')
+    except Exception as e:
+        flash(f'Error awarding accolade: {str(e)}', 'error')
+        return redirect('/staff/award-accolade')
+
 @staff_views.route('/staff/leaderboard', methods=['GET'])
 @jwt_required()
 def staff_leaderboard():
