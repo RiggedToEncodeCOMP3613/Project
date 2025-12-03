@@ -153,6 +153,19 @@
 
       <!-- Search and Selection Script -->
       <script>
+        // Initialize - show all accolades when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+          resetAccoladeFiltering();
+        });
+
+        function resetAccoladeFiltering() {
+          const accoladeOptions = document.querySelectorAll('.accolade-option');
+          accoladeOptions.forEach(option => {
+            const label = option.closest('.accolade-label');
+            label.style.display = 'block';
+          });
+        }
+
         function filterStudents() {
           const searchTerm = document.getElementById('student-search').value.toLowerCase();
           const cards = document.querySelectorAll('.student-card');
@@ -186,12 +199,13 @@
           textSpan.textContent = studentName + ' (ID: ' + studentId + ', ' + totalHours + ' hrs)';
           display.style.display = 'block';
           
-          // Display accolades if student has any
+          // Store current accolades for filtering
+          let currentAccolades = [];
           if (accoladesList && accoladesList.trim() !== '') {
-            const accolades = accoladesList.split('|').filter(a => a.trim() !== '');
-            if (accolades.length > 0) {
+            currentAccolades = accoladesList.split('|').filter(a => a.trim() !== '');
+            if (currentAccolades.length > 0) {
               accoladesDiv.style.display = 'block';
-              accoladesList_element.innerHTML = accolades.map(accolade => 
+              accoladesList_element.innerHTML = currentAccolades.map(accolade => 
                 `<span>${accolade}</span>`
               ).join('');
             } else {
@@ -200,6 +214,9 @@
           } else {
             accoladesDiv.style.display = 'none';
           }
+          
+          // Filter out duplicate accolades from Step 2
+          filterAvailableAccolades(currentAccolades);
           
           const input = document.createElement('input');
           input.type = 'hidden';
@@ -214,6 +231,28 @@
           setTimeout(() => {
             document.querySelector('div:has(> h5 > i.material-icons:nth-child(1))').scrollIntoView({ behavior: 'smooth' });
           }, 100);
+        }
+
+        function filterAvailableAccolades(currentAccolades) {
+          const accoladeOptions = document.querySelectorAll('.accolade-option');
+          
+          accoladeOptions.forEach(option => {
+            const accoladeDescription = option.querySelector('.accolade-description').textContent.trim();
+            const isDuplicate = currentAccolades.some(accolade => accolade.trim() === accoladeDescription);
+            
+            const label = option.closest('.accolade-label');
+            if (isDuplicate) {
+              label.style.display = 'none';
+              // Uncheck if previously selected
+              const radio = label.querySelector('input[type="radio"]');
+              if (radio.checked) {
+                radio.checked = false;
+                option.classList.remove('selected');
+              }
+            } else {
+              label.style.display = 'block';
+            }
+          });
         }
 
         function selectAccolade(radio) {

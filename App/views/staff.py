@@ -25,9 +25,9 @@ def staff_main_menu():
     # Get some stats
     pending_requests = RequestHistory.query.filter_by(status='Pending', staff_id=user.staff_id).count()
     total_students = Student.query.count()
-    total_logged_hours = LoggedHoursHistory.query.count()
-    from App.models import Accolade
-    total_accolades = Accolade.query.count()
+    total_logged_hours = LoggedHoursHistory.query.filter_by(staff_id=user.staff_id).count()
+    from App.models import Accolade, AccoladeHistory
+    total_accolades = AccoladeHistory.query.filter_by(staff_id=user.staff_id).count()
 
     return render_template('staff/main_menu.html',
                          staff=staff,
