@@ -110,21 +110,16 @@ def initialize(drop_first=True):
 
         create_logged_hours(student.user_id, staff_member.user_id, hours, random.choice(services), request_date)
 
-    # Create 30 unique accolades
+    # Create accolades based on accolade_description list
     accolades = []
-    used_descriptions = set()
-    for i in range(30):
+    for description in accolade_description:
         staff_member = random.choice(staff_members)
-        description = f"Accolade {i+1}: {random.choice(accolade_description)}"
-        while description in used_descriptions:
-            description = f"Accolade {i+1}: {random.choice(accolade_description)}"
-        used_descriptions.add(description)
         accolade, err = create_accolade(staff_member.user_id, description)
         if accolade:
             accolades.append(accolade)
 
-    # Assign 30 accolades to random students
-    for i in range(30):
+    # Assign accolades to 50 random students (controller handles duplicate prevention)
+    for i in range(50):
         accolade = random.choice(accolades)
         student = random.choice(students)
         staff_member = random.choice(staff_members)
