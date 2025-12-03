@@ -28,11 +28,11 @@ def student_main_menu():
     accolades_count = len(student.check_accolades())
 
     return render_template('student_main_menu.html',
-                         student=student,
-                         total_hours=total_hours,
-                         pending_requests=pending_requests,
-                         milestones_count=milestones_count,
-                         accolades_count=accolades_count)
+                          student=student,
+                          total_hours=total_hours,
+                          pending_requests=pending_requests,
+                          milestones_count=milestones_count,
+                          accolades_count=accolades_count)
 
 @student_views.route('/student/make-request', methods=['GET'])
 @jwt_required()
@@ -95,21 +95,21 @@ def student_change_username():
 
         if not new_username or not password:
             flash('All fields are required')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_username'))
 
         if not user.check_password(password):
             flash('Incorrect password')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_email'))
 
         if len(new_username) < 3 or len(new_username) > 20:
             flash('Username must be 3-20 characters long')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_username'))
 
         # Check if username already exists
         existing = User.query.filter_by(username=new_username).first()
         if existing:
             flash('Username already taken')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_username'))
 
         # Update username
         user.username = new_username
@@ -139,25 +139,25 @@ def student_change_email():
 
         if not new_email or not confirm_email or not password:
             flash('All fields are required')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_email'))
 
         if new_email != confirm_email:
             flash('Email addresses do not match')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_email'))
 
         if "@" not in new_email:
             flash('Invalid email address')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_email'))
 
         if not user.check_password(password):
             flash('Incorrect password')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_username'))
 
         # Check if email already exists
         existing = User.query.filter_by(email=new_email).first()
         if existing:
             flash('Email already in use')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_email'))
 
         # Update email
         user.email = new_email
@@ -187,34 +187,34 @@ def student_change_password():
 
         if not current_password or not new_password or not confirm_password:
             flash('All fields are required')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_password'))
 
         if not user.check_password(current_password):
             flash('Current password is incorrect')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_password'))
 
         if new_password != confirm_password:
             flash('New passwords do not match')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_password'))
 
         if len(new_password) < 8:
             flash('Password must be at least 8 characters long')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_password'))
 
         # Basic password requirements check
         import re
         if not re.search(r'[A-Z]', new_password):
             flash('Password must contain at least one uppercase letter')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_password'))
         if not re.search(r'[a-z]', new_password):
             flash('Password must contain at least one lowercase letter')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_password'))
         if not re.search(r'\d', new_password):
             flash('Password must contain at least one number')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_password'))
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', new_password):
             flash('Password must contain at least one special character')
-            return redirect(request.url)
+            return redirect(url_for('student_views.student_change_password'))
 
         # Update password
         user.set_password(new_password)
@@ -258,3 +258,8 @@ def make_request_action():
         return jsonify(message='Invalid request data'), 400
     request_2 = create_hours_request(user.student_id, data['hours'])
     return jsonify(request_2.get_json()), 201
+
+@student_views.route('/api/students', methods=['GET'])
+@jwt_required()
+def get_students_action():
+    return get_all_students_json()
