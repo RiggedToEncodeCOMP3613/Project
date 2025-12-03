@@ -106,15 +106,22 @@ def log_hours_view():
         create_logged_hours(student_id, user.staff_id, hours, service=request.form.get('service'), date_completed=utc.localize(datetime.utcnow()))
         flash('Hours logged successfully', 'success')
         return redirect(url_for('staff_views.log_hours_view'))
+    
+@staff_views.route("/profile")
+def profile_screen():
+    return render_template("staff/profilescreen.html", current_user=jwt_current_user)
+    
 
 @staff_views.route('/staff/change_username', methods=['GET', 'POST'])
 @jwt_required()
 def change_username_view():
     user = jwt_current_user
+    print (user) #debug
     if user.role != 'staff':
         flash('Access forbidden: Not a staff member', 'error')
         return redirect(url_for('index_views.index'))
     if request.method == 'POST':
+        print (request.form) #debug
         new_username = request.form.get('new_username')
         if not new_username:
             flash('New username is required', 'error')
@@ -123,7 +130,7 @@ def change_username_view():
         if existing_user:
             flash('Username already taken', 'error')
             return redirect(url_for('staff_views.change_username_view'))
-        password = request.form.get('password')
+        password = request.form.get('confirm_password')
         if not password or not user.check_password(password):
             flash('Incorrect password', 'error')
             return redirect(url_for('staff_views.change_username_view'))
@@ -131,6 +138,8 @@ def change_username_view():
         db.session.commit()
         flash('Username changed successfully', 'success')
         return redirect(url_for('staff_views.change_username_view'))
+    # GET -> render the change username form
+    return render_template('staff/change_username.html', current_user=user)
 
 @staff_views.route('/staff/change_password', methods=['GET', 'POST'])
 @jwt_required()
@@ -152,7 +161,7 @@ def change_password_view():
         db.session.commit()
         flash(f'Password changed successfully to {new_password}, remember it!', 'success')
         return redirect(url_for('staff_views.change_password_view'))
-    return render_template('staff/changepassword.html', current_user=user)
+    return render_template('staff/change_password.html', current_user=user)
 
 @staff_views.route('/staff/change_email', methods=['GET', 'POST'])
 @jwt_required()
@@ -170,7 +179,7 @@ def change_email_view():
         if existing_user:
             flash('Email already in use', 'error')
             return redirect(url_for('staff_views.change_email_view'))
-        password = request.form.get('password')
+        password = request.form.get('confirm_password')
         if not password or not user.check_password(password):
             flash('Incorrect password', 'error')
             return redirect(url_for('staff_views.change_email_view'))
@@ -178,6 +187,8 @@ def change_email_view():
         db.session.commit()
         flash(f'Email changed successfully to {new_email}', 'success')
         return redirect(url_for('staff_views.change_email_view'))
+    # GET -> render change email form
+    return render_template('staff/change_email.html', current_user=user)
     
 @staff_views.route('/staff/profile', methods=['GET'])
 @jwt_required()
