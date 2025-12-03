@@ -15,7 +15,7 @@ html {
 }
 
 .dark-theme {
-    --bg-color: #121212;
+    --bg-color: #1C1B22;
     --text-color: #ffffff;
     --card-bg: #1e1e1e;
     --border-color: #ffffff;
@@ -112,6 +112,11 @@ p {
     background-color: rgba(255, 255, 0, 0.1) !important;
     box-shadow: 0 6px 16px rgba(0,0,0,0.15) !important;
     transform: translateY(-4px);
+}
+
+/* Profile Option Hover Effect */
+.profile-option:hover {
+    background-color: rgba(255, 255, 0, 0.1) !important;
 }
 
 /* Stat Card */

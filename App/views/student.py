@@ -57,7 +57,22 @@ def student_profile():
     if user.role != 'student':
         flash('Access forbidden: Not a student')
         return redirect('/login')
-    return render_template('message.html', title="Profile", message="Profile page - Coming Soon!")
+
+    student = Student.query.get(user.student_id)
+    if not student:
+        flash('Student profile not found')
+        return redirect('/login')
+
+    # Get stats
+    total_hours = student.total_hours
+    milestones_count = len(student.check_for_milestones())
+    accolades_count = len(student.check_accolades())
+
+    return render_template('student_profile.html',
+                          student=student,
+                          total_hours=total_hours,
+                          milestones_count=milestones_count,
+                          accolades_count=accolades_count)
 
 @student_views.route('/student/leaderboard', methods=['GET'])
 @jwt_required()
