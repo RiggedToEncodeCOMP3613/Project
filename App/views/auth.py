@@ -60,6 +60,10 @@ def logout_action():
     unset_jwt_cookies(response)
     return response
 
+@auth_views.route('/forgot-password', methods=['GET'])
+def forgot_password():
+    return render_template('forgot_password.html')
+
 '''
 API Routes
 '''
