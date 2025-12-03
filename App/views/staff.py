@@ -127,6 +127,66 @@ def create_milestone_submit():
         flash(f'Error creating milestone: {str(e)}', 'error')
         return redirect('/staff/create-milestone')
 
+@staff_views.route('/staff/edit-milestone/<int:milestone_id>', methods=['GET'])
+@jwt_required()
+def edit_milestone_page(milestone_id):
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+    
+    from App.models import Milestone
+    milestone = Milestone.query.get(milestone_id)
+    if not milestone:
+        flash('Milestone not found', 'error')
+        return redirect('/staff/milestones')
+    
+    return render_template('staff_edit_milestone.html', milestone=milestone)
+
+@staff_views.route('/staff/edit-milestone/<int:milestone_id>', methods=['POST'])
+@jwt_required()
+def edit_milestone_submit(milestone_id):
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+    
+    from App.models import Milestone
+    milestone = Milestone.query.get(milestone_id)
+    if not milestone:
+        flash('Milestone not found', 'error')
+        return redirect('/staff/milestones')
+    
+    hours = request.form.get('hours')
+    
+    if not hours:
+        flash('Hours field is required', 'error')
+        return redirect(f'/staff/edit-milestone/{milestone_id}')
+    
+    try:
+        hours = int(hours)
+        if hours <= 0:
+            flash('Hours must be greater than 0', 'error')
+            return redirect(f'/staff/edit-milestone/{milestone_id}')
+        
+        # Check if another milestone already has this hours value
+        existing = Milestone.query.filter_by(hours=hours).filter(Milestone.id != milestone_id).first()
+        if existing:
+            flash(f'Milestone with {hours} hours already exists', 'error')
+            return redirect(f'/staff/edit-milestone/{milestone_id}')
+        
+        from App.controllers.milestone_controller import update_milestone as update_milestone_controller
+        update_milestone_controller(milestone_id, hours)
+        flash(f'Milestone updated to {hours} hours successfully', 'success')
+        return redirect('/staff/milestones')
+    
+    except ValueError:
+        flash('Hours must be a valid number', 'error')
+        return redirect(f'/staff/edit-milestone/{milestone_id}')
+    except Exception as e:
+        flash(f'Error updating milestone: {str(e)}', 'error')
+        return redirect(f'/staff/edit-milestone/{milestone_id}')
+
 @staff_views.route('/staff/leaderboard', methods=['GET'])
 @jwt_required()
 def staff_leaderboard():
