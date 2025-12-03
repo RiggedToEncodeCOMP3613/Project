@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, jsonify, request, send_from_directory, flash, redirect, url_for
 from flask_jwt_extended import jwt_required, current_user as jwt_current_user
-from App.models import Student, RequestHistory, User
+from App.models import Student, Staff, RequestHistory, User
 from App.database import db
 from App.controllers.leaderboard_controller import generate_leaderboard
 from.index import index_views
@@ -27,21 +27,71 @@ def student_main_menu():
     milestones_count = len(student.check_for_milestones())
     accolades_count = len(student.check_accolades())
 
-    return render_template('student_main_menu.html',
+    return render_template('student/main_menu.html',
                           student=student,
                           total_hours=total_hours,
                           pending_requests=pending_requests,
                           milestones_count=milestones_count,
                           accolades_count=accolades_count)
 
-@student_views.route('/student/make-request', methods=['GET'])
+@student_views.route('/student/make-request', methods=['GET', 'POST'])
 @jwt_required()
 def student_make_request():
     user = jwt_current_user
     if user.role != 'student':
         flash('Access forbidden: Not a student')
         return redirect('/login')
-    return render_template('message.html', title="Make Request", message="Make Request page - Coming Soon!")
+    
+    student = Student.query.get(user.student_id)
+    if not student:
+        flash('Student profile not found')
+        return redirect('/login')
+    
+    if request.method == 'POST':
+        try:
+            # Get form data
+            service = request.form.get('service')
+            date_completed = request.form.get('date')
+            hours = request.form.get('hours')
+            student_id = request.form.get('student_id')
+            supervisor_id = request.form.get('supervisor_id')
+            
+            # Validate required fields
+            if not all([service, date_completed, hours, student_id, supervisor_id]):
+                flash('All fields are required.', 'error')
+                return redirect(url_for('student_views.student_make_request'))
+            
+            # Import the create_request controller function
+            from App.controllers.request_controller import create_request
+            
+            # Create the request
+            req, message = create_request(
+                student_id=int(student_id),
+                service=service,
+                staff_id=int(supervisor_id),
+                hours=float(hours),
+                date_completed=date_completed
+            )
+            
+            if req is None:
+                flash(f'Error: {message}', 'error')
+                return redirect(url_for('student_views.student_make_request'))
+            
+            flash('Request created successfully!', 'success')
+            return redirect(url_for('student_views.student_make_request'))
+            
+        except ValueError as e:
+            flash(f'Invalid input: {str(e)}', 'error')
+            return redirect(url_for('student_views.student_make_request'))
+        except Exception as e:
+            flash(f'An error occurred: {str(e)}', 'error')
+            return redirect(url_for('student_views.student_make_request'))
+    
+    # GET method
+    staff_members = Staff.query.all()
+    return render_template('student/make_request.html', 
+                          student=student, 
+                          staff_members=staff_members)
 
 @student_views.route('/student/stats', methods=['GET'])
 @jwt_required()
@@ -70,7 +120,7 @@ def student_profile():
     milestones_count = len(student.check_for_milestones())
     accolades_count = len(student.check_accolades())
 
-    return render_template('student_profile.html',
+    return render_template('student/profile.html',
                           student=student,
                           total_hours=total_hours,
                           milestones_count=milestones_count,
@@ -117,7 +167,7 @@ def student_change_username():
         flash('Username changed successfully')
         return redirect('/student/profile')
 
-    return render_template('student_change_username.html', student=student)
+    return render_template('student/change_username.html', student=student)
 
 @student_views.route('/student/change-email', methods=['GET', 'POST'])
 @jwt_required()
@@ -165,7 +215,7 @@ def student_change_email():
         flash('Email changed successfully')
         return redirect('/student/profile')
 
-    return render_template('student_change_email.html', student=student)
+    return render_template('student/change_email.html', student=student)
 
 @student_views.route('/student/change-password', methods=['GET', 'POST'])
 @jwt_required()
@@ -222,7 +272,7 @@ def student_change_password():
         flash('Password changed successfully')
         return redirect('/student/profile')
 
-    return render_template('student_change_password.html', student=student)
+    return render_template('student/change_password.html', student=student)
 
 @student_views.route('/student/leaderboard', methods=['GET'])
 @jwt_required()

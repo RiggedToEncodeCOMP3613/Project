@@ -29,7 +29,7 @@ def staff_main_menu():
     from App.models import Accolade
     total_accolades = Accolade.query.count()
 
-    return render_template('staff_main_menu.html',
+    return render_template('staff/main_menu.html',
                          staff=staff,
                          pending_requests=pending_requests,
                          total_students=total_students,
@@ -51,7 +51,7 @@ def staff_milestones():
     for milestone in milestones:
         milestone.student_count = MilestoneHistory.query.filter_by(milestone_id=milestone.id).count()
 
-    return render_template('staff_milestones.html', milestones=milestones)
+    return render_template('staff/milestones.html', milestones=milestones)
 
 @staff_views.route('/staff/delete-milestone/<int:milestone_id>', methods=['POST'])
 @jwt_required()
@@ -85,7 +85,7 @@ def create_milestone_page():
         flash('Access forbidden: Not a staff member')
         return redirect('/login')
     
-    return render_template('staff_create_milestone.html')
+    return render_template('staff/create_milestone.html')
 
 @staff_views.route('/staff/create-milestone', methods=['POST'])
 @jwt_required()
@@ -141,7 +141,7 @@ def edit_milestone_page(milestone_id):
         flash('Milestone not found', 'error')
         return redirect('/staff/milestones')
     
-    return render_template('staff_edit_milestone.html', milestone=milestone)
+    return render_template('staff/edit_milestone.html', milestone=milestone)
 
 @staff_views.route('/staff/edit-milestone/<int:milestone_id>', methods=['POST'])
 @jwt_required()
@@ -203,7 +203,7 @@ def staff_accolades():
         accolade.total_count = AccoladeHistory.query.filter_by(accolade_id=accolade.id).count()
         accolade.personal_count = AccoladeHistory.query.filter_by(accolade_id=accolade.id, staff_id=user.staff_id).count()
 
-    return render_template('staff_accolades.html', accolades=accolades)
+    return render_template('staff/accolades.html', accolades=accolades)
 
 @staff_views.route('/staff/create-accolade', methods=['GET'])
 @jwt_required()
@@ -213,7 +213,7 @@ def create_accolade_page():
         flash('Access forbidden: Not a staff member')
         return redirect('/login')
     
-    return render_template('staff_create_accolade.html')
+    return render_template('staff/create_accolade.html')
 
 @staff_views.route('/staff/create-accolade', methods=['POST'])
 @jwt_required()
@@ -265,7 +265,7 @@ def edit_accolade_page(accolade_id):
         flash('Accolade not found', 'error')
         return redirect('/staff/accolades')
     
-    return render_template('staff_edit_accolade.html', accolade=accolade)
+    return render_template('staff/edit_accolade.html', accolade=accolade)
 
 @staff_views.route('/staff/edit-accolade/<int:accolade_id>', methods=['POST'])
 @jwt_required()
@@ -350,7 +350,7 @@ def award_accolade_page():
         student.accolade_count = len(student_accolades)
         student.accolades = [accolade.description for accolade in Accolade.query.join(AccoladeHistory).filter(AccoladeHistory.student_id == student.student_id).all()]
     
-    return render_template('staff_award_accolade.html', students=students, accolades=accolades)
+    return render_template('staff/award_accolade.html', students=students, accolades=accolades)
 
 @staff_views.route('/staff/award-accolade', methods=['POST'])
 @jwt_required()
