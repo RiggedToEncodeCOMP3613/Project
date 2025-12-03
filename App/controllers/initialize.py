@@ -76,11 +76,11 @@ def initialize(drop_first=True):
 
     db.session.commit()
 
-    # Create 50 requests for random students and staff
+    # Create 100 requests for random students and staff
     requests = []
     request_date = datetime.now(timezone.utc)
 
-    for i in range(50):
+    for i in range(100):
         student = random.choice(students)
         staff_member = random.choice(staff_members)
         hours = round(random.uniform(1, 12))
@@ -104,8 +104,8 @@ def initialize(drop_first=True):
 
     db.session.commit()
 
-    # Approve 30 requests, deny 10, leave 10 pending
-    for i, req in enumerate(requests[:30]):
+    # Approve 60 requests, deny 20, leave 20 pending
+    for i, req in enumerate(requests[:60]):
         req.status = 'approved'
         staff_member = Staff.query.get(req.staff_id)
 
@@ -126,10 +126,8 @@ def initialize(drop_first=True):
         log.activity_id = activity.id
         db.session.add(log)
 
-    for req in requests[30:40]:
+    for req in requests[60:80]:
         req.status = 'denied'
-
-    # Leave requests[40:50] as pending
 
     db.session.commit()
 
@@ -161,9 +159,9 @@ def initialize(drop_first=True):
 
     db.session.commit()
 
-    # Create 10 accolades
+    # Create 30 accolades
     accolades = []
-    for i in range(10):
+    for i in range(30):
         staff_member = random.choice(staff_members)
         description = f"Accolade {i+1}: {random.choice(accolade_description)}"
         accolade = Accolade(staff_id=staff_member.user_id, description=description)
@@ -172,8 +170,8 @@ def initialize(drop_first=True):
 
     db.session.commit()
 
-    # Assign 10 accolades to random students
-    for i in range(10):
+    # Assign 30 accolades to random students
+    for i in range(30):
         accolade = random.choice(accolades)
         student = random.choice(students)
         staff_member = random.choice(staff_members)
