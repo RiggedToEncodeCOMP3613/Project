@@ -7,13 +7,7 @@ def login(username, password):
   result = db.session.execute(db.select(User).filter_by(username=username))
   user = result.scalar_one_or_none()
   if user and user.check_password(password):
-    # Store ONLY the user id as a string in JWT 'sub'
-    role_to_id = {
-      'student': str(user.student_id),
-      'staff': str(user.staff_id)
-    }
-    identity = role_to_id.get(user.role, str(user.id))
-    return create_access_token(identity=identity)
+    return create_access_token(identity=str(user.user_id))
   return None
 
 
@@ -24,7 +18,7 @@ def setup_jwt(app):
   # whether a User object or a raw id is passed.
   @jwt.user_identity_loader
   def user_identity_lookup(identity):
-    user_id = getattr(identity, "id", identity)
+    user_id = getattr(identity, "user_id", identity)
     return str(user_id) if user_id is not None else None
 
   @jwt.user_lookup_loader

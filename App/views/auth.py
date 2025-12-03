@@ -6,8 +6,8 @@ from.index import index_views
 
 from App.controllers import (
     login,
-
 )
+from App.models import User
 
 auth_views = Blueprint('auth_views', __name__, template_folder='../templates')
 
@@ -16,7 +16,11 @@ auth_views = Blueprint('auth_views', __name__, template_folder='../templates')
 
 '''
 Page/Action Routes
-'''    
+'''
+
+@auth_views.route('/login', methods=['GET'])
+def login_page():
+    return render_template('login.html')
 
 @auth_views.route('/identify', methods=['GET'])
 @jwt_required()
@@ -28,17 +32,26 @@ def identify_page():
 def login_action():
     data = request.form
     token = login(data['username'], data['password'])
-    response = redirect(request.referrer)
     if not token:
-        flash('Bad username or password given'), 401
+        flash('Bad username or password given')
+        return redirect('/login')
+
+    # Get user to determine redirect based on role
+    user = User.query.filter_by(username=data['username']).first()
+    if user.role == 'student':
+        response = redirect('/student/main')
+    elif user.role == 'staff':
+        response = redirect('/staff/main')  # We'll need to create this later
     else:
-        flash('Login Successful')
-        set_access_cookies(response, token) 
+        response = redirect('/')
+
+    flash('Login Successful')
+    set_access_cookies(response, token)
     return response
 
 @auth_views.route('/logout', methods=['GET'])
 def logout_action():
-    response = redirect(request.referrer) 
+    response = redirect('/login')
     flash("Logged Out!")
     unset_jwt_cookies(response)
     return response
@@ -53,7 +66,7 @@ def user_login_api():
   token = login(data['username'], data['password'])
   if not token:
     return jsonify(message='bad username or password given'), 401
-  response = jsonify(access_token=token) 
+  response = jsonify(access_token=token)
   set_access_cookies(response, token)
   return response
 

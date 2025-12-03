@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% block title %}Login - Service Hours Tracker{% endblock %}
+{% block page %}Login{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 400px; margin-top: 50px;">
+  <div class="card">
+    <div class="card-content">
+      <div class="center-align">
+        <div style="width: 96px; height: 96px; border: 4px solid #424242; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+          <span style="color: #9e9e9e; font-size: 14px;">LOGO</span>
+        </div>
+        <h5 style="color: #424242; margin-bottom: 32px;">Service Hours Tracker</h5>
+      </div>
+
+      <form method="POST" action="/login">
+        <div class="input-field">
+          <input placeholder="Enter username or email" id="username" name="username" type="text" class="validate" required>
+          <label for="username">Username / Email</label>
+        </div>
+
+        <div class="input-field">
+          <input placeholder="Enter password" id="password" name="password" type="password" class="validate" required>
+          <label for="password">Password</label>
+        </div>
+
+        <p>
+          <label>
+            <input type="checkbox" />
+            <span>Remember me</span>
+          </label>
+        </p>
+
+        <div style="margin-top: 24px;">
+          <button type="submit" name="role" value="student" class="btn waves-effect waves-light" style="width: 100%; margin-bottom: 12px; background-color: #424242 !important;">
+            Login as Student
+          </button>
+          <button type="submit" name="role" value="staff" class="btn waves-effect waves-light" style="width: 100%; background-color: white !important; color: #424242 !important; border: 2px solid #424242;">
+            Login as Staff
+          </button>
+        </div>
+
+        <div class="center-align" style="margin-top: 24px;">
+          <a href="#" style="color: #424242;">Forgot Password?</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
