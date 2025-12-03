@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, current_user as jwt_current_user
 from pytz import utc
 from App.controllers.staff_controller import get_staff_by_name
 from App.models import Student, RequestHistory, LoggedHoursHistory
+from App.models.staff import Staff
 from.index import index_views
 from App.controllers.student_controller import get_all_students_json,fetch_accolades,create_hours_request
 from App.controllers.request_controller import process_request_approval, process_request_denial
@@ -130,3 +131,50 @@ def change_username_view():
         db.session.commit()
         flash('Username changed successfully', 'success')
         return redirect(url_for('staff_views.change_username_view'))
+
+@staff_views.route('/staff/change_password', methods=['GET', 'POST'])
+@jwt_required()
+def change_password_view():
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member', 'error')
+        return redirect(url_for('index_views.index'))
+    if request.method == 'POST':
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        if not current_password or not new_password:
+            flash('Current and new passwords are required', 'error')
+            return redirect(url_for('staff_views.change_password_view'))
+        if not user.check_password(current_password):
+            flash('Incorrect current password', 'error')
+            return redirect(url_for('staff_views.change_password_view'))
+        user.set_password(new_password)
+        db.session.commit()
+        flash(f'Password changed successfully to {new_password}, remember it!', 'success')
+        return redirect(url_for('staff_views.change_password_view'))
+    return render_template('staff/changepassword.html', current_user=user)
+
+@staff_views.route('/staff/change_email', methods=['GET', 'POST'])
+@jwt_required()
+def change_email_view():
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member', 'error')
+        return redirect(url_for('index_views.index'))
+    if request.method == 'POST':
+        new_email = request.form.get('new_email')
+        if not new_email:
+            flash('New email is required', 'error')
+            return redirect(url_for('staff_views.change_email_view'))
+        existing_user = Staff.query.filter_by(email=new_email).first()
+        if existing_user:
+            flash('Email already in use', 'error')
+            return redirect(url_for('staff_views.change_email_view'))
+        password = request.form.get('password')
+        if not password or not user.check_password(password):
+            flash('Incorrect password', 'error')
+            return redirect(url_for('staff_views.change_email_view'))
+        user.email = new_email
+        db.session.commit()
+        flash(f'Email changed successfully to {new_email}', 'success')
+        return redirect(url_for('staff_views.change_email_view'))
