@@ -100,7 +100,10 @@ def student_stats():
     if user.role != 'student':
         flash('Access forbidden: Not a student')
         return redirect('/login')
-    return render_template('student/view_stats_menu.html')
+
+    pending_requests = RequestHistory.query.filter_by(student_id=user.student_id, status='Pending').count()
+
+    return render_template('student/view_stats_menu.html', pending_requests=pending_requests)
 
 @student_views.route('/student/stats/accolades', methods=['GET'])
 @jwt_required()
@@ -129,7 +132,10 @@ def student_stats_pending():
     if user.role != 'student':
         flash('Access forbidden: Not a student')
         return redirect('/login')
-    return render_template('student/pending_requests.html')
+
+    pending_requests = RequestHistory.query.filter_by(student_id=user.student_id, status='Pending').all()
+
+    return render_template('student/pending_requests.html', requests=pending_requests)
 
 @student_views.route('/student/stats/history', methods=['GET'])
 @jwt_required()
