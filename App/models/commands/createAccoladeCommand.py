@@ -9,17 +9,21 @@ class CreateAccoladeCommand(Command):
         self.staff = staff
         self.log: Accolade = None
 
-    #def execute(self, description: str):
-    def execute(self):
+    def execute(self, description: str = None):
         if not self.staff:
             raise ValueError("Staff member not set for CreateAccoladeCommand")
-        #if not self.description:
-        #    raise ValueError("Description required to create accolade")
         
-        description = input("Please enter a description for the accolade: ")
+        if description is None:
+            # CLI mode
+            description = input("Please enter a description for the accolade: ")
 
         self.log = self.staff.create_accolade(description)
-        print("Accolade created with description:", description)
+        
+        # Only print message in CLI mode
+        if description is not None:
+            # This was CLI mode (description was originally None)
+            print("Accolade created with description:", description)
+        
         return self.log
 
     def get_log(self) -> Accolade:

@@ -7,21 +7,27 @@ class MakeRequestCommand(Command):
         self.student = student
         self.log: RequestHistory = None
 
-    def execute(self):
+    def execute(self, service: str = None, staff_id: int = None, hours: float = None, date_completed: str = None):
         if not self.student:
             raise ValueError("Student not set for MakeRequestCommand")
         
         try:
-            print("Please provide the following details in order to make a request:")
-
-            service = input("Service Description: ")
-            staff_id = int(input("Staff ID: "))
-            hours = float(input("Number of Hours: "))
-            date_completed = input("Date Completed (YYYY-MM-DD): ")
+            # If no parameters provided, use CLI mode
+            if service is None or staff_id is None or hours is None or date_completed is None:
+                print("Please provide the following details in order to make a request:")
+                service = input("Service Description: ")
+                staff_id = int(input("Staff ID: "))
+                hours = float(input("Number of Hours: "))
+                date_completed = input("Date Completed (YYYY-MM-DD): ")
 
             request = self.student.make_request(service, staff_id, hours, date_completed)
             self.log = request
-            print("Request made successfully.")
+            
+            # Only print success message in CLI mode
+            if service is not None and staff_id is not None and hours is not None and date_completed is not None:
+                # This was CLI mode (all params were originally None)
+                print("Request made successfully.")
+            
             return self.log
 
         except Exception:

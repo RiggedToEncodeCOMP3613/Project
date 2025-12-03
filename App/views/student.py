@@ -5,6 +5,7 @@ from App.database import db
 from App.controllers.leaderboard_controller import generate_leaderboard
 from.index import index_views
 from App.controllers.student_controller import get_all_students_json,fetch_accolades,create_hours_request
+from App.models.commands.makeRequestCommand import MakeRequestCommand
 
 student_views = Blueprint('student_views', __name__, template_folder='../templates')
 
@@ -61,24 +62,30 @@ def student_make_request():
                 flash('All fields are required.', 'error')
                 return redirect(url_for('student_views.student_make_request'))
             
-            # Import the create_request controller function
-            from App.controllers.request_controller import create_request
-            
-            # Create the request
-            req, message = create_request(
-                student_id=int(student_id),
-                service=service,
-                staff_id=int(supervisor_id),
-                hours=float(hours),
-                date_completed=date_completed
-            )
-            
-            if req is None:
-                flash(f'Error: {message}', 'error')
+            # Get student profile
+            student = Student.query.get(user.student_id)
+            if not student:
+                flash('Student profile not found', 'error')
                 return redirect(url_for('student_views.student_make_request'))
             
-            flash('Request created successfully!', 'success')
-            return redirect(url_for('student_views.student_make_request'))
+            # Use MakeRequestCommand
+            make_request_command = MakeRequestCommand(student)
+            try:
+                req = make_request_command.execute(
+                    service=service,
+                    staff_id=int(supervisor_id),
+                    hours=float(hours),
+                    date_completed=date_completed
+                )
+                
+                if req:
+                    flash('Request created successfully!', 'success')
+                else:
+                    flash('Error creating request', 'error')
+                return redirect(url_for('student_views.student_make_request'))
+            except Exception as e:
+                flash(f'Error creating request: {str(e)}', 'error')
+                return redirect(url_for('student_views.student_make_request'))
             
         except ValueError as e:
             flash(f'Invalid input: {str(e)}', 'error')
@@ -359,8 +366,28 @@ def make_request_action():
     data = request.json
     if not data or 'hours' not in data:
         return jsonify(message='Invalid request data'), 400
-    request_2 = create_hours_request(user.student_id, data['hours'])
-    return jsonify(request_2.get_json()), 201
+    
+    # Get student profile
+    student = Student.query.get(user.student_id)
+    if not student:
+        return jsonify(message='Student profile not found'), 404
+    
+    # Use MakeRequestCommand (simplified API version)
+    make_request_command = MakeRequestCommand(student)
+    try:
+        # For API, we need basic parameters - these could be extended based on API design
+        req = make_request_command.execute(
+            service=data.get('service', 'Service'),
+            staff_id=data.get('staff_id', 1),  # Default staff ID
+            hours=float(data['hours']),
+            date_completed=data.get('date_completed', '2023-01-01')  # Default date
+        )
+        if req:
+            return jsonify(req.get_json()), 201
+        else:
+            return jsonify(message='Error creating request'), 400
+    except Exception as e:
+        return jsonify(message=f'Error creating request: {str(e)}'), 500
 
 @student_views.route('/api/students', methods=['GET'])
 @jwt_required()
@@ -420,22 +447,24 @@ def make_request():
                 flash('All fields are required.', 'error')
                 return redirect(url_for('student_views.make_request'))
 
-            # Create the request using create_request controller function
-            from App.controllers.request_controller import create_request
-            req, message = create_request(
-                student_id=int(student_id),
-                service=service,
-                staff_id=int(supervisor_id),
-                hours=float(hours),
-                date_completed=date_completed
-            )
-
-            if req is None:
-                flash(f'Error: {message}', 'error')
+            # Use MakeRequestCommand
+            make_request_command = MakeRequestCommand(student)
+            try:
+                req = make_request_command.execute(
+                    service=service,
+                    staff_id=int(supervisor_id),
+                    hours=float(hours),
+                    date_completed=date_completed
+                )
+                
+                if req:
+                    flash('Request created successfully!', 'success')
+                else:
+                    flash('Error creating request', 'error')
                 return redirect(url_for('student_views.make_request'))
-
-            flash('Request created successfully!', 'success')
-            return redirect(url_for('student_views.make_request'))
+            except Exception as e:
+                flash(f'Error creating request: {str(e)}', 'error')
+                return redirect(url_for('student_views.make_request'))
 
         except ValueError as e:
             flash(f'Invalid input: {str(e)}', 'error')

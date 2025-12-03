@@ -5,6 +5,11 @@ from App.controllers.leaderboard_controller import generate_leaderboard
 from.index import index_views
 from App.controllers.student_controller import get_all_students_json,fetch_accolades,create_hours_request
 from App.controllers.request_controller import process_request_approval, process_request_denial
+from App.models.commands.approveHoursCommand import ApproveHoursCommand
+from App.models.commands.denyHoursCommand import DenyHoursCommand
+from App.models.commands.logHoursCommand import LogHoursCommand
+from App.models.commands.awardAccoladeCommand import AwardAccoladeCommand
+from App.models.commands.createAccoladeCommand import CreateAccoladeCommand
 from App import db
 
 staff_views = Blueprint('staff_views', __name__, template_folder='../templates')
@@ -258,7 +263,6 @@ def create_accolade_submit():
         return redirect('/staff/create-accolade')
     
     try:
-        from App.controllers.accolade_controller import create_accolade as create_accolade_controller
         from App.models import Accolade
         
         # Check if accolade already exists
@@ -267,12 +271,23 @@ def create_accolade_submit():
             flash(f'Accolade "{description}" already exists', 'error')
             return redirect('/staff/create-accolade')
         
-        accolade, error = create_accolade_controller(user.staff_id, description)
-        if error:
-            flash(error, 'error')
+        # Get staff profile
+        staff = Staff.query.get(user.staff_id)
+        if not staff:
+            flash('Staff profile not found', 'error')
             return redirect('/staff/create-accolade')
         
-        flash(f'Accolade "{description}" created successfully', 'success')
+        # Use CreateAccoladeCommand
+        create_command = CreateAccoladeCommand(staff)
+        try:
+            accolade = create_command.execute(description=description)
+            if accolade:
+                flash(f'Accolade "{description}" created successfully', 'success')
+            else:
+                flash('Error creating accolade', 'error')
+        except Exception as e:
+            flash(f'Error creating accolade: {str(e)}', 'error')
+        
         return redirect('/staff/accolades')
     
     except Exception as e:
@@ -400,7 +415,6 @@ def award_accolade_submit():
         accolade_id = int(accolade_id)
         
         from App.models import Student, Accolade, AccoladeHistory
-        from App.controllers.accolade_controller import assign_accolade_to_student
         
         student = Student.query.get(student_id)
         if not student:
@@ -421,8 +435,23 @@ def award_accolade_submit():
             flash(f'{student.username} already has the "{accolade.description}" accolade', 'error')
             return redirect('/staff/award-accolade')
         
-        assign_accolade_to_student(accolade_id, student_id, user.staff_id)
-        flash(f'Accolade "{accolade.description}" awarded to {student.username} successfully', 'success')
+        # Get staff profile
+        staff = Staff.query.get(user.staff_id)
+        if not staff:
+            flash('Staff profile not found', 'error')
+            return redirect('/staff/award-accolade')
+        
+        # Use AwardAccoladeCommand
+        award_command = AwardAccoladeCommand(staff)
+        try:
+            result = award_command.execute(student_id=str(student_id), accolade_id=str(accolade_id))
+            if result:
+                flash(f'Accolade "{accolade.description}" awarded to {student.username} successfully', 'success')
+            else:
+                flash('Error awarding accolade', 'error')
+        except Exception as e:
+            flash(f'Error awarding accolade: {str(e)}', 'error')
+        
         return redirect('/staff/accolades')
     
     except ValueError:
@@ -453,14 +482,26 @@ def accept_request_action():
     data = request.json
     if not data or 'request_id' not in data:
         return jsonify(message='Invalid request data'), 400
-    # Logic to accept the request goes here
+    
+    # Get staff profile
+    staff = Staff.query.get(user.staff_id)
+    if not staff:
+        return jsonify(message='Staff profile not found'), 404
+    
+    # Verify request exists and belongs to this staff member
     req = RequestHistory.query.get(data['request_id'])
     if not req:
         return jsonify(message='Request not found'), 404
+    if req.staff_id != user.staff_id:
+        return jsonify(message='Request does not belong to this staff member'), 403
     
-    process_request_approval(user.staff_id, data['request_id'])
-    
-    return jsonify(message='Request accepted'), 200
+    # Use ApproveHoursCommand
+    approve_command = ApproveHoursCommand(staff)
+    try:
+        result = approve_command.execute(request_id=data['request_id'])
+        return jsonify(message='Request accepted'), 200
+    except Exception as e:
+        return jsonify(message=f'Error approving request: {str(e)}'), 500
 
 @staff_views.route('/api/deny_request', methods=['PUT'])
 @jwt_required()
@@ -470,13 +511,27 @@ def deny_request_action():
         return jsonify(message='Access forbidden: Not a staff member'), 403
     data = request.json
     if not data or 'request_id' not in data:
-        return jsonify(message='Invalid request data'), 400    
-    # Logic to deny the request goes here
+        return jsonify(message='Invalid request data'), 400
+    
+    # Get staff profile
+    staff = Staff.query.get(user.staff_id)
+    if not staff:
+        return jsonify(message='Staff profile not found'), 404
+    
+    # Verify request exists and belongs to this staff member
     req = RequestHistory.query.get(data['request_id'])
     if not req:
-        return jsonify(message='Request not found'), 404    
-    process_request_denial(user.staff_id, data['request_id'])
-    return jsonify(message='Request denied'), 200
+        return jsonify(message='Request not found'), 404
+    if req.staff_id != user.staff_id:
+        return jsonify(message='Request does not belong to this staff member'), 403
+    
+    # Use DenyHoursCommand
+    deny_command = DenyHoursCommand(staff)
+    try:
+        result = deny_command.execute(request_id=data['request_id'])
+        return jsonify(message='Request denied'), 200
+    except Exception as e:
+        return jsonify(message=f'Error denying request: {str(e)}'), 500
 
 @staff_views.route('/api/delete_request', methods=['DELETE'])
 @jwt_required()
@@ -520,14 +575,18 @@ def log_hours_view():
         flash('Access forbidden: Not a staff member', 'error')
         return redirect(url_for('index_views.index'))
     
-    # Import required modules for both GET and POST
-    from datetime import datetime
-    from pytz import utc
-    from App.controllers.loggedHoursHistory_controller import create_logged_hours
+    # Get staff profile
+    staff = Staff.query.get(user.staff_id)
+    if not staff:
+        flash('Staff profile not found', 'error')
+        return redirect(url_for('index_views.index'))
     
     if request.method == 'POST':
         student_id = request.form.get('student_id')
         hours = request.form.get('hours')
+        service = request.form.get('service', '')
+        date_completed = request.form.get('date_completed', '')
+        
         if not student_id or not hours:
             flash('Student ID and hours are required', 'error')
             return redirect(url_for('staff_views.log_hours_view'))
@@ -536,13 +595,23 @@ def log_hours_view():
         except ValueError:
             flash('Invalid hours value', 'error')
             return redirect(url_for('staff_views.log_hours_view'))
+        
         student = Student.query.get(student_id)
         if not student:
             flash('Student not found', 'error')
             return redirect(url_for('staff_views.log_hours_view'))
-        # Log the hours for the student
-        create_logged_hours(student_id, user.staff_id, hours, service=request.form.get('service'), date_completed=utc.localize(datetime.utcnow()))
-        flash('Hours logged successfully', 'success')
+        
+        # Use LogHoursCommand
+        log_command = LogHoursCommand(staff)
+        try:
+            result = log_command.execute(service=service, student_id=student_id, hours=hours, date_completed=date_completed)
+            if result:
+                flash('Hours logged successfully', 'success')
+            else:
+                flash('Error logging hours', 'error')
+        except Exception as e:
+            flash(f'Error logging hours: {str(e)}', 'error')
+        
         return redirect(url_for('staff_views.log_hours_view'))
     
     # GET request - render the log hours page

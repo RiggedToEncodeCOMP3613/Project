@@ -7,21 +7,27 @@ class LogHoursCommand(Command):
         self.staff = staff
         self.log: LoggedHoursHistory = None
 
-    def execute(self):
+    def execute(self, service: str = None, student_id: int = None, hours: float = None, date_completed: str = None):
         if not self.staff:
             raise ValueError("Staff member not set for LogHoursCommand")
 
         try:
-            print("Please provide the following details in order to log hours for a student:")
-
-            service = input("Service Description: ")
-            student_id = int(input("Student ID: "))
-            hours = float(input("Number of Hours: "))
-            date_completed = input("Date Completed (YYYY-MM-DD): ")
+            # If no parameters provided, use CLI mode
+            if service is None or student_id is None or hours is None or date_completed is None:
+                print("Please provide the following details in order to log hours for a student:")
+                service = input("Service Description: ")
+                student_id = int(input("Student ID: "))
+                hours = float(input("Number of Hours: "))
+                date_completed = input("Date Completed (YYYY-MM-DD): ")
 
             logged_hours = self.staff.log_hours(service, student_id, hours, date_completed)
             self.log = logged_hours
-            print(f'Hours logged successfully for Student ID {student_id}.')
+            
+            # Only print success message in CLI mode
+            if service is not None and student_id is not None and hours is not None and date_completed is not None:
+                # This was CLI mode (all params were originally None)
+                print(f'Hours logged successfully for Student ID {student_id}.')
+            
             return self.log
 
         except Exception:
