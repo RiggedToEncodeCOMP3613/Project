@@ -126,18 +126,21 @@ def change_username_view():
         if not new_username:
             flash('New username is required', 'error')
             return redirect(url_for('staff_views.change_username_view'))
-        existing_user = get_staff_by_name(new_username)
-        if existing_user:
-            flash('Username already taken', 'error')
+        try:
+            existing_user = get_staff_by_name(new_username)
+            if existing_user:
+                flash('Username already taken', 'error')
+                return redirect(url_for('staff_views.change_username_view'))
+        except: # We actually want the try to fail, this indicates no user found with that name
+            password = request.form.get('confirm_password')
+            if not password or not user.check_password(password):
+                flash('Incorrect password', 'error')
+                return redirect(url_for('staff_views.change_username_view'))
+            user.username = new_username
+            db.session.commit()
+            flash(f'Username changed successfully to {user.username}', 'success')
+            print (f'Username changed successfully to {user.username}') #debug
             return redirect(url_for('staff_views.change_username_view'))
-        password = request.form.get('confirm_password')
-        if not password or not user.check_password(password):
-            flash('Incorrect password', 'error')
-            return redirect(url_for('staff_views.change_username_view'))
-        user.username = new_username
-        db.session.commit()
-        flash('Username changed successfully', 'success')
-        return redirect(url_for('staff_views.change_username_view'))
     # GET -> render the change username form
     return render_template('staff/change_username.html', current_user=user)
 
