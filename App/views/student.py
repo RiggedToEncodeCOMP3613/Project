@@ -118,6 +118,54 @@ def student_change_username():
 
     return render_template('student_change_username.html', student=student)
 
+@student_views.route('/student/change-email', methods=['GET', 'POST'])
+@jwt_required()
+def student_change_email():
+    user = jwt_current_user
+    if user.role != 'student':
+        flash('Access forbidden: Not a student')
+        return redirect('/login')
+
+    student = Student.query.get(user.student_id)
+    if not student:
+        flash('Student profile not found')
+        return redirect('/login')
+
+    if request.method == 'POST':
+        new_email = request.form.get('new_email')
+        confirm_email = request.form.get('confirm_email')
+        password = request.form.get('password')
+
+        if not new_email or not confirm_email or not password:
+            flash('All fields are required')
+            return redirect(request.url)
+
+        if new_email != confirm_email:
+            flash('Email addresses do not match')
+            return redirect(request.url)
+
+        if "@" not in new_email:
+            flash('Invalid email address')
+            return redirect(request.url)
+
+        if not user.check_password(password):
+            flash('Incorrect password')
+            return redirect(request.url)
+
+        # Check if email already exists
+        existing = User.query.filter_by(email=new_email).first()
+        if existing:
+            flash('Email already in use')
+            return redirect(request.url)
+
+        # Update email
+        user.email = new_email
+        db.session.commit()
+        flash('Email changed successfully')
+        return redirect('/student/profile')
+
+    return render_template('student_change_email.html', student=student)
+
 @student_views.route('/student/leaderboard', methods=['GET'])
 @jwt_required()
 def student_leaderboard():
