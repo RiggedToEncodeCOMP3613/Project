@@ -258,3 +258,8 @@ def make_request_action():
         return jsonify(message='Invalid request data'), 400
     request_2 = create_hours_request(user.student_id, data['hours'])
     return jsonify(request_2.get_json()), 201
+
+@student_views.route('/api/students', methods=['GET'])
+@jwt_required()
+def get_students_action():
+    return get_all_students_json()

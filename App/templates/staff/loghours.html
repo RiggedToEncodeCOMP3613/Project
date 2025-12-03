@@ -1,0 +1,62 @@
+<h1>Log Hours</h1>
+<p><- Back to Main menu</p>
+
+        <h2>Manually Log student hours</h2>
+        {# This should be a search function to be implemented later #}
+        {# <form method="post">
+            <label for="student_id">Student ID:</label>
+            <input type="text" id="student_id" name="student_id" required>
+        </form> #}
+
+        {# Fetch results from getting students #}
+        {% if students %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td id="studentId">{{ student.id }}</td>
+                    <td>{{ student.name }}</td>
+                    <td onclick="selectStudent()">Select</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No students found.</p>
+        {% endif %}
+        Selected Student: <span id="selectedStudent"></span>
+
+        <h2>Data for logged hours</h2>
+        <form method="post" action="/staff/loghours">
+            <label for="Service" placeholder="Enter service name">Service:</label>
+            <label for="hours">Hours:</label>
+            <input type="number" id="hours" name="hours" step="0.1" required>
+            <button type="submit">Log Hours</button>
+        </form>
+
+        <script>
+            function fetchStudents() {
+                fetch('/api/students', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+                    }
+                });
+                students = response.json();
+                console.log(students);
+            }
+            function selectStudent() {
+                var studentId = event.target.parentNode.firstChild.textContent;
+                document.getElementById("selectedStudent").textContent = studentId;
+            }
+            window.onload = fetchStudents;
+        </script>
