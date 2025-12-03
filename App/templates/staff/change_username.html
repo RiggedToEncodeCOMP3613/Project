@@ -36,12 +36,18 @@
           <input placeholder="Enter your password to confirm" id="confirm_password" name="confirm_password" type="password" required style="background-color: var(--bg-color); color: var(--text-color); border: 2px solid var(--border-color); padding: 12px; border-radius: 4px; width: 100%; box-sizing: border-box;">
         </div>
 
-        <!-- Buttons -->
-        <div style="display: flex; gap: 16px;">
-          <button type="submit" class="btn waves-effect waves-light" style="flex: 1; background-color: var(--btn-bg) !important; color: var(--btn-text) !important;">
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 16px; margin-top: 32px;">
+          <button 
+            type="submit" 
+            class="btn-primary"
+          >
             Change Username
           </button>
-          <a href="/staff/profile" class="btn waves-effect waves-light" style="flex: 1; background-color: transparent !important; color: var(--text-color) !important; border: 2px solid var(--border-color);">
+          <a 
+            href="/staff/profile" 
+            class="btn-secondary"
+          >
             Cancel
           </a>
         </div>
