@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, jsonify, request, send_from_directory, flash, redirect, url_for
+import logging
 from flask_jwt_extended import jwt_required, current_user as jwt_current_user
 from App.models import Student, Staff, RequestHistory, User
 from App.database import db
@@ -8,6 +9,7 @@ from App.controllers.student_controller import get_all_students_json,fetch_accol
 from App.models.commands.makeRequestCommand import MakeRequestCommand
 
 student_views = Blueprint('student_views', __name__, template_folder='../templates')
+logger = logging.getLogger(__name__)
 
 @student_views.route('/student/main', methods=['GET'])
 @jwt_required()
@@ -387,7 +389,8 @@ def make_request_action():
         else:
             return jsonify(message='Error creating request'), 400
     except Exception as e:
-        return jsonify(message=f'Error creating request: {str(e)}'), 500
+        logger.exception("Error occurred while creating request")
+        return jsonify(message='An internal error has occurred'), 500
 
 @student_views.route('/api/students', methods=['GET'])
 @jwt_required()
