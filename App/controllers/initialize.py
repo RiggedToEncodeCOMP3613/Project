@@ -159,11 +159,15 @@ def initialize(drop_first=True):
 
     db.session.commit()
 
-    # Create 30 accolades
+    # Create 30 unique accolades
     accolades = []
+    used_descriptions = set()
     for i in range(30):
         staff_member = random.choice(staff_members)
         description = f"Accolade {i+1}: {random.choice(accolade_description)}"
+        while description in used_descriptions:
+            description = f"Accolade {i+1}: {random.choice(accolade_description)}"
+        used_descriptions.add(description)
         accolade = Accolade(staff_id=staff_member.user_id, description=description)
         accolades.append(accolade)
         db.session.add(accolade)
