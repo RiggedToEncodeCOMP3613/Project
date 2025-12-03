@@ -109,7 +109,18 @@ def student_stats_accolades():
     if user.role != 'student':
         flash('Access forbidden: Not a student')
         return redirect('/login')
-    return render_template('message.html', title="Accolades & Milestones", message="Accolades & Milestones page - Coming Soon!")
+
+    student = Student.query.get(user.student_id)
+    if not student:
+        flash('Student profile not found')
+        return redirect('/login')
+
+    total_hours = student.total_hours
+    all_milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    next_milestone = next((m for m in all_milestones if m > total_hours), None)
+    accolades = student.check_accolades()
+
+    return render_template('student/all_stats.html', student=student, total_hours=total_hours, next_milestone=next_milestone, accolades=accolades)
 
 @student_views.route('/student/stats/pending', methods=['GET'])
 @jwt_required()
