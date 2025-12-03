@@ -34,28 +34,46 @@
       <form method="POST" action="{{ url_for('staff_views.log_hours_view') }}">
         <!-- Student Search Section -->
         <div style="margin-bottom: 32px;">
-          <!-- Search Input -->
-          <div class="input-field" style="margin-bottom: 16px;">
-            <input placeholder="Search by name or student ID..." id="student_search" name="student_search" type="text" class="validate" onkeyup="searchStudents()">
-            <label for="student_search">Search Student</label>
+          <div style="margin-bottom: 16px;">
+            <label class="form-label">
+              Search Student
+            </label>
+            <input 
+              type="text" 
+              id="student-search" 
+              placeholder="Search by name or student ID..." 
+              class="form-input"
+              onkeyup="filterStudents()"
+            />
           </div>
-          
+
           <!-- Hidden field to store selected student ID -->
           <input type="hidden" id="student_id" name="student_id" required>
-          
-          <!-- Student List (Always Visible) -->
-          <div id="studentList" style="border: 2px solid var(--border-color); border-radius: 8px; overflow: hidden; max-height: 300px; overflow-y: auto;">
-            {% for student in students %}
-            <div class="student-row" data-student-id="{{ student.student_id }}" data-name="{{ student.username }}" data-email="{{ student.email }}" onclick="selectStudent(this)">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="flex: 1;">
-                  <div style="color: var(--text-color); font-weight: 500;">{{ student.username }}</div>
-                  <div style="color: var(--secondary-text); font-size: 14px;">ID: {{ student.student_id }}</div>
-                </div>
-                <div style="color: var(--secondary-text); font-size: 14px;">Select</div>
-              </div>
+
+          <!-- Student Selection Grid -->
+          <div class="student-selection-grid" id="loghours-student-grid">
+            <div class="student-search-header">
+              <div>Student List - Click to Select</div>
             </div>
-            {% endfor %}
+            
+            <div class="student-cards-container">
+              {% for student in students %}
+              <div class="student-card {% if loop.index % 3 == 1 %}student-card-1{% elif loop.index % 3 == 2 %}student-card-2{% else %}student-card-3{% endif %}" 
+                   data-student-name="{{ student.username.lower() }}" 
+                   data-student-id="{{ student.student_id }}"
+                   onclick="selectStudent('{{ student.student_id }}', '{{ student.username }}')">
+                <div class="student-card-header">
+                  <div class="student-name">{{ student.username }}</div>
+                </div>
+                <div class="student-card-body">
+                  <div class="student-id">ID: {{ student.student_id }}</div>
+                </div>
+                <div class="student-card-footer">
+                  <span class="select-indicator">Click to Select</span>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
           </div>
           
           {% if not students %}
@@ -68,9 +86,9 @@
         <!-- Form Fields Section -->
         <div style="border-top: 2px solid var(--border-color); padding-top: 24px; margin-top: 24px;">
           <!-- Student Selection Display -->
-          <div id="selectedStudent" style="display: none; margin-bottom: 24px; padding: 16px; border: 2px solid var(--border-color); border-radius: 8px; background-color: var(--card-panel-bg);">
+          <div id="selected-student-info-block" class="selected-student-info" style="display: none; margin-bottom: 24px; padding: 16px; border: 2px solid var(--border-color); border-radius: 8px; background-color: var(--card-panel-bg);">
             <div style="color: var(--text-color);">
-              <strong>Selected Student:</strong> <span id="selectedStudentName"></span> (ID: <span id="selectedStudentId"></span>)
+              <strong class="selected-student-label">Selected Student:</strong> <span id="selected-student-text" class="selected-student-text"></span>
             </div>
           </div>
 
@@ -164,48 +182,46 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Student search functionality
-function searchStudents() {
-    const searchTerm = document.getElementById('student_search').value.toLowerCase();
-    const studentRows = document.querySelectorAll('.student-row');
+function filterStudents() {
+    const searchTerm = document.getElementById('student-search').value.toLowerCase();
+    const cards = document.querySelectorAll('.student-card');
     
-    if (searchTerm.length >= 2) {
-        studentRows.forEach(row => {
-            const studentId = row.getAttribute('data-student-id').toLowerCase();
-            const name = row.getAttribute('data-name').toLowerCase();
-            const email = row.getAttribute('data-email').toLowerCase();
+    if (searchTerm.length >= 1) {
+        cards.forEach(card => {
+            const studentId = card.getAttribute('data-student-id').toLowerCase();
+            const name = card.getAttribute('data-student-name').toLowerCase();
             
-            if (studentId.includes(searchTerm) || name.includes(searchTerm) || email.includes(searchTerm)) {
-                row.style.display = 'block';
+            if (studentId.includes(searchTerm) || name.includes(searchTerm)) {
+                card.classList.remove('hidden');
             } else {
-                row.style.display = 'none';
+                card.classList.add('hidden');
             }
         });
     } else {
-        // Show all students when search is cleared
-        studentRows.forEach(row => {
-            row.style.display = 'block';
+        // Show all students when search is cleared or less than 1 character
+        cards.forEach(card => {
+            card.classList.remove('hidden');
         });
     }
 }
 
 // Student selection functionality
-function selectStudent(row) {
-    const studentId = row.getAttribute('data-student-id');
-    const name = row.getAttribute('data-name');
+function selectStudent(studentId, studentName) {
+    // Show selected student info
+    const display = document.getElementById('selected-student-info-block');
+    const textSpan = document.getElementById('selected-student-text');
     
-    // Update selected student display
-    document.getElementById('selectedStudent').style.display = 'block';
-    document.getElementById('selectedStudentName').textContent = name;
-    document.getElementById('selectedStudentId').textContent = studentId;
+    textSpan.textContent = studentName + ' (ID: ' + studentId + ')';
+    display.style.display = 'block';
     
     // Set hidden field value
     document.getElementById('student_id').value = studentId;
     
     // Clear search field and show all students
-    document.getElementById('student_search').value = '';
-    const studentRows = document.querySelectorAll('.student-row');
-    studentRows.forEach(row => {
-        row.style.display = 'block';
+    document.getElementById('student-search').value = '';
+    const studentCards = document.querySelectorAll('.student-card');
+    studentCards.forEach(card => {
+        card.classList.remove('hidden');
     });
     
     // Update Materialize labels
@@ -236,15 +252,6 @@ function validateForm() {
     return confirm('Are you sure you want to log these hours for the student?');
 }
 
-// Clear search when clicking outside the search area
-document.addEventListener('click', function(event) {
-    const searchInput = document.getElementById('student_search');
-    const studentList = document.getElementById('studentList');
-    
-    if (!searchInput.contains(event.target) && !studentList.contains(event.target)) {
-        // Don't clear the search input, just let it be
-        // This maintains the current behavior of keeping the search term
-    }
-});
+// Search functionality is handled by the filterStudents function
 </script>
 {% endblock %}
