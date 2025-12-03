@@ -187,6 +187,151 @@ def edit_milestone_submit(milestone_id):
         flash(f'Error updating milestone: {str(e)}', 'error')
         return redirect(f'/staff/edit-milestone/{milestone_id}')
 
+@staff_views.route('/staff/accolades', methods=['GET'])
+@jwt_required()
+def staff_accolades():
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+
+    from App.models import Accolade, AccoladeHistory
+    accolades = Accolade.query.all()
+    
+    # Count total students awarded and personally awarded for each accolade
+    for accolade in accolades:
+        accolade.total_count = AccoladeHistory.query.filter_by(accolade_id=accolade.id).count()
+        accolade.personal_count = AccoladeHistory.query.filter_by(accolade_id=accolade.id, staff_id=user.staff_id).count()
+
+    return render_template('staff_accolades.html', accolades=accolades)
+
+@staff_views.route('/staff/create-accolade', methods=['GET'])
+@jwt_required()
+def create_accolade_page():
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+    
+    return render_template('staff_create_accolade.html')
+
+@staff_views.route('/staff/create-accolade', methods=['POST'])
+@jwt_required()
+def create_accolade_submit():
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+    
+    description = request.form.get('description')
+    
+    if not description:
+        flash('Accolade name field is required', 'error')
+        return redirect('/staff/create-accolade')
+    
+    try:
+        from App.controllers.accolade_controller import create_accolade as create_accolade_controller
+        from App.models import Accolade
+        
+        # Check if accolade already exists
+        existing = Accolade.query.filter_by(description=description).first()
+        if existing:
+            flash(f'Accolade "{description}" already exists', 'error')
+            return redirect('/staff/create-accolade')
+        
+        accolade, error = create_accolade_controller(user.staff_id, description)
+        if error:
+            flash(error, 'error')
+            return redirect('/staff/create-accolade')
+        
+        flash(f'Accolade "{description}" created successfully', 'success')
+        return redirect('/staff/accolades')
+    
+    except Exception as e:
+        flash(f'Error creating accolade: {str(e)}', 'error')
+        return redirect('/staff/create-accolade')
+
+@staff_views.route('/staff/edit-accolade/<int:accolade_id>', methods=['GET'])
+@jwt_required()
+def edit_accolade_page(accolade_id):
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+    
+    from App.models import Accolade
+    accolade = Accolade.query.get(accolade_id)
+    if not accolade:
+        flash('Accolade not found', 'error')
+        return redirect('/staff/accolades')
+    
+    return render_template('staff_edit_accolade.html', accolade=accolade)
+
+@staff_views.route('/staff/edit-accolade/<int:accolade_id>', methods=['POST'])
+@jwt_required()
+def edit_accolade_submit(accolade_id):
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+    
+    from App.models import Accolade
+    accolade = Accolade.query.get(accolade_id)
+    if not accolade:
+        flash('Accolade not found', 'error')
+        return redirect('/staff/accolades')
+    
+    description = request.form.get('description')
+    
+    if not description:
+        flash('Accolade name field is required', 'error')
+        return redirect(f'/staff/edit-accolade/{accolade_id}')
+    
+    try:
+        # Check if another accolade already has this description
+        existing = Accolade.query.filter_by(description=description).filter(Accolade.id != accolade_id).first()
+        if existing:
+            flash(f'Accolade "{description}" already exists', 'error')
+            return redirect(f'/staff/edit-accolade/{accolade_id}')
+        
+        from App.controllers.accolade_controller import update_accolade as update_accolade_controller
+        result, error = update_accolade_controller(accolade_id, description=description)
+        if error:
+            flash(error, 'error')
+            return redirect(f'/staff/edit-accolade/{accolade_id}')
+        
+        flash(f'Accolade updated successfully', 'success')
+        return redirect('/staff/accolades')
+    
+    except Exception as e:
+        flash(f'Error updating accolade: {str(e)}', 'error')
+        return redirect(f'/staff/edit-accolade/{accolade_id}')
+
+@staff_views.route('/staff/delete-accolade/<int:accolade_id>', methods=['POST'])
+@jwt_required()
+def delete_accolade(accolade_id):
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+
+    from App.controllers.accolade_controller import delete_accolade as delete_accolade_controller
+    from App.models import Accolade
+    
+    accolade = Accolade.query.get(accolade_id)
+    if not accolade:
+        flash('Accolade not found', 'error')
+        return redirect('/staff/accolades')
+    
+    try:
+        description = accolade.description
+        delete_accolade_controller(accolade_id, delete_history=True)
+        flash(f'Accolade "{description}" deleted successfully', 'success')
+    except Exception as e:
+        flash(f'Error deleting accolade: {str(e)}', 'error')
+    
+    return redirect('/staff/accolades')
+
 @staff_views.route('/staff/leaderboard', methods=['GET'])
 @jwt_required()
 def staff_leaderboard():
