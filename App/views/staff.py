@@ -178,3 +178,12 @@ def change_email_view():
         db.session.commit()
         flash(f'Email changed successfully to {new_email}', 'success')
         return redirect(url_for('staff_views.change_email_view'))
+    
+@staff_views.route('/staff/profile', methods=['GET'])
+@jwt_required()
+def staff_profile_view():
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member', 'error')
+        return redirect(url_for('index_views.index'))
+    return render_template('staff/profilescreen.html', current_user=user)
