@@ -519,6 +519,12 @@ def log_hours_view():
     if user.role != 'staff':
         flash('Access forbidden: Not a staff member', 'error')
         return redirect(url_for('index_views.index'))
+    
+    # Import required modules for both GET and POST
+    from datetime import datetime
+    from pytz import utc
+    from App.controllers.loggedHoursHistory_controller import create_logged_hours
+    
     if request.method == 'POST':
         student_id = request.form.get('student_id')
         hours = request.form.get('hours')
@@ -540,10 +546,6 @@ def log_hours_view():
         return redirect(url_for('staff_views.log_hours_view'))
     
     # GET request - render the log hours page
-    from datetime import datetime
-    from pytz import utc
-    from App.controllers.loggedHoursHistory_controller import create_logged_hours
-    
     # Get all students for the dropdown
     students = Student.query.all()
     return render_template('staff/loghours.html', students=students)

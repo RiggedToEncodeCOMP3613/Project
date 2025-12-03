@@ -207,3 +207,18 @@ p {
     color: #424242 !important;
     border: 2px solid #424242 !important;
 }
+
+/* Student Row Hover Effect */
+.student-row {
+    padding: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--card-bg);
+    transition: all 0.3s ease;
+}
+
+.student-row:hover {
+    background-color: rgba(255, 255, 0, 0.1) !important;
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
