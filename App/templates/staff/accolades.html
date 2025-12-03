@@ -8,15 +8,15 @@
     <div class="card-content">
       <!-- Header with Back Button -->
       <div style="margin-bottom: 24px;">
-        <a href="/staff/main" style="color: #9e9e9e; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+        <a href="/staff/main" style="color: var(--secondary-text); text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
           <i class="material-icons" style="font-size: 18px;">arrow_back</i>
           Back to Main Menu
         </a>
       </div>
 
       <!-- Title and Action Buttons -->
-      <div style="border-bottom: 2px solid #424242; padding-bottom: 16px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;">
-        <h4 style="color: #424242; margin: 0;">Manage Accolades</h4>
+      <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 16px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;">
+        <h4 style="color: var(--text-color); margin: 0;">Manage Accolades</h4>
         <div style="display: flex; gap: 12px;">
           <a href="/staff/award-accolade" class="btn waves-effect waves-light" style="background-color: var(--btn-bg); color: var(--btn-text); margin: 0;">
             <i class="material-icons left">emoji_events</i>
@@ -31,27 +31,27 @@
 
       <!-- Accolades Table -->
       <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse;">
+        <table class="accolades-table" style="width: 100%; border-collapse: collapse;">
           <thead>
-            <tr style="background-color: #424242; color: #ffffff;">
-              <th style="padding: 16px; text-align: left; border: 1px solid #424242;">Accolade Name</th>
-              <th style="padding: 16px; text-align: left; border: 1px solid #424242;">Total Students Awarded</th>
-              <th style="padding: 16px; text-align: left; border: 1px solid #424242;">Personally Awarded</th>
-              <th style="padding: 16px; text-align: center; border: 1px solid #424242;">Actions</th>
+            <tr class="accolades-header">
+              <th>Accolade Name</th>
+              <th>Total Students Awarded</th>
+              <th>Personally Awarded</th>
+              <th style="text-align: center;">Actions</th>
             </tr>
           </thead>
           <tbody>
             {% for accolade in accolades %}
-            <tr style="background-color: {% if loop.index % 2 == 0 %}#f5f5f5{% else %}#ffffff{% endif %}; border: 1px solid #e0e0e0;">
-              <td style="padding: 16px; border: 1px solid #e0e0e0; color: var(--text-color);">{{ accolade.description }}</td>
-              <td style="padding: 16px; border: 1px solid #e0e0e0; color: var(--text-color);">{{ accolade.total_count | default(0) }}</td>
-              <td style="padding: 16px; border: 1px solid #e0e0e0; color: var(--text-color);">{{ accolade.personal_count | default(0) }}</td>
-              <td style="padding: 16px; border: 1px solid #e0e0e0; text-align: center;">
-                <a href="/staff/edit-accolade/{{ accolade.id }}" style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 2px solid #424242; background-color: #ffffff; color: #424242; text-decoration: none; margin-right: 12px; cursor: pointer; transition: all 0.3s;">
-                  <i class="material-icons" style="font-size: 20px;">edit</i>
+            <tr class="{% if loop.index % 2 == 0 %}accolade-row-even{% else %}accolade-row-odd{% endif %}">
+              <td>{{ accolade.description }}</td>
+              <td>{{ accolade.total_count | default(0) }}</td>
+              <td>{{ accolade.personal_count | default(0) }}</td>
+              <td style="text-align: center;">
+                <a href="/staff/edit-accolade/{{ accolade.id }}" class="accolade-edit-btn">
+                  <i class="material-icons">edit</i>
                 </a>
-                <a href="#delete-modal-{{ accolade.id }}" class="modal-trigger" style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 2px solid #ef5350; background-color: #ef5350; color: #ffffff; text-decoration: none; cursor: pointer; transition: all 0.3s;">
-                  <i class="material-icons" style="font-size: 20px;">delete</i>
+                <a href="#delete-modal-{{ accolade.id }}" class="modal-trigger accolade-delete-btn">
+                  <i class="material-icons">delete</i>
                 </a>
                 
                 <!-- Delete Modal -->
@@ -75,9 +75,9 @@
       </div>
 
       <!-- Info Card -->
-      <div class="card-panel" style="border: 2px solid var(--border-color); margin-top: 32px; background-color: var(--card-panel-bg);">
-        <h5 style="color: #424242; margin-bottom: 12px;">About Accolades</h5>
-        <p style="color: var(--secondary-text); margin: 0;">
+      <div class="card-panel accolade-info-panel" style="margin-top: 32px;">
+        <h5 style="margin-bottom: 12px;">About Accolades</h5>
+        <p style="margin: 0;">
           Accolades are special awards given to students for exceptional service or achievements. Unlike milestones, accolades are manually awarded by staff members based on qualitative assessment of student contributions. You can create custom accolades, edit existing ones, award them to students, or remove them from the system.
         </p>
       </div>

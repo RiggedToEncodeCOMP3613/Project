@@ -154,9 +154,16 @@ p {
 
 /* Accolade Card Hover Effect */
 .accolade-card:hover {
-    background-color: rgba(128, 0, 128, 0.3) !important; /* deeper purple */
+    background-color: rgba(128, 0, 128, 0.4) !important; /* deeper purple for better visibility */
     transform: translateY(-4px);
     box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+/* Enhanced dark mode accolade hover effect */
+.dark-theme .accolade-card:hover {
+    background-color: rgba(128, 0, 128, 0.5) !important; /* even more vibrant purple in dark mode */
+    border-color: rgba(128, 0, 128, 0.7) !important;
+    box-shadow: 0 6px 16px rgba(128, 0, 128, 0.2) !important; /* purple-tinted shadow */
 }
 
 /* Stat Card */
@@ -521,4 +528,303 @@ p {
 
 .milestone-stats-hours {
     color: var(--secondary-text) !important;
+}
+
+/* Accolades Table Styling */
+.accolades-table {
+    background-color: var(--card-bg) !important;
+    border: 2px solid var(--border-color) !important;
+}
+
+.accolades-header {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+}
+
+.accolades-header th {
+    padding: 16px !important;
+    text-align: left !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.accolades-header th:last-child {
+    text-align: center !important;
+}
+
+.accolade-row-even {
+    background-color: var(--card-panel-bg) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.accolade-row-odd {
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.accolade-row-even td,
+.accolade-row-odd td {
+    padding: 16px !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+.accolade-edit-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    border: 2px solid var(--border-color) !important;
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    text-decoration: none !important;
+    margin-right: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+}
+
+.accolade-edit-btn:hover {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+}
+
+.accolade-delete-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    border: 2px solid #ef5350 !important;
+    background-color: #ef5350 !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+}
+
+.accolade-delete-btn:hover {
+    background-color: #d32f2f !important;
+    border-color: #d32f2f !important;
+}
+
+.accolade-info-panel {
+    border: 2px solid var(--border-color) !important;
+    background-color: var(--card-panel-bg) !important;
+}
+
+.accolade-info-panel h5 {
+    color: var(--text-color) !important;
+}
+
+.accolade-info-panel p {
+    color: var(--secondary-text) !important;
+}
+
+/* Award Accolade Template Styling */
+.award-step-section {
+    border: 2px solid var(--border-color) !important;
+    padding: 24px !important;
+    margin-bottom: 24px !important;
+    background-color: var(--card-bg) !important;
+}
+
+.award-step-title {
+    color: var(--text-color) !important;
+    margin-bottom: 16px !important;
+}
+
+.student-selection-table {
+    border: 2px solid var(--border-color) !important;
+    max-height: 400px !important;
+    overflow-y: auto !important;
+}
+
+.student-table-header {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+    display: grid !important;
+    grid-template-columns: 2fr 1fr 1fr 1fr 80px !important;
+    gap: 12px !important;
+    padding: 12px !important;
+    font-weight: 500 !important;
+    position: sticky !important;
+    top: 0 !important;
+    font-size: 14px !important;
+}
+
+.student-row {
+    display: grid !important;
+    grid-template-columns: 2fr 1fr 1fr 1fr 80px !important;
+    gap: 12px !important;
+    padding: 12px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    align-items: center !important;
+    transition: display 0.3s ease !important;
+}
+
+/* Hidden state for search functionality */
+.student-row.hidden {
+    display: none !important;
+}
+
+.student-row-even {
+    background-color: var(--card-panel-bg) !important;
+}
+
+.student-row-odd {
+    background-color: var(--card-bg) !important;
+}
+
+.student-name {
+    color: var(--text-color) !important;
+    font-weight: 500 !important;
+}
+
+.student-id,
+.student-hours,
+.student-accolades {
+    color: var(--secondary-text) !important;
+    font-size: 14px !important;
+}
+
+.student-accolades {
+    text-align: center !important;
+}
+
+.student-select-cell {
+    text-align: center !important;
+}
+
+.student-select-btn {
+    padding: 6px 12px !important;
+    border: 2px solid var(--border-color) !important;
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    cursor: pointer !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    border-radius: 3px !important;
+    transition: all 0.2s !important;
+    min-width: 70px !important;
+}
+
+.student-select-btn:hover {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+}
+
+.selected-student-info {
+    margin-bottom: 20px !important;
+    padding: 16px !important;
+    background-color: var(--card-panel-bg) !important;
+    border: 2px solid #4caf50 !important;
+    border-radius: 4px !important;
+}
+
+.selected-student-label,
+.current-accolades-label {
+    color: #2e7d32 !important;
+}
+
+.selected-student-text {
+    color: #1b5e20 !important;
+    font-weight: 500 !important;
+}
+
+.current-accolades-label {
+    display: block !important;
+    margin-bottom: 8px !important;
+}
+
+.current-accolades-list {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+}
+
+.current-accolades-list span {
+    background-color: #c8e6c9 !important;
+    color: #1b5e20 !important;
+    padding: 6px 12px !important;
+    border-radius: 16px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.accolade-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+}
+
+.accolade-label {
+    cursor: pointer !important;
+}
+
+.accolade-option {
+    padding: 16px !important;
+    border: 2px solid var(--border-color) !important;
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+    font-weight: 500 !important;
+    transition: all 0.3s !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    min-height: 80px !important;
+}
+
+.accolade-option:hover {
+    background-color: rgba(128, 0, 128, 0.3) !important; /* purple hover effect */
+    border-color: rgba(128, 0, 128, 0.6) !important;
+}
+
+.accolade-option.selected {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+    border-color: var(--text-color) !important;
+}
+
+.accolade-icon {
+    background-color: #ffd54f !important;
+    padding: 12px !important;
+    border-radius: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+.accolade-icon i {
+    font-size: 32px !important;
+    line-height: 1 !important;
+    color: var(--text-color) !important;
+}
+
+.accolade-option.selected .accolade-icon {
+    background-color: var(--bg-color) !important;
+}
+
+.accolade-option.selected .accolade-icon i {
+    color: var(--text-color) !important;
+}
+
+.accolade-description {
+    flex: 1 !important;
+    line-height: 1.4 !important;
+    word-wrap: break-word !important;
+}
+
+.accolade-note {
+    padding: 12px !important;
+    background-color: var(--card-panel-bg) !important;
+    border-left: 4px solid #ffc107 !important;
+    color: var(--text-color) !important;
+}
+
+.award-action-buttons {
+    display: flex !important;
+    gap: 16px !important;
 }
