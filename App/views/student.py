@@ -166,6 +166,63 @@ def student_change_email():
 
     return render_template('student_change_email.html', student=student)
 
+@student_views.route('/student/change-password', methods=['GET', 'POST'])
+@jwt_required()
+def student_change_password():
+    user = jwt_current_user
+    if user.role != 'student':
+        flash('Access forbidden: Not a student')
+        return redirect('/login')
+
+    student = Student.query.get(user.student_id)
+    if not student:
+        flash('Student profile not found')
+        return redirect('/login')
+
+    if request.method == 'POST':
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+
+        if not current_password or not new_password or not confirm_password:
+            flash('All fields are required')
+            return redirect(request.url)
+
+        if not user.check_password(current_password):
+            flash('Current password is incorrect')
+            return redirect(request.url)
+
+        if new_password != confirm_password:
+            flash('New passwords do not match')
+            return redirect(request.url)
+
+        if len(new_password) < 8:
+            flash('Password must be at least 8 characters long')
+            return redirect(request.url)
+
+        # Basic password requirements check
+        import re
+        if not re.search(r'[A-Z]', new_password):
+            flash('Password must contain at least one uppercase letter')
+            return redirect(request.url)
+        if not re.search(r'[a-z]', new_password):
+            flash('Password must contain at least one lowercase letter')
+            return redirect(request.url)
+        if not re.search(r'\d', new_password):
+            flash('Password must contain at least one number')
+            return redirect(request.url)
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', new_password):
+            flash('Password must contain at least one special character')
+            return redirect(request.url)
+
+        # Update password
+        user.set_password(new_password)
+        db.session.commit()
+        flash('Password changed successfully')
+        return redirect('/student/profile')
+
+    return render_template('student_change_password.html', student=student)
+
 @student_views.route('/student/leaderboard', methods=['GET'])
 @jwt_required()
 def student_leaderboard():
