@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+{% block title %}View All Stats - Service Hours Tracker{% endblock %}
+{% block page %}View All Stats{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+  <div class="card">
+    <div class="card-content">
+      <!-- Back Button -->
+      <div style="margin-bottom: 24px;">
+        <a href="/student/stats" class="btn waves-effect waves-light" style="background-color: transparent !important; color: var(--text-color) !important; border: 2px solid var(--border-color);">
+          <i class="material-icons left">arrow_back</i>
+          Back to Stats Menu
+        </a>
+      </div>
+
+      <h4 style="color: var(--text-color); margin-bottom: 24px;">Accolades, Milestones & Total Hours</h4>
+
+      <!-- Total Hours -->
+      <div class="stats-card" style="border: 4px solid var(--border-color); padding: 24px; margin-bottom: 32px;">
+        <h5 style="color: var(--text-color); margin-bottom: 16px;">Total Service Hours</h5>
+        <div style="display: flex; align-items: flex-end; gap: 16px; margin-bottom: 16px;">
+          <div style="color: var(--text-color); font-size: 48px; font-weight: bold;">{{ total_hours }}</div>
+          <div style="color: var(--secondary-text); padding-bottom: 8px;">hours completed</div>
+        </div>
+        {% if next_milestone %}
+        <div style="background-color: var(--card-panel-bg); height: 16px; border: 2px solid var(--border-color); border-radius: 8px; overflow: hidden;">
+          <div style="background-color: var(--text-color); height: 100%; width: {{ (total_hours / next_milestone * 100)|round }}%;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 8px; color: var(--secondary-text);">
+          <span>0 hours</span>
+          <span>Next Milestone: {{ next_milestone }} hours</span>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Milestones -->
+      <div style="border: 4px solid var(--border-color); padding: 24px; margin-bottom: 32px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+          <i class="material-icons" style="color: var(--text-color);">flag</i>
+          <h5 style="color: var(--text-color); margin: 0;">Milestones</h5>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          {% set all_milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100] %}
+          {% for m_hours in all_milestones %}
+          {% set achieved = total_hours >= m_hours %}
+          <div class="milestone-card" style="display: flex; align-items: center; gap: 16px; padding: 16px; background-color: var(--card-panel-bg); border: 2px solid var(--border-color); border-radius: 8px;">
+            <div style="width: 32px; height: 32px; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; border-radius: 4px; background-color: {% if achieved %}#4caf50{% else %}var(--bg-color){% endif %};">
+              {% if achieved %}
+              <i class="material-icons" style="color: white; font-size: 20px;">check</i>
+              {% endif %}
+            </div>
+            <div style="flex: 1;">
+              <div style="color: {% if achieved %}var(--text-color){% else %}var(--secondary-text){% endif %}; font-weight: 500;">
+                {{ m_hours }} Hours Milestone
+              </div>
+            </div>
+            <div style="color: var(--secondary-text);">{{ m_hours }} hrs</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Accolades -->
+      <div style="border: 4px solid var(--border-color); padding: 24px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+          <i class="material-icons" style="color: var(--text-color);">emoji_events</i>
+          <h5 style="color: var(--text-color); margin: 0;">Accolades Earned</h5>
+        </div>
+        {% if accolades %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          {% for accolade in accolades %}
+          <div class="accolade-card" style="border: 2px solid var(--border-color); padding: 16px; background-color: rgba(255, 255, 0, 0.1); border-radius: 8px; text-align: center;">
+            <div style="width: 100%; height: 80px; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; border-radius: 4px;">
+              <i class="material-icons" style="font-size: 32px; color: var(--text-color);">emoji_events</i>
+            </div>
+            <div style="color: var(--text-color); font-weight: 500; margin-bottom: 4px;">{{ accolade.description.split(': ', 1)[1] if ':' in accolade.description else accolade.description }}</div>
+            <div style="color: var(--secondary-text); font-size: 12px;">Awarded</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; color: var(--secondary-text); padding: 32px;">
+          No accolades earned yet. Keep volunteering to earn accolades!
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
