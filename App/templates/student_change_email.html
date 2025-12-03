@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% block title %}Change Email - Service Hours Tracker{% endblock %}
+{% block page %}Change Email{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 600px;">
+  <div class="card">
+    <div class="card-content">
+      <!-- Back Button -->
+      <div style="margin-bottom: 24px;">
+        <a href="/student/profile" class="btn waves-effect waves-light" style="background-color: transparent !important; color: var(--text-color) !important; border: 2px solid var(--border-color);">
+          <i class="material-icons left">arrow_back</i>
+          Back to Profile
+        </a>
+      </div>
+
+      <h4 style="color: var(--text-color); margin-bottom: 24px;">Change Email Address</h4>
+
+      <form method="POST" style="max-width: 400px;">
+        <!-- Current Email -->
+        <div style="margin-bottom: 24px;">
+          <label style="color: var(--secondary-text); font-weight: bold; display: block; margin-bottom: 8px;">Current Email</label>
+          <input type="email" value="{{ student.email }}" readonly style="background-color: var(--card-panel-bg); color: var(--text-color); border: 2px solid var(--border-color); padding: 12px; border-radius: 4px; width: 100%; box-sizing: border-box;">
+        </div>
+
+        <!-- New Email Address -->
+        <div style="margin-bottom: 24px;">
+          <label for="new_email" style="color: var(--secondary-text); font-weight: bold; display: block; margin-bottom: 8px;">New Email Address</label>
+          <input placeholder="Enter new email address" id="new_email" name="new_email" type="email" class="validate" required style="background-color: var(--bg-color); color: var(--text-color); border: 2px solid var(--border-color); padding: 12px; border-radius: 4px; width: 100%; box-sizing: border-box;">
+        </div>
+
+        <!-- Confirm New Email -->
+        <div style="margin-bottom: 24px;">
+          <label for="confirm_email" style="color: var(--secondary-text); font-weight: bold; display: block; margin-bottom: 8px;">Confirm New Email</label>
+          <input placeholder="Re-enter new email address" id="confirm_email" name="confirm_email" type="email" class="validate" required style="background-color: var(--bg-color); color: var(--text-color); border: 2px solid var(--border-color); padding: 12px; border-radius: 4px; width: 100%; box-sizing: border-box;">
+        </div>
+
+        <!-- Confirm Password -->
+        <div style="margin-bottom: 32px;">
+          <label for="password" style="color: var(--secondary-text); font-weight: bold; display: block; margin-bottom: 8px;">Confirm Password</label>
+          <input placeholder="Enter your password to confirm" id="password" name="password" type="password" class="validate" required style="background-color: var(--bg-color); color: var(--text-color); border: 2px solid var(--border-color); padding: 12px; border-radius: 4px; width: 100%; box-sizing: border-box;">
+        </div>
+
+        <!-- Buttons -->
+        <div style="display: flex; gap: 16px;">
+          <button type="submit" class="btn waves-effect waves-light" style="flex: 1; background-color: var(--btn-bg) !important; color: var(--btn-text) !important;">
+            Change Email
+          </button>
+          <a href="/student/profile" class="btn waves-effect waves-light" style="flex: 1; background-color: transparent !important; color: var(--text-color) !important; border: 2px solid var(--border-color);">
+            Cancel
+          </a>
+        </div>
+      </form>
+
+      <!-- Note -->
+      <div style="margin-top: 32px; padding: 16px; background-color: rgba(255, 255, 0, 0.1); border: 2px solid var(--border-color); border-radius: 8px;">
+        <p style="color: var(--text-color); margin: 0;">
+          <strong>Note:</strong> A verification email will be sent to your old email address.
+          You must verify your new email before the change takes effect.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

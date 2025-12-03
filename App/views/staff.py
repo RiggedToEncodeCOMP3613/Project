@@ -1,12 +1,45 @@
 from flask import Blueprint, render_template, jsonify, request, send_from_directory, flash, redirect, url_for
 from flask_jwt_extended import jwt_required, current_user as jwt_current_user
-from App.models import Student, RequestHistory, LoggedHoursHistory
+from App.models import Student, RequestHistory, LoggedHoursHistory, Staff
+from App.controllers.leaderboard_controller import generate_leaderboard
 from.index import index_views
 from App.controllers.student_controller import get_all_students_json,fetch_accolades,create_hours_request
 from App.controllers.request_controller import process_request_approval, process_request_denial
 from App import db
 
 staff_views = Blueprint('staff_views', __name__, template_folder='../templates')
+
+@staff_views.route('/staff/main', methods=['GET'])
+@jwt_required()
+def staff_main_menu():
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+
+    staff = Staff.query.get(user.staff_id)
+    if not staff:
+        flash('Staff profile not found')
+        return redirect('/login')
+
+    # Get some stats
+    pending_requests = RequestHistory.query.filter_by(status='Pending').count()
+    total_students = Student.query.count()
+    total_logged_hours = LoggedHoursHistory.query.count()
+
+    return render_template('message.html', title="Staff Main Menu", message="Staff Main Menu - Coming Soon!")
+
+@staff_views.route('/staff/leaderboard', methods=['GET'])
+@jwt_required()
+def staff_leaderboard():
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+
+    leaderboard = generate_leaderboard()
+
+    return render_template('leaderboard.html', leaderboard=leaderboard, user_role=user.role)
 
 @staff_views.route('/api/accept_request', methods=['PUT'])
 @jwt_required()

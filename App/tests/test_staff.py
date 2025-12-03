@@ -29,6 +29,8 @@ def app_context():
     app.config.update({"TESTING": True})
     with app.app_context():
         db.create_all()
+        # Reset staff ID suffix for test isolation
+        Staff._next_suffix = 10000
         yield
         db.session.remove()
         db.drop_all()

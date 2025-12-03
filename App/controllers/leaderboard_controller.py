@@ -7,10 +7,12 @@ def get_leaderboard():
     leaderboard = []
     for student in students:
         total_hours = student.total_hours
+        accolades_count = len(student.check_accolades())
         leaderboard.append({
             'student_id': student.student_id,
             'username': student.username,
-            'total_approved_hours': total_hours
+            'total_approved_hours': total_hours,
+            'accolades': accolades_count
         })
     leaderboard.sort(key=lambda x: x['total_approved_hours'], reverse=True)
     return leaderboard
@@ -28,7 +30,8 @@ def generate_leaderboard():
         {
             'name': entry['username'],
             'hours': entry['total_approved_hours'],
-            'student_id': entry['student_id']
+            'student_id': entry['student_id'],
+            'accolades': entry['accolades']
         }
         for entry in leaderboard
     ]

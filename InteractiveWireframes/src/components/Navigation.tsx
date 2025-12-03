@@ -41,6 +41,7 @@ export function Navigation({ currentScreen, onNavigate }: NavigationProps) {
     'staff-update-username': 'Staff Change Username',
     'staff-update-email': 'Staff Change Email',
     'staff-update-password': 'Staff Change Password',
+    'leaderboard': 'Leaderboard',
   };
 
   const screens: Screen[] = [
@@ -67,6 +68,7 @@ export function Navigation({ currentScreen, onNavigate }: NavigationProps) {
     'staff-update-username',
     'staff-update-email',
     'staff-update-password',
+    'leaderboard',
   ];
 
   return (

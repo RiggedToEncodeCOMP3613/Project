@@ -92,6 +92,19 @@ export function StaffMainMenu({ onNavigate }: StaffMainMenuProps) {
               <p className="text-gray-600">Manage your account</p>
             </div>
           </button>
+
+          <button
+            onClick={() => onNavigate('leaderboard')}
+            className="border-4 border-gray-800 p-8 hover:bg-gray-50 flex flex-col items-center gap-4"
+          >
+            <div className="w-20 h-20 border-2 border-gray-800 flex items-center justify-center">
+              <Trophy className="w-10 h-10" />
+            </div>
+            <div className="text-center">
+              <h4 className="text-gray-800">Student Leaderboard</h4>
+              <p className="text-gray-600">View student rankings</p>
+            </div>
+          </button>
         </div>
 
         <div className="border-2 border-gray-800 p-6 mt-8">
