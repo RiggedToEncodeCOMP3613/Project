@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, jsonify, request, send_from_direct
 from flask_jwt_extended import jwt_required, current_user as jwt_current_user
 from App.models import Student, RequestHistory, User
 from App.database import db
+from App.controllers.leaderboard_controller import generate_leaderboard
 from.index import index_views
 from App.controllers.student_controller import get_all_students_json,fetch_accolades,create_hours_request
 
@@ -227,10 +228,13 @@ def student_change_password():
 @jwt_required()
 def student_leaderboard():
     user = jwt_current_user
-    if user.role != 'student':
-        flash('Access forbidden: Not a student')
+    if user.role not in ['student', 'staff']:
+        flash('Access forbidden')
         return redirect('/login')
-    return render_template('message.html', title="Leaderboard", message="Leaderboard page - Coming Soon!")
+
+    leaderboard = generate_leaderboard()
+
+    return render_template('leaderboard.html', leaderboard=leaderboard, user_role=user.role)
 
 @student_views.route('/api/accolades', methods=['GET'])
 @jwt_required()

@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+{% block title %}Leaderboard - Service Hours Tracker{% endblock %}
+{% block page %}Leaderboard{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+  <div class="card">
+    <div class="card-content">
+      <!-- Back Button -->
+      <div style="margin-bottom: 24px;">
+        {% if user_role == 'student' %}
+        <a href="/student/main" class="btn waves-effect waves-light" style="background-color: transparent !important; color: var(--text-color) !important; border: 2px solid var(--border-color);">
+          <i class="material-icons left">arrow_back</i>
+          Back to Main Menu
+        </a>
+        {% elif user_role == 'staff' %}
+        <a href="/staff/main" class="btn waves-effect waves-light" style="background-color: transparent !important; color: var(--text-color) !important; border: 2px solid var(--border-color);">
+          <i class="material-icons left">arrow_back</i>
+          Back to Main Menu
+        </a>
+        {% endif %}
+      </div>
+
+      <!-- Leaderboard -->
+      <div style="border: 4px solid var(--border-color); padding: 24px;">
+        <h3 style="color: var(--text-color); margin-bottom: 24px; text-align: center;">Top Students by Total Hours</h3>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          {% for entry in leaderboard %}
+          <div style="display: flex; align-items: center; gap: 16px; padding: 16px; background-color: var(--card-panel-bg); border: 2px solid var(--border-color);">
+            <!-- Rank -->
+            <div style="display: flex; align-items: center; justify-content: center; width: 48px;">
+              {% if entry.student_id == 0 %}
+              <span style="color: var(--text-color); font-weight: bold;">{{ loop.index }}</span>
+              {% elif loop.index == 1 %}
+              <i class="material-icons" style="color: #ffd700; font-size: 24px;">emoji_events</i>
+              {% elif loop.index == 2 %}
+              <i class="material-icons" style="color: #c0c0c0; font-size: 24px;">military_tech</i>
+              {% elif loop.index == 3 %}
+              <i class="material-icons" style="color: #cd7f32; font-size: 24px;">grade</i>
+              {% else %}
+              <span style="color: var(--text-color); font-weight: bold;">{{ loop.index }}</span>
+              {% endif %}
+            </div>
+
+            <!-- Name -->
+            <div style="flex: 1;">
+              <div style="color: var(--text-color); font-weight: 500;">{{ entry.name }}</div>
+            </div>
+
+            <!-- Hours -->
+            <div style="text-align: center;">
+              <div style="color: var(--text-color); font-weight: bold;">{{ entry.hours }}</div>
+              <div style="color: var(--secondary-text); font-size: 12px;">hours</div>
+            </div>
+
+            <!-- Accolades -->
+            <div style="text-align: center;">
+              <div style="color: var(--text-color);">{{ entry.accolades }}</div>
+              <div style="color: var(--secondary-text); font-size: 12px;">accolades</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div style="margin-top: 24px; text-align: center; color: var(--secondary-text);">
+          Rankings updated daily based on total approved service hours
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, jsonify, request, send_from_directory, flash, redirect, url_for
 from flask_jwt_extended import jwt_required, current_user as jwt_current_user
 from App.models import Student, RequestHistory, LoggedHoursHistory, Staff
+from App.controllers.leaderboard_controller import generate_leaderboard
 from.index import index_views
 from App.controllers.student_controller import get_all_students_json,fetch_accolades,create_hours_request
 from App.controllers.request_controller import process_request_approval, process_request_denial
@@ -27,6 +28,18 @@ def staff_main_menu():
     total_logged_hours = LoggedHoursHistory.query.count()
 
     return render_template('message.html', title="Staff Main Menu", message="Staff Main Menu - Coming Soon!")
+
+@staff_views.route('/staff/leaderboard', methods=['GET'])
+@jwt_required()
+def staff_leaderboard():
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+
+    leaderboard = generate_leaderboard()
+
+    return render_template('leaderboard.html', leaderboard=leaderboard, user_role=user.role)
 
 @staff_views.route('/api/accept_request', methods=['PUT'])
 @jwt_required()
