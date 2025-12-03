@@ -14,20 +14,44 @@
   </head>
   <body>
 
+    <button class="theme-toggle" id="theme-toggle" title="Toggle Theme">
+      <i class="material-icons">brightness_6</i>
+    </button>
+
     <div class="container" id="content">{% block content %}{% endblock %}</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
        M.AutoInit();
 
-        {% with messages = get_flashed_messages() %}
-          {% if messages %}
-              {% for message in messages %}
-              M.toast({html: '{{message}}'})
-              {% endfor %}
-          {% endif %}
-        {% endwith %}
-       
+       {% with messages = get_flashed_messages() %}
+         {% if messages %}
+             {% for message in messages %}
+             M.toast({html: '{{message}}'})
+             {% endfor %}
+         {% endif %}
+       {% endwith %}
+
+       // Theme toggle functionality
+       const themeToggle = document.getElementById('theme-toggle');
+       const body = document.body;
+
+       // Check for saved theme preference or default to light mode
+       const currentTheme = localStorage.getItem('theme') || 'light';
+       if (currentTheme === 'dark') {
+           body.classList.add('dark-theme');
+           themeToggle.innerHTML = '<i class="material-icons">brightness_7</i>';
+       } else {
+           themeToggle.innerHTML = '<i class="material-icons">brightness_6</i>';
+       }
+
+       themeToggle.addEventListener('click', () => {
+           body.classList.toggle('dark-theme');
+           const isDark = body.classList.contains('dark-theme');
+           localStorage.setItem('theme', isDark ? 'dark' : 'light');
+           themeToggle.innerHTML = isDark ? '<i class="material-icons">brightness_7</i>' : '<i class="material-icons">brightness_6</i>';
+       });
+
     </script>
   </body>
 </html>

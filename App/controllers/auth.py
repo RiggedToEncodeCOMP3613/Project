@@ -3,8 +3,11 @@ from flask_jwt_extended import create_access_token, jwt_required, JWTManager, ge
 from App.models import User
 from App.database import db
 
-def login(username, password):
-  result = db.session.execute(db.select(User).filter_by(username=username))
+def login(username_or_email, password):
+  if "@" in username_or_email:
+    result = db.session.execute(db.select(User).filter_by(email=username_or_email))
+  else:
+    result = db.session.execute(db.select(User).filter_by(username=username_or_email))
   user = result.scalar_one_or_none()
   if user and user.check_password(password):
     return create_access_token(identity=str(user.user_id))

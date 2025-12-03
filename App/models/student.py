@@ -125,7 +125,7 @@ class Student(User):
                     )
                     milestone_history.activity_id = activity.id
                     db.session.add(milestone_history)
-                    db.session.commit()
+                    milestone.add_student(self.student_id)
                     m.append(milestone_history)
         return m
     

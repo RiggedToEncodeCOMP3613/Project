@@ -27,9 +27,11 @@ def initialize(drop_first=True):
     accolade_description = ["Outstanding Service", "Leadership", "Community Impact", "Excellence", "Dedication", 
                             "Teamwork", "Commitment", "Tax Fraud"]
 
-    # Generate 10 random students
-    students_data = []
-    used_names = set()
+    # Add test student
+    students_data = [('teststudent', 'test@student.com', 'password')]
+
+    # Generate 9 random students (since we added 1 test)
+    used_names = {'teststudent'}
     for i in range(10):
         while True:
             first = random.choice(first_names)
@@ -42,9 +44,11 @@ def initialize(drop_first=True):
                 students_data.append((username, email, password))
                 break
 
-    # Generate 10 random staff
-    staff_data = []
-    used_names = set()
+    # Add test staff
+    staff_data = [('teststaff', 'test@staff.com', 'password')]
+
+    # Generate 9 random staff (since we added 1 test)
+    used_names = {'teststaff'}
     for i in range(10):
         while True:
             first = random.choice(first_names)
@@ -72,11 +76,11 @@ def initialize(drop_first=True):
 
     db.session.commit()
 
-    # Create 10 requests for random students and staff
+    # Create 100 requests for random students and staff
     requests = []
     request_date = datetime.now(timezone.utc)
 
-    for i in range(50):
+    for i in range(100):
         student = random.choice(students)
         staff_member = random.choice(staff_members)
         hours = round(random.uniform(1, 12))
@@ -100,8 +104,8 @@ def initialize(drop_first=True):
 
     db.session.commit()
 
-    # Approve 5 requests, deny 3, leave 2 pending
-    for i, req in enumerate(requests[:30]):
+    # Approve 60 requests, deny 20, leave 20 pending
+    for i, req in enumerate(requests[:60]):
         req.status = 'approved'
         staff_member = Staff.query.get(req.staff_id)
 
@@ -122,10 +126,8 @@ def initialize(drop_first=True):
         log.activity_id = activity.id
         db.session.add(log)
 
-    for req in requests[30:40]:
+    for req in requests[60:80]:
         req.status = 'denied'
-
-    # Leave requests[40:50] as pending
 
     db.session.commit()
 
@@ -157,19 +159,23 @@ def initialize(drop_first=True):
 
     db.session.commit()
 
-    # Create 10 accolades
+    # Create 30 unique accolades
     accolades = []
-    for i in range(10):
+    used_descriptions = set()
+    for i in range(30):
         staff_member = random.choice(staff_members)
         description = f"Accolade {i+1}: {random.choice(accolade_description)}"
+        while description in used_descriptions:
+            description = f"Accolade {i+1}: {random.choice(accolade_description)}"
+        used_descriptions.add(description)
         accolade = Accolade(staff_id=staff_member.user_id, description=description)
         accolades.append(accolade)
         db.session.add(accolade)
 
     db.session.commit()
 
-    # Assign 10 accolades to random students
-    for i in range(10):
+    # Assign 30 accolades to random students
+    for i in range(30):
         accolade = random.choice(accolades)
         student = random.choice(students)
         staff_member = random.choice(staff_members)
