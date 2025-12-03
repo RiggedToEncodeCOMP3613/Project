@@ -29,8 +29,12 @@ class Staff(User):
 
     def __init__(self, username, email, password):
         prefix = 300
-        suffix = Staff._next_suffix
-        Staff._next_suffix += 1
+        # Get the next suffix by finding the max existing staff_id
+        max_staff = db.session.query(func.max(Staff.staff_id)).scalar()
+        if max_staff is None:
+            suffix = 10000
+        else:
+            suffix = (max_staff % 100000) + 1  # Extract suffix and increment
         self.staff_id = int(f"{prefix}{suffix:05d}")
         self.user_id = self.staff_id
         super().__init__(username, email, password, role="staff")
