@@ -55,7 +55,7 @@ Intended users: administrators, staff reviewers, and students at educational ins
 | Command | Description |
 |---------|-------------|
 | `flask request create <student_id> <service> <staff_id> <hours> <date>` | Create a new service hour request |
-| `flask request search [--student_id] [--service] [--date]` | Search requests by student_id, service, or date |
+| `flask request search [--student_id] [--service] [--date] [--staff_id] [--status]` | Search requests by student_id, service, date, staff_id, or status |
 | `flask request update <request_id> [--student_id] [--service] [--hours] [--staff_id]` | Update a request's attributes |
 | `flask request approve <staff_id> <request_id>` | Staff approves a student's request |
 | `flask request deny <staff_id> <request_id>` | Staff denies a student's request |
