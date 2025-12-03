@@ -12,7 +12,10 @@ from sqlalchemy import func
 class Staff(User):
     __tablename__ = "staff"
     staff_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), primary_key=True, autoincrement=False)
-    
+
+    # Class variable for next suffix
+    _next_suffix = 10000
+
     # Relationships (match required names)
     loggedhours = db.relationship('LoggedHoursHistory', backref='staff', lazy=True, cascade="all, delete-orphan")
     accolades_created = db.relationship('Accolade', back_populates='staff', lazy=True, cascade="all, delete-orphan")
@@ -26,11 +29,8 @@ class Staff(User):
 
     def __init__(self, username, email, password):
         prefix = 300
-        max_id = db.session.query(func.max(User.user_id)).filter(User.role == 'staff', User.user_id.between(prefix*10**5, (prefix+1)*10**5-1)).scalar()
-        if max_id:
-            suffix = int(str(max_id)[4:]) + 1
-        else:
-            suffix = 10000
+        suffix = Staff._next_suffix
+        Staff._next_suffix += 1
         self.staff_id = int(f"{prefix}{suffix:05d}")
         self.user_id = self.staff_id
         super().__init__(username, email, password, role="staff")
@@ -143,5 +143,3 @@ class Staff(User):
         db.session.commit()
         
         return accolade_history
-
-

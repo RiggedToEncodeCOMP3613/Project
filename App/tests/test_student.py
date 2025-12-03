@@ -222,6 +222,7 @@ class StudentIntegrationTests(unittest.TestCase):
         self.assertEqual(newrequest.status, "Pending")  
         self.assertIsNotNone(newrequest.activity_id)  
         
+        
         #now to check to see if the new request is linked properly to all the relevant relationships
         activity = ActivityHistory.query.get(newrequest.activity_id)
         self.assertIsNotNone(activity, "ActivityHistory should exist for this request")
@@ -269,5 +270,3 @@ class StudentIntegrationTests(unittest.TestCase):
             assert r.date_completed is not None
             assert r.status == 'Pending'
             assert r.activity_id is not None
-
-    
