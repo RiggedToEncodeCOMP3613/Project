@@ -230,8 +230,8 @@ class StudentIntegrationTests(unittest.TestCase):
         
         self.assertIn(newrequest, activity.requests)
         
-        self.assertEqual(newstudent.activity_history.id, activity.id)
-        self.assertIn(newrequest, newstudent.activity_history.requests)
+        self.assertEqual(newstudent.activity_history[0].id, activity.id)
+        self.assertIn(newrequest, newstudent.activity_history[0].requests)
 
         self.assertIn(newrequest, newstaff.requests)
 
