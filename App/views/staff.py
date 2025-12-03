@@ -77,6 +77,56 @@ def delete_milestone(milestone_id):
     
     return redirect('/staff/milestones')
 
+@staff_views.route('/staff/create-milestone', methods=['GET'])
+@jwt_required()
+def create_milestone_page():
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+    
+    return render_template('staff_create_milestone.html')
+
+@staff_views.route('/staff/create-milestone', methods=['POST'])
+@jwt_required()
+def create_milestone_submit():
+    user = jwt_current_user
+    if user.role != 'staff':
+        flash('Access forbidden: Not a staff member')
+        return redirect('/login')
+    
+    hours = request.form.get('hours')
+    
+    if not hours:
+        flash('Hours field is required', 'error')
+        return redirect('/staff/create-milestone')
+    
+    try:
+        hours = int(hours)
+        if hours <= 0:
+            flash('Hours must be greater than 0', 'error')
+            return redirect('/staff/create-milestone')
+        
+        from App.controllers.milestone_controller import create_milestone as create_milestone_controller
+        from App.models import Milestone
+        
+        # Check if milestone already exists
+        existing = Milestone.query.filter_by(hours=hours).first()
+        if existing:
+            flash(f'Milestone with {hours} hours already exists', 'error')
+            return redirect('/staff/create-milestone')
+        
+        create_milestone_controller(hours)
+        flash(f'Milestone ({hours} hours) created successfully', 'success')
+        return redirect('/staff/milestones')
+    
+    except ValueError:
+        flash('Hours must be a valid number', 'error')
+        return redirect('/staff/create-milestone')
+    except Exception as e:
+        flash(f'Error creating milestone: {str(e)}', 'error')
+        return redirect('/staff/create-milestone')
+
 @staff_views.route('/staff/leaderboard', methods=['GET'])
 @jwt_required()
 def staff_leaderboard():
