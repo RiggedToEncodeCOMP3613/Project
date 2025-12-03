@@ -26,8 +26,15 @@ def staff_main_menu():
     pending_requests = RequestHistory.query.filter_by(status='Pending').count()
     total_students = Student.query.count()
     total_logged_hours = LoggedHoursHistory.query.count()
+    from App.models import Accolade
+    total_accolades = Accolade.query.count()
 
-    return render_template('message.html', title="Staff Main Menu", message="Staff Main Menu - Coming Soon!")
+    return render_template('staff_main_menu.html',
+                         staff=staff,
+                         pending_requests=pending_requests,
+                         total_students=total_students,
+                         total_logged_hours=total_logged_hours,
+                         total_accolades=total_accolades)
 
 @staff_views.route('/staff/leaderboard', methods=['GET'])
 @jwt_required()
