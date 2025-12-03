@@ -130,3 +130,15 @@ p {
 .logout-btn {
     color: var(--text-color) !important;
 }
+
+/* Login Buttons */
+.student-login-btn {
+    background-color: #424242 !important;
+    color: #ffffff !important;
+}
+
+.staff-login-btn {
+    background-color: #ffffff !important;
+    color: #424242 !important;
+    border: 2px solid #424242 !important;
+}
