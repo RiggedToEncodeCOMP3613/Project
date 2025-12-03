@@ -78,8 +78,8 @@ def make_request():
 @student_page_views.route('/view_stats_menu', methods=['GET'])
 def view_stats_menu():
     if request.method == 'GET':
-        return render_template('student/stats_menu.html')     
-       
+        return render_template('student/all_stats.html')
+
 @student_page_views.route('/view_stats', methods=['GET'])
 @jwt_required()
 def view_stats():
@@ -95,7 +95,7 @@ def view_stats():
 
     pending_requests = RequestHistory.query.filter_by(student_id=user.student_id, status='Pending').count()
 
-    return render_template('student/stats_menu.html', student=student, pending_requests=pending_requests)
+    return render_template('student/all_stats.html', student=student, pending_requests=pending_requests)
 
 @student_page_views.route('/view_pending_requests', methods=['GET'])
 def view_pending_requests():
