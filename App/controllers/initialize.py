@@ -27,9 +27,11 @@ def initialize(drop_first=True):
     accolade_description = ["Outstanding Service", "Leadership", "Community Impact", "Excellence", "Dedication", 
                             "Teamwork", "Commitment", "Tax Fraud"]
 
-    # Generate 10 random students
-    students_data = []
-    used_names = set()
+    # Add test student
+    students_data = [('teststudent', 'test@student.com', 'password')]
+
+    # Generate 9 random students (since we added 1 test)
+    used_names = {'teststudent'}
     for i in range(10):
         while True:
             first = random.choice(first_names)
@@ -42,9 +44,11 @@ def initialize(drop_first=True):
                 students_data.append((username, email, password))
                 break
 
-    # Generate 10 random staff
-    staff_data = []
-    used_names = set()
+    # Add test staff
+    staff_data = [('teststaff', 'test@staff.com', 'password')]
+
+    # Generate 9 random staff (since we added 1 test)
+    used_names = {'teststaff'}
     for i in range(10):
         while True:
             first = random.choice(first_names)
@@ -72,7 +76,7 @@ def initialize(drop_first=True):
 
     db.session.commit()
 
-    # Create 10 requests for random students and staff
+    # Create 50 requests for random students and staff
     requests = []
     request_date = datetime.now(timezone.utc)
 
@@ -100,7 +104,7 @@ def initialize(drop_first=True):
 
     db.session.commit()
 
-    # Approve 5 requests, deny 3, leave 2 pending
+    # Approve 30 requests, deny 10, leave 10 pending
     for i, req in enumerate(requests[:30]):
         req.status = 'approved'
         staff_member = Staff.query.get(req.staff_id)
