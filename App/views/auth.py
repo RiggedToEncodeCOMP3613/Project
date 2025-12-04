@@ -57,7 +57,11 @@ def login_action():
         response = redirect('/')
 
     flash('Login Successful')
-    set_access_cookies(response, token)
+    remember = request.form.get('remember')
+    if remember:
+        set_access_cookies(response, token, max_age=2592000)  # 30 days
+    else:
+        set_access_cookies(response, token)
     return response
 
 @auth_views.route('/logout', methods=['GET'])
@@ -82,7 +86,11 @@ def user_login_api():
   if not token:
     return jsonify(message='Invalid Username/Email or Password'), 401
   response = jsonify(access_token=token)
-  set_access_cookies(response, token)
+  remember = data.get('remember')
+  if remember:
+    set_access_cookies(response, token, max_age=2592000)  # 30 days
+  else:
+    set_access_cookies(response, token)
   return response
 
 @auth_views.route('/api/identify', methods=['GET'])
