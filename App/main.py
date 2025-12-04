@@ -11,7 +11,8 @@ from App.config import load_config
 
 from App.controllers import (
     setup_jwt,
-    add_auth_context
+    add_auth_context,
+    initialize
 )
 
 from App.views import views, setup_admin
@@ -33,6 +34,7 @@ def create_app(overrides={}):
     init_db(app)
     app.app_context().push()
     create_db()  # Create tables if they don't exist
+    initialize(drop_first=False)
     jwt = setup_jwt(app)
     setup_admin(app)
     @jwt.invalid_token_loader
