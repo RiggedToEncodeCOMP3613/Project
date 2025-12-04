@@ -15,6 +15,9 @@ def initialize(drop_first=True):
     from App.models import Student, Staff, RequestHistory, LoggedHoursHistory, ActivityHistory, Accolade, AccoladeHistory, Milestone, MilestoneHistory
     from datetime import datetime, timezone
     import random
+    
+    if Student.query.filter_by(username='teststudent').first():
+        return {}
 
     if drop_first:
         db.drop_all()

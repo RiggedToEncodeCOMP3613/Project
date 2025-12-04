@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for
 from flask_uploads import DOCUMENTS, IMAGES, TEXT, UploadSet, configure_uploads
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
@@ -11,7 +11,8 @@ from App.config import load_config
 
 from App.controllers import (
     setup_jwt,
-    add_auth_context
+    add_auth_context,
+    initialize
 )
 
 from App.views import views, setup_admin
@@ -33,10 +34,15 @@ def create_app(overrides={}):
     init_db(app)
     app.app_context().push()
     create_db()  # Create tables if they don't exist
+    initialize(drop_first=False)
     jwt = setup_jwt(app)
     setup_admin(app)
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        return redirect(url_for('auth_views.login_page'))
+
     @jwt.invalid_token_loader
     @jwt.unauthorized_loader
     def custom_unauthorized_response(error):
-        return render_template('401.html', error=error), 401
+        return redirect(url_for('auth_views.login_page'))
     return app
