@@ -31,11 +31,12 @@ except Exception:
 
 from App.models import Accolade, Staff, AccoladeHistory, Student, ActivityHistory
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="function")
 def app_context():
     app = create_app()
     app.config.update({"TESTING": True})
     with app.app_context():
+        db.drop_all()
         db.create_all()
         yield
         db.session.remove()

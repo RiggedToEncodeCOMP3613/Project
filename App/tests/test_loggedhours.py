@@ -23,9 +23,11 @@ LOGGER = logging.getLogger(__name__)
 @pytest.fixture(autouse=True, scope="function")
 def empty_db():
     app = create_app({'TESTING': True, 'SQLALCHEMY_DATABASE_URI': 'sqlite:///test.db'})
-    create_db()
-    yield app.test_client()
-    db.drop_all()
+    with app.app_context():
+        db.drop_all()
+        create_db()
+        yield app.test_client()
+        db.drop_all()
 
 
 class LoggedHoursUnitTests(unittest.TestCase):
