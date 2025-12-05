@@ -96,8 +96,8 @@ class StudentIntegrationTests(unittest.TestCase):
 
         student = Student.create_student("nisha", "nisha@example.com", "pass")
 
-        milestone_10 = Milestone(hours=10)
-        db.session.add(milestone_10)
+        milestone_14 = Milestone(hours=14)
+        db.session.add(milestone_14)
         db.session.commit()
 
         activity1 = ActivityHistory(student_id=student.student_id)
@@ -118,7 +118,7 @@ class StudentIntegrationTests(unittest.TestCase):
         assert name == student.username
         assert total == 11.0
 
-        milestone_10.add_student(student.student_id)
+        milestone_14.add_student(student.student_id)
         db.session.commit()
 
         if not hasattr(Student, 'accolades'):
@@ -128,23 +128,23 @@ class StudentIntegrationTests(unittest.TestCase):
 
         accolades = fetch_accolades(student.student_id)
         assert isinstance(accolades, list)
-        assert any('10' in str(a) for a in accolades)
+        assert any('14' in str(a) for a in accolades)
 
     def test_generate_leaderboard(self):
         s_a = Student.create_student("Student A", "a@test.com", "pw")
         s_b = Student.create_student("Student B", "b@test.com", "pw")
         s_c = Student.create_student("Student C", "c@test.com", "pw")
 
-        s_a.total_hours = 5.0
-        s_b.total_hours = 15.0
-        s_c.total_hours = 10.0
+        s_a.total_hours = 105.0
+        s_b.total_hours = 115.0
+        s_c.total_hours = 110.0
         db.session.commit()
 
         leaderboard = generate_leaderboard()
         assert isinstance(leaderboard, list)
-        assert leaderboard[0]['name'] == 'Student B' and leaderboard[0]['hours'] == 15.0
-        assert leaderboard[1]['name'] == 'Student C' and leaderboard[1]['hours'] == 10.0
-        assert leaderboard[2]['name'] == 'Student A' and leaderboard[2]['hours'] == 5.0
+        assert leaderboard[0]['name'] == 'Student B' and leaderboard[0]['hours'] == 115.0
+        assert leaderboard[1]['name'] == 'Student C' and leaderboard[1]['hours'] == 110.0
+        assert leaderboard[2]['name'] == 'Student A' and leaderboard[2]['hours'] == 105.0
 
     def test_student_milestone_achievement(self):
 

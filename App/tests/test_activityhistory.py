@@ -194,17 +194,17 @@ class ActivityHistoryIntegrationTests(unittest.TestCase):
         assert student is not None
         assert student.username == "test_student_milestone"
 
-        # Create a milestone with 10 hours requirement
-        milestone = create_milestone(10)
+        # Create a milestone with 13 hours requirement
+        milestone = create_milestone(13)
         assert milestone is not None
-        assert milestone.hours == 10
+        assert milestone.hours == 13
 
         # Create logged hours to make student reach the milestone
         current_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         logged_hours = create_logged_hours(
             student_id=student.student_id,
             staff_id=None,  # No staff needed for this test
-            hours=10.0,
+            hours=13.0,
             service="volunteer",
             date_completed=current_date
         )
@@ -212,7 +212,7 @@ class ActivityHistoryIntegrationTests(unittest.TestCase):
         # Verify logged hours was created successfully
         assert logged_hours is not None
         assert logged_hours.student_id == student.student_id
-        assert logged_hours.hours == 10.0
+        assert logged_hours.hours == 13.0
 
         # Update student's total hours to trigger milestone calculation
         student.calculate_total_hours()
@@ -229,7 +229,7 @@ class ActivityHistoryIntegrationTests(unittest.TestCase):
         assert milestone_history is not None
         assert milestone_history.milestone_id == milestone.id
         assert milestone_history.student_id == student.student_id
-        assert milestone_history.hours == milestone.hours
+        assert milestone_history.hours == 13
 
         # Verify ActivityHistory was created and linked
         assert milestone_history.activity_id is not None

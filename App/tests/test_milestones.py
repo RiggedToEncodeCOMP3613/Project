@@ -83,10 +83,10 @@ class MilestoneIntegrationTests(unittest.TestCase):
         assert student2_refreshed.total_hours == 8.0
         assert student3_refreshed.total_hours == 15.0
 
-        # Create milestone at 10 hours
-        milestone = create_milestone(10)
+        # Create milestone at 11 hours
+        milestone = create_milestone(11)
         assert milestone is not None
-        assert milestone.hours == 10
+        assert milestone.hours == 11
 
         # Verify eligible students auto-awarded
 
@@ -96,7 +96,7 @@ class MilestoneIntegrationTests(unittest.TestCase):
             milestone_id=milestone.id
         ).first()
         assert milestone_history1 is not None
-        assert milestone_history1.hours == 10
+        assert milestone_history1.hours == 11
 
         # Student2 should not have milestone history (only 8 hours)
         milestone_history2 = MilestoneHistory.query.filter_by(
@@ -111,17 +111,17 @@ class MilestoneIntegrationTests(unittest.TestCase):
             milestone_id=milestone.id
         ).first()
         assert milestone_history3 is not None
-        assert milestone_history3.hours == 10
+        assert milestone_history3.hours == 11
 
     def test_search_milestones(self):
-        m1 = create_milestone(10)
-        m2 = create_milestone(20)
-        results = search_milestones(hours=10)
+        m1 = create_milestone(12)
+        m2 = create_milestone(22)
+        results = search_milestones(hours=12)
         assert len(results) == 1
-        assert results[0]['hours'] == 10
+        assert results[0]['hours'] == 12
         
     def test_update_milestone_hours(self):
-        milestone = create_milestone(50)
+        milestone = create_milestone(55)
         updated_milestone = update_milestone(milestone.id, 75)
         assert updated_milestone.hours == 75
         # Verify change persists in db
